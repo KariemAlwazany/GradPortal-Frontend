@@ -4,6 +4,7 @@ import 'package:flutter_project/screens/signin_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,6 +19,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? selectedRole;
   String? registrationNumber;
   String? phoneNumber;
+  String? fullName;
+  String? email;
+  String? username;
+  String? password;
+
+  // Function to create a user and send data to API
+  Future<void> createUser() async {
+    if (_formSignupKey.currentState!.validate() && agreePersonalData) {
+      _formSignupKey.currentState!.save(); // Save the form data
+
+      // Prepare the data to send
+      Map<String, dynamic> userData = {
+        "FullName": fullName,
+        "Email": email,
+        "Username": username,
+        "Password": password,
+        "Role": selectedRole,
+        if (selectedRole == "Student" || selectedRole == "Doctor")
+          "registrationNumber": registrationNumber,
+        if (selectedRole == "Seller") "phoneNumber": phoneNumber,
+      };
+
+      try {
+        // Send data to API (replace 'your_api_url' with the actual endpoint)
+        const url = 'http://192.168.88.5:3000/GP/v1/users/signup';
+        final uri = Uri.parse(url);
+        final response = await http.post(
+          uri,
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(userData),
+        );
+
+        if (response.statusCode == 201) {
+          // If the API request is successful, navigate to the sign-in page
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sign up successful!')),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SignInScreen(),
+            ),
+          );
+        } else {
+          // If the API request fails, show an error message
+          var responseData = jsonDecode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${responseData['message']}')),
+          );
+        }
+      } catch (e) {
+        // Handle exceptions
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exception occurred: $e')),
+        );
+      }
+    } else if (!agreePersonalData) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please agree to the processing of personal data')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +127,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // full name
                       TextFormField(
+                        onSaved: (value) {
+                          fullName = value;
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Full name';
@@ -93,6 +161,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       // email
                       TextFormField(
+                        onSaved: (value) {
+                          email = value;
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
@@ -124,6 +195,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
 
                       TextFormField(
+                        onSaved: (value) {
+                          username = value;
+                        },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Username';
@@ -156,6 +230,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                       // password
                       TextFormField(
+                        onSaved: (value) {
+                          password = value;
+                        },
                         obscureText: true,
                         obscuringCharacter: '*',
                         validator: (value) {
@@ -235,14 +312,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           children: [
                             const SizedBox(height: 25.0),
                             TextFormField(
+                              onSaved: (value) {
+                                registrationNumber = value;
+                              },
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter Registration Number';
                                 }
                                 return null;
-                              },
-                              onChanged: (value) {
-                                registrationNumber = value;
                               },
                               decoration: InputDecoration(
                                 label: const Text('Registration Number'),
@@ -275,14 +352,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           children: [
                             const SizedBox(height: 25.0),
                             TextFormField(
+                              onSaved: (value) {
+                                phoneNumber = value;
+                              },
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter Phone Number';
                                 }
                                 return null;
-                              },
-                              onChanged: (value) {
-                                phoneNumber = value;
                               },
                               decoration: InputDecoration(
                                 label: const Text('Phone Number'),
@@ -346,25 +423,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (_formSignupKey.currentState!.validate() &&
-                                agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Processing Data'),
-                                ),
-                              );
-                              const url = '';
-                              final uri = Uri.parse(url);
-                              http.get(uri);
-                            } else if (!agreePersonalData) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Please agree to the processing of personal data')),
-                              );
-                            }
-                          },
+                          onPressed:
+                              createUser, // Call createUser function on sign up
                           child: const Text('Sign up'),
                         ),
                       ),
@@ -415,9 +475,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Logo(Logos.apple),
                         ],
                       ),
-                      const SizedBox(
-                        height: 25.0,
-                      ),
+                      const SizedBox(height: 25.0),
                       // already have an account
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -447,9 +505,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(
-                        height: 20.0,
-                      ),
+                      const SizedBox(height: 20.0),
                     ],
                   ),
                 ),
