@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_project/screens/verification_code.dart';
 import 'package:flutter_project/screens/signin_screen.dart';
+import 'dart:convert';
 
 class ResetPasswordPage extends StatefulWidget {
   @override
@@ -15,6 +17,46 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> sendOTP(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://192.168.88.7:3000/GP/v1/users/forgetPassword'), // Replace with your API URL
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+
+      if (response.statusCode == 200) {
+        // If the server sends a success response, navigate to the OTP verification page
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification code sent!')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OTPPage(),
+          ),
+        );
+      } else {
+        // Show error if response is not successful
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send OTP')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OTPPage(),
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error occurred: $e')),
+      );
+    }
   }
 
   @override
@@ -120,13 +162,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               _isButtonPressed = !_isButtonPressed;
                             });
                             if (_emailController.text.isNotEmpty) {
-                              // Navigate to OTP Page
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => OTPPage(),
-                                ),
-                              );
+                              // Call the sendOTP function when the email is entered
+                              sendOTP(_emailController.text);
                             } else {
                               // Show a message if the email field is empty
                               ScaffoldMessenger.of(context).showSnackBar(
