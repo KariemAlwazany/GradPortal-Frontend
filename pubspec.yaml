@@ -38,6 +38,8 @@ dependencies:
   icons_plus: ^4.0.0
   http: ^0.13.5
   device_preview: ^1.2.0
+  image_picker: ^0.8.5+3
+  flutter_otp_text_field: ^1.1.0+2
 
 
 dev_dependencies:
