@@ -1,10 +1,13 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
+import 'package:flutter_project/screens/user_page.dart';
+import 'package:flutter_project/screens/student.dart';
+import 'package:flutter_project/screens/main_screen.dart';
+import 'package:flutter_project/screens/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -18,7 +21,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     const url =
-        'http://192.168.88.5:3000/GP/v1/users/login'; // Update this to your API URL
+        'http://192.168.88.7:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -53,6 +56,11 @@ class SignInScreenState extends State<SignInScreen> {
   String? email;
   String? password;
 
+  Future<void> _storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token); // Store JWT token
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomScaffold(
@@ -73,6 +81,8 @@ class SignInScreenState extends State<SignInScreen> {
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(40.0),
                   topRight: Radius.circular(40.0),
+                  bottomLeft: Radius.circular(40.0),
+                  bottomRight: Radius.circular(40.0),
                 ),
               ),
               child: SingleChildScrollView(
@@ -180,6 +190,14 @@ class SignInScreenState extends State<SignInScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResetPasswordPage(),
+                                ),
+                              );
+                            },
                           )
                         ],
                       ),
@@ -194,19 +212,56 @@ class SignInScreenState extends State<SignInScreen> {
                               var result = await login(email!, password!);
 
                               if (result.containsKey('token')) {
+                                String token =
+                                    result['token']; // Capture JWT token
+                                await _storeToken(
+                                    token); // Store token for future use
+
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Login successful!'),
                                   ),
                                 );
-                                // Navigate to another screen if necessary
-                                // For example:
-                                // Navigator.pushReplacement(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) => const HomeScreen(),
-                                //   ),
-                                // );
+
+                                String userRole =
+                                    result['data']['user']['Role'];
+
+                                if (userRole == 'User') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Doctor') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MainPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Seller') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Admin') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Student') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => StudentPage(),
+                                    ),
+                                  );
+                                }
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

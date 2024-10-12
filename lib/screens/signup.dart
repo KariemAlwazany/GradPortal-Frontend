@@ -5,6 +5,8 @@ import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // For File
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,17 +21,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? selectedRole;
   String? registrationNumber;
   String? phoneNumber;
+  String? shopName;
   String? fullName;
   String? email;
   String? username;
   String? password;
+  File? _doctorImage;
+  File? _studentImage;
+  final ImagePicker _picker = ImagePicker();
+  Future<void> pickImage(String role) async {
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
-  // Function to create a user and send data to API
+      setState(() {
+        if (pickedFile != null) {
+          if (role == 'Doctor') {
+            _doctorImage = File(pickedFile.path);
+          } else if (role == 'Student') {
+            _studentImage = File(pickedFile.path);
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No image selected')),
+          );
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
+    }
+  }
+
   Future<void> createUser() async {
     if (_formSignupKey.currentState!.validate() && agreePersonalData) {
-      _formSignupKey.currentState!.save(); // Save the form data
+      _formSignupKey.currentState!.save();
 
-      // Prepare the data to send
       Map<String, dynamic> userData = {
         "FullName": fullName,
         "Email": email,
@@ -43,7 +70,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.88.5:3000/GP/v1/users/signup';
+        const url = 'http://192.168.88.7:3000/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,
@@ -104,6 +131,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(40.0),
                   topRight: Radius.circular(40.0),
+                  bottomLeft: Radius.circular(40.0),
+                  bottomRight: Radius.circular(40.0),
                 ),
               ),
               child: SingleChildScrollView(
@@ -345,7 +374,46 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ],
                         ),
+                      if (selectedRole == 'Doctor')
+                        Column(
+                          children: [
+                            const SizedBox(height: 25.0),
+                            ElevatedButton.icon(
+                              onPressed: () => pickImage('Doctor'),
+                              icon: const Icon(Icons.image),
+                              label: const Text('Upload Doctor Degree'),
+                            ),
+                            const SizedBox(height: 15.0),
+                            _doctorImage != null
+                                ? Image.file(
+                                    _doctorImage!,
+                                    height: 150,
+                                    width: 150,
+                                  )
+                                : const Text('No image selected'),
+                          ],
+                        ),
 
+                      // Image picker for Student
+                      if (selectedRole == 'Student')
+                        Column(
+                          children: [
+                            const SizedBox(height: 25.0),
+                            ElevatedButton.icon(
+                              onPressed: () => pickImage('Student'),
+                              icon: const Icon(Icons.image),
+                              label: const Text('Upload Student Card'),
+                            ),
+                            const SizedBox(height: 15.0),
+                            _studentImage != null
+                                ? Image.file(
+                                    _studentImage!,
+                                    height: 150,
+                                    width: 150,
+                                  )
+                                : const Text('No image selected'),
+                          ],
+                        ),
                       // Show Phone Number if Seller is selected
                       if (selectedRole == 'Seller')
                         Column(
@@ -364,6 +432,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               decoration: InputDecoration(
                                 label: const Text('Phone Number'),
                                 hintText: 'Enter Phone Number',
+                                hintStyle: const TextStyle(
+                                  color: Colors.black26,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 25.0),
+                            TextFormField(
+                              onSaved: (value) {
+                                shopName = value;
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter Shop name';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                label: const Text('Shop Name'),
+                                hintText: 'Enter Shop Name',
                                 hintStyle: const TextStyle(
                                   color: Colors.black26,
                                 ),
