@@ -1,13 +1,11 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:flutter_project/screens/user_page.dart';
 import 'package:flutter_project/screens/student.dart';
-
 import 'package:flutter_project/screens/main_screen.dart';
 import 'package:flutter_project/screens/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
@@ -57,6 +55,11 @@ class SignInScreenState extends State<SignInScreen> {
   bool rememberMe = true;
   String? email;
   String? password;
+
+  Future<void> _storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token); // Store JWT token
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,11 +212,17 @@ class SignInScreenState extends State<SignInScreen> {
                               var result = await login(email!, password!);
 
                               if (result.containsKey('token')) {
+                                String token =
+                                    result['token']; // Capture JWT token
+                                await _storeToken(
+                                    token); // Store token for future use
+
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Login successful!'),
                                   ),
                                 );
+
                                 String userRole =
                                     result['data']['user']['Role'];
 
@@ -253,8 +262,6 @@ class SignInScreenState extends State<SignInScreen> {
                                     ),
                                   );
                                 }
-
-                                // Add further role checks if necessary
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(

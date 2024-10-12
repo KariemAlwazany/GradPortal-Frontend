@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert'; // For JSON decoding
+import 'package:http/http.dart' as http; // For HTTP requests
+import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -12,7 +15,7 @@ class MainPageState extends State<MainPage> {
 
   // Define the pages corresponding to each BottomNav item
   final List<Widget> _pages = [
-    ProjectsListViewPage(), // Existing page
+    ProjectsListViewPage(), // Projects List page
     Center(child: Text('Favorites Page')), // Placeholder for another page
     Center(child: Text('Settings Page')), // Placeholder for another page
     Center(child: Text('Profile Page')), // Placeholder for another page
@@ -83,16 +86,65 @@ class MainPageState extends State<MainPage> {
   }
 }
 
-// The main ListView page for Projects
-class ProjectsListViewPage extends StatelessWidget {
+class ProjectsListViewPage extends StatefulWidget {
+  @override
+  _ProjectsListViewPageState createState() => _ProjectsListViewPageState();
+}
+
+class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
+  late Future<List<Project>> _projectsFuture; // Future to store project data
+
+  @override
+  void initState() {
+    super.initState();
+    _projectsFuture = fetchProjects(); // Fetch projects on page load
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs
+        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+  }
+
+  Future<List<Project>> fetchProjects() async {
+    final token = await getToken(); // Get the JWT token
+
+    final response = await http.get(
+      Uri.parse('http://192.168.88.7:3000/GP/v1/projects'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Include JWT token in the headers
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List jsonResponse = json.decode(response.body);
+      return jsonResponse.map((project) => Project.fromJson(project)).toList();
+    } else {
+      throw Exception('Failed to load projects');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: ListView.builder(
-          itemCount: _images.length,
-          itemBuilder: (BuildContext context, int index) {
+    return FutureBuilder<List<Project>>(
+      future: _projectsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator()); // Show loading indicator
+        } else if (snapshot.hasError) {
+          return Center(
+              child: Text('Error: ${snapshot.error}')); // Show error message
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No projects found')); // No data found
+        }
+
+        // Display the list of projects
+        return ListView.builder(
+          itemCount: snapshot.data!.length,
+          itemBuilder: (context, index) {
+            Project project = snapshot.data![index];
             return InkWell(
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
@@ -107,29 +159,44 @@ class ProjectsListViewPage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          _images[index],
+                          project.imageUrl ??
+                              'https://via.placeholder.com/200', // Use default image if null
                           width: 200,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.network(
+                              'https://via.placeholder.com/200', // Fallback image if loading fails
+                              width: 200,
+                            );
+                          },
                         ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                        child: Text(
-                      'Title: $index',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.title, // Display project title
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        Text(
+                          project.description, // Display project description
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     )),
                   ],
                 ),
               ),
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
-// SecondPage for displaying project details
 class SecondPage extends StatelessWidget {
   final int heroTag;
 
@@ -147,14 +214,15 @@ class SecondPage extends StatelessWidget {
                 tag: heroTag,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(_images[heroTag]),
+                  child: Image.network(
+                      'https://example.com/project-image'), // Placeholder image
                 ),
               ),
             ),
           ),
           Expanded(
             child: Text(
-              "Content goes here",
+              "Project content goes here",
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           )
@@ -164,12 +232,19 @@ class SecondPage extends StatelessWidget {
   }
 }
 
-// Sample images list for testing
-final List<String> _images = [
-  'https://images.pexels.com/photos/167699/pexels-photo-167699.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260',
-  'https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-  'https://images.pexels.com/photos/273935/pexels-photo-273935.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-  'https://images.pexels.com/photos/1591373/pexels-photo-1591373.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-  'https://images.pexels.com/photos/462024/pexels-photo-462024.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-  'https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
-];
+// Project model to map JSON data
+class Project {
+  final String title;
+  final String description;
+  final String? imageUrl; // Image URL is nullable
+
+  Project({required this.title, required this.description, this.imageUrl});
+
+  factory Project.fromJson(Map<String, dynamic> json) {
+    return Project(
+      title: json['GP_Title'],
+      description: json['GP_Description'],
+      imageUrl: json['imageUrl'], // imageUrl can be null
+    );
+  }
+}
