@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For File
+import 'dart:typed_data'; // For Uint8List
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -29,6 +30,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
   File? _doctorImage;
   File? _studentImage;
   final ImagePicker _picker = ImagePicker();
+  Future<String> encodeImageToBase64(File image) async {
+    final bytes = await image.readAsBytes(); // Get the image as bytes
+    String base64Image =
+        base64Encode(bytes); // Convert the bytes to Base64 string
+    return base64Image;
+  }
+
+  Future<Image> decodeBase64Image(String base64Image) async {
+    Uint8List imageBytes =
+        base64Decode(base64Image); // Decode Base64 string to bytes
+    return Image.memory(imageBytes); // Convert bytes to image
+  }
+
   Future<void> pickImage(String role) async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -57,6 +71,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formSignupKey.currentState!.validate() && agreePersonalData) {
       _formSignupKey.currentState!.save();
 
+      // Initialize the image variable as null
+      String? imageBase64;
+
+      // Check if a doctor image was selected, then encode it
+      if (selectedRole == 'Doctor' && _doctorImage != null) {
+        imageBase64 = await encodeImageToBase64(_doctorImage!);
+      }
+
+      // Check if a student image was selected, then encode it
+      if (selectedRole == 'Student' && _studentImage != null) {
+        imageBase64 = await encodeImageToBase64(_studentImage!);
+      }
+
       Map<String, dynamic> userData = {
         "FullName": fullName,
         "Email": email,
@@ -65,12 +92,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         "Role": selectedRole,
         if (selectedRole == "Student" || selectedRole == "Doctor")
           "registrationNumber": registrationNumber,
+        // Add the image to the userData if an image was selected and encoded
+        if (imageBase64 != null) "Degree": imageBase64,
         if (selectedRole == "Seller") "phoneNumber": phoneNumber,
       };
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.88.7:3000/GP/v1/users/signup';
+        const url = 'http://192.168.88.5:3000/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,
@@ -106,7 +135,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } else if (!agreePersonalData) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please agree to the processing of personal data')),
+          content: Text('Please agree to the processing of personal data'),
+        ),
       );
     }
   }

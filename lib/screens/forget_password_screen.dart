@@ -23,7 +23,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       final response = await http.post(
         Uri.parse(
-            'http://192.168.88.7:3000/GP/v1/users/forgetPassword'), // Replace with your API URL
+            'http://192.168.88.11:3000/GP/v1/users/forgetPassword'), // Replace with your API URL
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
