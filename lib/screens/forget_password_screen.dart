@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_project/screens/verification_code.dart';
-import 'package:flutter_project/screens/signin_screen.dart';
-import 'dart:convert';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
+import 'dart:math'; // For generating random OTPs
+
+import 'verification_code.dart'; // Import the OTPPage
+import 'signin_screen.dart'; // Import your SignInScreen
 
 class ResetPasswordPage extends StatefulWidget {
   @override
@@ -12,6 +14,7 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isButtonPressed = false; // For subtle animation
+  late String _generatedOTP; // This will store the generated OTP
 
   @override
   void dispose() {
@@ -19,42 +22,59 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     super.dispose();
   }
 
-  Future<void> sendOTP(String email) async {
-    try {
-      final response = await http.post(
-        Uri.parse(
-            'http://192.168.88.11:3000/GP/v1/users/forgetPassword'), // Replace with your API URL
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email}),
-      );
+  // Function to generate a random OTP
+  String generateOTP(int length) {
+    final random = Random();
+    const availableChars = '0123456789';
+    final randomString = List.generate(length,
+            (index) => availableChars[random.nextInt(availableChars.length)])
+        .join();
+    return randomString;
+  }
 
-      if (response.statusCode == 200) {
-        // If the server sends a success response, navigate to the OTP verification page
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Verification code sent!')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OTPPage(),
-          ),
-        );
-      } else {
-        // Show error if response is not successful
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send OTP')),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OTPPage(),
-          ),
-        );
-      }
-    } catch (e) {
-      // Handle exceptions
+  // Function to send OTP using Gmail SMTP via the `mailer` package
+  Future<void> sendOTP(String email) async {
+    final String username = 'Yazan.mansour2003@gmail.com'; // Your Gmail
+    final String password = 'btgv vhcc sizg wqcm'; // Your App Password
+
+    final smtpServer = gmail(username, password);
+
+    // Generate the OTP
+    _generatedOTP = generateOTP(6);
+
+    // Create the email message
+    final message = Message()
+      ..from = Address(username, 'Mail') // App name
+      ..recipients.add(email) // The recipient email address
+      ..subject = 'Your OTP Code'
+      ..text = 'Your OTP code is: $_generatedOTP'; // Send generated OTP
+
+    try {
+      // Send the email
+      final sendReport = await send(message, smtpServer);
+      print('Message sent: ' + sendReport.toString());
+
+      // Navigate to the OTP verification page if the email is sent
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error occurred: $e')),
+        SnackBar(content: Text('Verification code sent!')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OTPPage(
+            email: email,
+            generatedOTP:
+                _generatedOTP, // Pass the generated OTP to the OTPPage
+          ),
+        ),
+      );
+    } on MailerException catch (e) {
+      // If sending fails, print the error and show a message to the user
+      print('Message not sent. ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send OTP. Please try again.'),
+        ),
       );
     }
   }
@@ -168,7 +188,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               // Show a message if the email field is empty
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text('Please enter an email')),
+                                  content: Text('Please enter an email'),
+                                ),
                               );
                             }
                           },

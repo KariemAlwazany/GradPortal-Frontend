@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'package:flutter_project/screens/forget_password_screen.dart'; // Make sure to import the ResetPasswordPage
+import 'resetPassword.dart'; // Import the ResetPasswordPage
 
 class OTPPage extends StatelessWidget {
+  final String email; // Accept email as a parameter
+  final String generatedOTP; // Accept generatedOTP as a parameter
+
+  OTPPage(
+      {required this.email,
+      required this.generatedOTP}); // Add generatedOTP to constructor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,29 +63,33 @@ class OTPPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20),
                 OtpTextField(
-                  numberOfFields: 5,
+                  numberOfFields:
+                      6, // Set it to 6 fields if your OTP length is 6
                   borderColor: Color(0xFF512DA8),
                   showFieldAsBox: true,
-                  onCodeChanged: (String code) {
-                    // Handle validation or checks here
-                  },
-                  onSubmit: (String verificationCode) {
-                    // When all text fields are filled
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Verification Code"),
-                          content: Text('Code entered is $verificationCode'),
-                        );
-                      },
-                    );
+                  onSubmit: (String verificationCode) async {
+                    if (verificationCode == generatedOTP) {
+                      // If OTP is correct, navigate to the ResetPasswordPage
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ResetPasswordPage(),
+                        ),
+                      );
+                    } else {
+                      // Show an error if OTP is incorrect
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Invalid OTP, please try again.'),
+                        ),
+                      );
+                    }
                   },
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Navigate to the reset password logic
+                    // Optionally add a button to submit the OTP
                   },
                   child: Text('Verify'),
                 ),

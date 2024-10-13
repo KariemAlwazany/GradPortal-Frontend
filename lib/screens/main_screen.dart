@@ -178,7 +178,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken(); // Get the JWT token
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.11:3000/GP/v1/projects'),
+      Uri.parse('http://192.168.88.5:3000/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
