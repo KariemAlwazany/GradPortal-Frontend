@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/signin_screen.dart';
+import 'package:http/http.dart' as http; // Import http package
+import 'dart:convert';
 
 class ResetPasswordPage extends StatefulWidget {
+  final String email; // Accept email as a parameter
+
+  ResetPasswordPage({required this.email}); // Add email to constructor
+
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
@@ -22,16 +28,51 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   }
 
   // Function to validate and handle password reset logic
-  void _resetPassword() {
+  // Function to validate and handle password reset logic
+  Future<void> _resetPassword() async {
     if (_formKey.currentState!.validate()) {
-      // Handle the password reset logic here
+      // Show a loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset successful!')),
+        SnackBar(content: Text('Processing...')),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SignInScreen()),
-      );
+
+      try {
+        // Send the PATCH request to update the password
+        final response = await http.patch(
+          Uri.parse('http://192.168.88.9:3000/GP/v1/users/changePassword'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'email': widget.email,
+            'password': _passwordController.text,
+          }),
+        );
+
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
+        if (response.statusCode == 200) {
+          // Handle successful password reset
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Password reset successful!')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => SignInScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Password reset failed: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        // Handle network errors
+        print('Error occurred: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred, please try again later.')),
+        );
+      }
     }
   }
 

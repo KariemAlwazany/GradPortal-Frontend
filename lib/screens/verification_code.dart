@@ -34,7 +34,9 @@ class OTPPage extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ResetPasswordPage(),
+                    builder: (context) => ResetPasswordPage(
+                      email: email,
+                    ),
                   ),
                 );
               },
@@ -73,7 +75,7 @@ class OTPPage extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ResetPasswordPage(),
+                          builder: (context) => ResetPasswordPage(email: email),
                         ),
                       );
                     } else {
