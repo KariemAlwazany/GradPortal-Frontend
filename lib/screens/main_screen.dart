@@ -16,7 +16,7 @@ class MainPageState extends State<MainPage> {
   // Define the pages corresponding to each BottomNav item
   final List<Widget> _pages = [
     ProjectsListViewPage(), // Projects List page
-    Center(child: Text('Favorites Page')), // Placeholder for another page
+    Center(child: Text('Store Page')), // Placeholder for Store page
     Center(child: Text('Settings Page')), // Placeholder for another page
     Center(child: Text('Profile Page')), // Placeholder for another page
   ];
@@ -71,13 +71,13 @@ class MainPageState extends State<MainPage> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.favorite, color: Colors.white),
+                leading: Icon(Icons.store, color: Colors.white),
                 title: Text(
-                  'Favorites',
+                  'Store',
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  // Navigate to the Favorites page
+                  // Navigate to the Store page
                   Navigator.pop(context);
                 },
               ),
@@ -132,8 +132,8 @@ class MainPageState extends State<MainPage> {
             label: 'Projects',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
+            icon: Icon(Icons.store),
+            label: 'Store',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
@@ -159,7 +159,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
   List<Project> _projects = []; // Store all projects
   List<Project> _filteredProjects = []; // Filtered projects list
   String _searchQuery = ''; // Track search query
-  String _selectedFilter = 'All'; // Track selected filter
+  String _selectedFilter = 'Year'; // Track selected filter
   bool _isSearchBarVisible = false; // Toggle search bar visibility
 
   @override
@@ -178,7 +178,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken(); // Get the JWT token
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.5:3000/GP/v1/projects'),
+      Uri.parse('http://192.168.88.9:3000/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -203,11 +203,22 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     setState(() {
       _searchQuery = query;
 
-      _filteredProjects = _projects
-          .where((project) =>
-              project.title.toLowerCase().contains(query.toLowerCase()) &&
-              (filter == 'All' || project.category == filter))
-          .toList();
+      _filteredProjects = _projects.where((project) {
+        switch (filter) {
+          case 'Year':
+            return project.year.toString().contains(query);
+          case 'Project Type':
+            return project.projectType
+                .toLowerCase()
+                .contains(query.toLowerCase());
+          case 'Supervisor':
+            return project.supervisor
+                .toLowerCase()
+                .contains(query.toLowerCase());
+          default:
+            return false;
+        }
+      }).toList();
 
       // If search is cleared, show all projects
       if (query.isEmpty) {
@@ -262,7 +273,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
           padding: const EdgeInsets.all(8.0),
           child: DropdownButton<String>(
             value: _selectedFilter,
-            items: ['All', 'Category1', 'Category2', 'Category3'].map((filter) {
+            items: ['Year', 'Project Type', 'Supervisor'].map((filter) {
               return DropdownMenuItem(
                 value: filter,
                 child: Text(filter),
@@ -271,6 +282,9 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
             onChanged: (String? newFilter) {
               if (newFilter != null) {
                 _filterProjects(_searchQuery, newFilter);
+                setState(() {
+                  _selectedFilter = newFilter;
+                });
               }
             },
             isExpanded: true,
@@ -354,6 +368,18 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                                         color: Colors
                                             .black54), // Black for description
                               ),
+                              Text(
+                                'Year: ${project.year}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                'Project Type: ${project.projectType}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                'Supervisor: ${project.supervisor}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
                             ],
                           )),
                         ],
@@ -415,21 +441,26 @@ class Project {
   final String title;
   final String description;
   final String? imageUrl; // Image URL is nullable
-  final String category; // Added a category for filtering
+  final String projectType;
+  final int year;
+  final String supervisor;
 
   Project(
       {required this.title,
       required this.description,
       this.imageUrl,
-      required this.category});
+      required this.projectType,
+      required this.year,
+      required this.supervisor});
 
   factory Project.fromJson(Map<String, dynamic> json) {
     return Project(
       title: json['GP_Title'],
       description: json['GP_Description'],
       imageUrl: json['imageUrl'], // imageUrl can be null
-      category:
-          json['category'] ?? 'All', // Set a default category if not provided
+      projectType: json['projectType'] ?? 'Unknown',
+      year: json['year'] ?? 0,
+      supervisor: json['supervisor'] ?? 'Unknown',
     );
   }
 }
