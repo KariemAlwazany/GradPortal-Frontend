@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/cart_screen.dart';
+import 'package:flutter_project/screens/item_screen.dart';
+import 'package:flutter_project/widgets/home_app_bar.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter_project/screens/shop_home_page.dart';
 
 void main() {
   runApp(
@@ -20,11 +24,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Student's Hub",
+      title: "GradHub",
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       theme: lightMode,
-      home: WelcomeScreen(),
+      home: CartScreen(),
+      // routes: {
+      //   "/": (context) => HomePage(),
+      //   "cartScreen": (context) => CartScreen(),
+      //   "itemScreen": (context) => ItemScreen(),
+      //   },
     );
   }
 }

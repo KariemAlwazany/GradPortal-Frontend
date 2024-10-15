@@ -43,7 +43,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.88.5:3000/GP/v1/users/signup';
+        const url = 'http://192.168.0.131:3000/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,
