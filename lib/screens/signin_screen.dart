@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/doctor_first_screen.dart';
-import 'package:flutter_project/screens/seller_setup_screen.dart';
-import 'package:flutter_project/screens/student_first_screen.dart';
-import 'package:flutter_project/screens/user_first_screen.dart';
+import 'package:icons_plus/icons_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
+import 'package:flutter_project/screens/signup.dart';
+import 'package:flutter_project/theme/theme.dart';
+import 'package:flutter_project/widgets/custom_scaffold.dart';
+import 'package:flutter_project/screens/user_page.dart';
+import 'package:flutter_project/screens/student.dart';
+import 'package:flutter_project/screens/main_screen.dart';
+import 'package:flutter_project/screens/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_project/screens/signup.dart';
-import 'package:icons_plus/icons_plus.dart';
 
-// Login Function
 Future<Map<String, dynamic>> login(String email, String password) async {
+  // Prepare the login data
   Map<String, dynamic> loginData = {
     "Email": email,
     "Password": password,
   };
 
   try {
-    const url = 'http://192.168.0.131:3000/GP/v1/users/login'; // Replace with your API URL
+    // Send data to API (replace 'your_api_url' with the actual endpoint)
+    const url =
+        'http://192.168.88.9:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -25,31 +30,16 @@ Future<Map<String, dynamic>> login(String email, String password) async {
     );
 
     if (response.statusCode == 200) {
-      // Parse the response
-      var responseData = jsonDecode(response.body);
-
-      // Debugging: Print the response to see the structure
-      //print(responseData);
-
-      // Check if the response contains the token and data
-      if (responseData.containsKey('token') && responseData['data'] != null && responseData['data'].containsKey('user')) {
-        // Extract the role from the nested user object
-        String role = responseData['data']['user']['Role'];
-        String user = responseData['data']['user']['Username'];
-        return {
-          'token': responseData['token'],
-          'role': role,
-          'username': user,
-        };
-      } else {
-        return {"error": "Invalid response from server"}; // Handle case if role or token is missing
-      }
+      // If the API request is successful, return the response data
+      return jsonDecode(response.body);
     } else {
+      // If the login fails, return the error message
       var responseData = jsonDecode(response.body);
-      return {"error": responseData['message']}; // Handle error response
+      return {"error": responseData['message']};
     }
   } catch (e) {
-    return {"error": "Exception occurred: $e"}; // Handle exceptions
+    // Handle exceptions
+    return {"error": "Exception occurred: $e"};
   }
 }
 
@@ -66,66 +56,15 @@ class SignInScreenState extends State<SignInScreen> {
   String? email;
   String? password;
 
-  // Function to handle login
-  Future<void> _handleLogin() async {
-    if (formSignInKey.currentState!.validate()) {
-      formSignInKey.currentState!.save();
-      var result = await login(email!, password!);
-      print(result);
-      if (result.containsKey('token')) {
-        // Get the user's role from the response
-        String role = result['role'];
-        String username = result['username'];
-        print('iam heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-        print('iam heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-        print('iam heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-        print('iam heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
-        print(username);
-        print(result);        // Show success message
-        //print(result['data']['user']);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login successful!')),
-        );
-
-        // Navigate based on the role
-        if (role == 'Seller') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => SellerSetupScreen(username: username)), // Replace with your SellerScreen
-          );
-        } else if (role == 'Doctor') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => DoctorFirstScreen(username: username)), // Replace with your DoctorScreen
-          );
-        } else if (role == 'User') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => UserFirstScreen(username: username)), // Replace with your UserScreen
-          );
-        } else if (role == 'Student') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => StudentFirstScreen(username: username)), // Replace with your StudentScreen
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Unknown user role')),
-          );
-        }
-      } else {
-        // Show error message if login failed
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['error'])),
-        );
-      }
-    }
+  Future<void> _storeToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('jwt_token', token); // Store JWT token
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return CustomScaffold(
+      child: Column(
         children: [
           Expanded(
             flex: 1,
@@ -142,6 +81,8 @@ class SignInScreenState extends State<SignInScreen> {
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(40.0),
                   topRight: Radius.circular(40.0),
+                  bottomLeft: Radius.circular(40.0),
+                  bottomRight: Radius.circular(40.0),
                 ),
               ),
               child: SingleChildScrollView(
@@ -155,7 +96,7 @@ class SignInScreenState extends State<SignInScreen> {
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: Colors.blue,
+                          color: lightColorScheme.primary,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -231,7 +172,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     rememberMe = value!;
                                   });
                                 },
-                                activeColor: Colors.blue,
+                                activeColor: lightColorScheme.primary,
                               ),
                               const Text(
                                 'Remember me',
@@ -245,10 +186,18 @@ class SignInScreenState extends State<SignInScreen> {
                             child: Text(
                               'Forget Password?',
                               style: TextStyle(
-                                color: Colors.blue,
+                                color: lightColorScheme.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResetPasswordPage(),
+                                ),
+                              );
+                            },
                           )
                         ],
                       ),
@@ -256,7 +205,72 @@ class SignInScreenState extends State<SignInScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _handleLogin, // Call the login handler
+                          onPressed: () async {
+                            if (formSignInKey.currentState!.validate()) {
+                              formSignInKey.currentState!.save();
+                              // Call the login function and handle the response
+                              var result = await login(email!, password!);
+
+                              if (result.containsKey('token')) {
+                                String token =
+                                    result['token']; // Capture JWT token
+                                await _storeToken(
+                                    token); // Store token for future use
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Login successful!'),
+                                  ),
+                                );
+
+                                String userRole =
+                                    result['data']['user']['Role'];
+
+                                if (userRole == 'User') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Doctor') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MainPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Seller') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Admin') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserPage(),
+                                    ),
+                                  );
+                                } else if (userRole == 'Student') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => StudentPage(),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(result['error']),
+                                  ),
+                                );
+                              }
+                            }
+                          },
                           child: const Text('Login'),
                         ),
                       ),
@@ -322,7 +336,7 @@ class SignInScreenState extends State<SignInScreen> {
                             child: Text(
                               'Sign up now',
                               style: TextStyle(
-                                color: Colors.blue,
+                                color: lightColorScheme.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

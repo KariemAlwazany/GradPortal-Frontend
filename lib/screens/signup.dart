@@ -5,6 +5,9 @@ import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io'; // For File
+import 'dart:typed_data'; // For Uint8List
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,17 +22,99 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? selectedRole;
   String? registrationNumber;
   String? phoneNumber;
+  String? shopName;
   String? fullName;
   String? email;
   String? username;
   String? password;
+  File? _doctorImage;
+  File? _studentImage;
+  final ImagePicker _picker = ImagePicker();
 
-  // Function to create a user and send data to API
+  Future<String> encodeImageToBase64(File image) async {
+    final bytes = await image.readAsBytes(); // Get the image as bytes
+    String base64Image =
+        base64Encode(bytes); // Convert the bytes to Base64 string
+    return base64Image;
+  }
+
+  Future<Image> decodeBase64Image(String base64Image) async {
+    Uint8List imageBytes =
+        base64Decode(base64Image); // Decode Base64 string to bytes
+    return Image.memory(imageBytes); // Convert bytes to image
+  }
+
+  Future<void> pickImage(String role) async {
+    try {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+      setState(() {
+        if (pickedFile != null) {
+          if (role == 'Doctor') {
+            _doctorImage = File(pickedFile.path);
+          } else if (role == 'Student') {
+            _studentImage = File(pickedFile.path);
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No image selected')),
+          );
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
+    }
+  }
+
+  Future<bool> isUsernameOrEmailTaken(String username, String email) async {
+    try {
+      // Replace 'your_api_url' with the actual endpoint to check username/email availability
+      const url = 'http://192.168.88.9:3000/GP/v1/users/check';
+      final uri = Uri.parse(url);
+      final response = await http.post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"username": username, "email": email}),
+      );
+      if (response.statusCode == 200) {
+        var responseData = jsonDecode(response.body);
+        return responseData['isTaken'];
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> createUser() async {
     if (_formSignupKey.currentState!.validate() && agreePersonalData) {
-      _formSignupKey.currentState!.save(); // Save the form data
+      _formSignupKey.currentState!.save();
 
-      // Prepare the data to send
+      // Check if username or email is already taken
+      bool isTaken = await isUsernameOrEmailTaken(username!, email!);
+      if (isTaken) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Username or email is already taken')),
+        );
+        return;
+      }
+
+      // Initialize the image variable as null
+      String? imageBase64;
+
+      // Check if a doctor image was selected, then encode it
+      if (selectedRole == 'Doctor' && _doctorImage != null) {
+        imageBase64 = await encodeImageToBase64(_doctorImage!);
+      }
+
+      // Check if a student image was selected, then encode it
+      if (selectedRole == 'Student' && _studentImage != null) {
+        imageBase64 = await encodeImageToBase64(_studentImage!);
+      }
+
       Map<String, dynamic> userData = {
         "FullName": fullName,
         "Email": email,
@@ -38,12 +123,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         "Role": selectedRole,
         if (selectedRole == "Student" || selectedRole == "Doctor")
           "registrationNumber": registrationNumber,
+        // Add the image to the userData if an image was selected and encoded
+        if (imageBase64 != null) "Degree": imageBase64,
         if (selectedRole == "Seller") "phoneNumber": phoneNumber,
       };
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.0.131:3000/GP/v1/users/signup';
+        const url = 'http://192.168.88.9:3000/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,
@@ -79,7 +166,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } else if (!agreePersonalData) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please agree to the processing of personal data')),
+          content: Text('Please agree to the processing of personal data'),
+        ),
       );
     }
   }
@@ -104,12 +192,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(40.0),
                   topRight: Radius.circular(40.0),
+                  bottomLeft: Radius.circular(40.0),
+                  bottomRight: Radius.circular(40.0),
                 ),
               ),
               child: SingleChildScrollView(
                 // get started form
                 child: Form(
                   key: _formSignupKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -154,6 +245,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightColorScheme
+                                  .primary, // Focus border color
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red, // Red border for errors
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -167,6 +273,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Email';
+                          } else if (!RegExp(
+                                  r"^[a-zA-Z0-9.+\-_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+                              .hasMatch(value)) {
+                            return 'Please enter a valid Email';
                           }
                           return null;
                         },
@@ -188,6 +298,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightColorScheme
+                                  .primary, // Focus border color
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red, // Red border for errors
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -201,6 +326,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Username';
+                          } else if (value.length < 4) {
+                            return 'Username must be at least 4 characters';
                           }
                           return null;
                         },
@@ -222,6 +349,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightColorScheme
+                                  .primary, // Focus border color
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red, // Red border for errors
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(
@@ -238,6 +380,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter Password';
+                          } else if (value.length < 8) {
+                            return 'Password must be at least 8 characters';
                           }
                           return null;
                         },
@@ -256,6 +400,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           enabledBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
                               color: Colors.black12, // Default border color
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightColorScheme
+                                  .primary, // Focus border color
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red, // Red border for errors
+                              width: 2.0,
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -285,6 +444,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: lightColorScheme
+                                  .primary, // Focus border color
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                              color: Colors.red, // Red border for errors
+                              width: 2.0,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                         items: ['Doctor', 'User', 'Student', 'Seller']
                             .map((String role) {
@@ -306,7 +480,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
 
-                      // Show Registration Number if Student is selected
+                      // Show Registration Number if Student or Doctor is selected
                       if (selectedRole == 'Student' || selectedRole == 'Doctor')
                         Column(
                           children: [
@@ -341,8 +515,75 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: lightColorScheme
+                                        .primary, // Focus border color
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.red, // Red border for errors
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             ),
+                          ],
+                        ),
+
+                      // Image picker for Doctor
+                      if (selectedRole == 'Doctor')
+                        Column(
+                          children: [
+                            const SizedBox(height: 25.0),
+                            ElevatedButton.icon(
+                              onPressed: () => pickImage('Doctor'),
+                              icon: const Icon(Icons.image),
+                              label: const Text('Upload Doctor Degree'),
+                            ),
+                            const SizedBox(height: 15.0),
+                            _doctorImage != null
+                                ? Image.file(
+                                    _doctorImage!,
+                                    height: 150,
+                                    width: 150,
+                                  )
+                                : const Text('No image selected'),
+                            if (_doctorImage == null)
+                              const Text(
+                                'Please upload your Doctor Degree',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                          ],
+                        ),
+
+                      // Image picker for Student
+                      if (selectedRole == 'Student')
+                        Column(
+                          children: [
+                            const SizedBox(height: 25.0),
+                            ElevatedButton.icon(
+                              onPressed: () => pickImage('Student'),
+                              icon: const Icon(Icons.image),
+                              label: const Text('Upload Student Card'),
+                            ),
+                            const SizedBox(height: 15.0),
+                            _studentImage != null
+                                ? Image.file(
+                                    _studentImage!,
+                                    height: 150,
+                                    width: 150,
+                                  )
+                                : const Text('No image selected'),
+                            if (_studentImage == null)
+                              const Text(
+                                'Please upload your Student Card',
+                                style: TextStyle(color: Colors.red),
+                              ),
                           ],
                         ),
 
@@ -378,6 +619,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   borderSide: const BorderSide(
                                     color:
                                         Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: lightColorScheme
+                                        .primary, // Focus border color
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.red, // Red border for errors
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 25.0),
+                            TextFormField(
+                              onSaved: (value) {
+                                shopName = value;
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter Shop name';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                label: const Text('Shop Name'),
+                                hintText: 'Enter Shop Name',
+                                hintStyle: const TextStyle(
+                                  color: Colors.black26,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: lightColorScheme
+                                        .primary, // Focus border color
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.red, // Red border for errors
+                                    width: 2.0,
                                   ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
