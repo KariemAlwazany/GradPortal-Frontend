@@ -38,6 +38,9 @@ dependencies:
   icons_plus: ^4.0.0
   http: ^1.2.2
   device_preview: ^1.2.0
+  badges: ^3.1.2
+  clippy_flutter: ^2.0.0-nullsafety.1
+  flutter_rating_bar: ^4.0.1
   image_picker: ^1.1.2
   flutter_otp_text_field: ^1.1.0+2
   shared_preferences: ^2.0.6
@@ -45,7 +48,6 @@ dependencies:
   http_parser: ^4.0.0
   email_otp: ^3.0.2
   mailer: ^6.2.0
-
 
 dev_dependencies:
   flutter_test:
