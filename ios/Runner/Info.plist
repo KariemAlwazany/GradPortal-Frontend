@@ -11,6 +11,10 @@
 <key>NSPhotoLibraryAddUsageDescription</key>
 <string>We need access to add photos to your library for saving profile pictures.</string>
 
+<key>NSCameraUsageDescription</key>
+<string>We need access to your camera for capturing photos.</string>
+
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

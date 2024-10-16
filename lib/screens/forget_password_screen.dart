@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'dart:math'; // For generating random OTPs
-
 import 'verification_code.dart'; // Import the OTPPage
 import 'signin_screen.dart'; // Import your SignInScreen
 

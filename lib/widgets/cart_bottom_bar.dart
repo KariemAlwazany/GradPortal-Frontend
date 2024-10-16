@@ -6,10 +6,9 @@ class CarBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      child: SafeArea(
+        height: 110, // Further reduce the height
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 20),
-          //height: 150, // Further reduce the height
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -36,10 +35,10 @@ class CarBottomNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              //SizedBox(height: 10), // Add some space between total and button
+              SizedBox(height: 10), // Add some space between total and button
               Container(
-                alignment: Alignment.bottomCenter,
-                height: 20,
+                alignment: Alignment.center,
+                height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: Color(0xFF4C53A5),
@@ -55,7 +54,6 @@ class CarBottomNavBar extends StatelessWidget {
               ),
             ],
           ),
-        ),
       ),
     );
   }
