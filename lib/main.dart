@@ -42,6 +42,7 @@ class MyApp extends StatelessWidget {
       //   '/shop': (context) => ShopHomePage(),  // Shop Home with HomeAppBar
       //   '/cart': (context) => CartScreen(),  // Cart screen for shopping
       // },
+      //
       home: ItemScreen(),
     );
   }
