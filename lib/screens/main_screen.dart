@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/signin_screen.dart';
+import 'package:flutter_project/components/side_bar_menu.dart';
 import 'dart:convert'; // For JSON decoding
 import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
+
+import 'profile_screen.dart'; // Import your UpdateProfileScreen here
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -18,15 +22,14 @@ class MainPageState extends State<MainPage> {
     ProjectsListViewPage(), // Projects List page
     Center(child: Text('Store Page')), // Placeholder for Store page
     Center(child: Text('Settings Page')), // Placeholder for another page
-    Center(child: Text('Profile Page')), // Placeholder for another page
+    Center(child: UpdateProfileScreen()), // Navigate to UpdateProfileScreen
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary, // Blue as primary color
+        backgroundColor: const Color(0xFF17203A), // Blue as primary color
         title: const Text("Projects ListView",
             style: TextStyle(color: Colors.white)),
         leading: Builder(
@@ -40,73 +43,7 @@ class MainPageState extends State<MainPage> {
           },
         ),
       ),
-      drawer: Drawer(
-        width: MediaQuery.of(context).size.width * 0.8,
-        child: Container(
-          color: Theme.of(context).colorScheme.primary, // Blue background
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary, // Blue header
-                ),
-                child: Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.person, color: Colors.white),
-                title: Text(
-                  'Profile',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // Navigate to the Profile page
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.store, color: Colors.white),
-                title: Text(
-                  'Store',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // Navigate to the Store page
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.settings, color: Colors.white),
-                title: Text(
-                  'Settings',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // Navigate to the Settings page
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.logout, color: Colors.white),
-                title: Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  // Handle logout action
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      drawer: SideMenu(),
       body: Container(
         color: Colors.white, // White background for the body
         child: _pages[_currentIndex], // Show the current page based on index
@@ -114,8 +51,7 @@ class MainPageState extends State<MainPage> {
 
       // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary, // Blue background
+        backgroundColor: const Color(0xFF17203A), // Blue background
         currentIndex: _currentIndex, // Highlight the selected icon
         selectedItemColor: Colors.white, // White for selected items
         unselectedItemColor:
@@ -178,7 +114,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken(); // Get the JWT token
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.9:3000/GP/v1/projects'),
+      Uri.parse('http://192.168.88.8:3000/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -204,20 +140,27 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
       _searchQuery = query;
 
       _filteredProjects = _projects.where((project) {
-        switch (filter) {
-          case 'Year':
-            return project.year.toString().contains(query);
-          case 'Project Type':
-            return project.projectType
-                .toLowerCase()
-                .contains(query.toLowerCase());
-          case 'Supervisor':
-            return project.supervisor
-                .toLowerCase()
-                .contains(query.toLowerCase());
-          default:
-            return false;
-        }
+        final matchesTitle = project.title
+            .toLowerCase()
+            .contains(query.toLowerCase()); // Filter by title
+        final matchesFilter = (() {
+          switch (filter) {
+            case 'Year':
+              return project.year.toString().contains(query);
+            case 'Project Type':
+              return project.projectType
+                  .toLowerCase()
+                  .contains(query.toLowerCase());
+            case 'Supervisor':
+              return project.supervisor
+                  .toLowerCase()
+                  .contains(query.toLowerCase());
+            default:
+              return false;
+          }
+        })();
+
+        return matchesTitle || matchesFilter; // Match title or other filters
       }).toList();
 
       // If search is cleared, show all projects
@@ -242,7 +185,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
         Align(
           alignment: Alignment.topLeft,
           child: IconButton(
-            icon: Icon(Icons.search, color: Colors.blue),
+            icon: Icon(Icons.search, color: Color(0xFF17203A)),
             onPressed: _toggleSearchBar,
           ),
         ),
@@ -273,7 +216,8 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
           padding: const EdgeInsets.all(8.0),
           child: DropdownButton<String>(
             value: _selectedFilter,
-            items: ['Year', 'Project Type', 'Supervisor'].map((filter) {
+            items:
+                ['Title', 'Project Type', 'Supervisor', 'Year'].map((filter) {
               return DropdownMenuItem(
                 value: filter,
                 child: Text(filter),
@@ -354,9 +298,8 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                                     .textTheme
                                     .headlineMedium
                                     ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary), // Blue for text
+                                        color:
+                                            Color(0xFF17203A)), // Blue for text
                               ),
                               Text(
                                 project
