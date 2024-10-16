@@ -1,5 +1,6 @@
 // student_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/shop_home_page.dart';
 
 class StudentPage extends StatelessWidget {
   const StudentPage({Key? key}) : super(key: key);
@@ -76,7 +77,13 @@ class StudentPage extends StatelessWidget {
               SizedBox(height: 10.0),
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to marketplace page for buying/selling components
+                  // Navigate to MarketplacePage when button is pressed
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ShopHomePage(),
+                    ),
+                  );
                 },
                 child: Text('Buy/Sell Project Components'),
               ),
