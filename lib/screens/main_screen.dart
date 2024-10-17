@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/signin_screen.dart';
 import 'package:flutter_project/components/side_bar_menu.dart';
 import 'dart:convert'; // For JSON decoding
 import 'package:http/http.dart' as http; // For HTTP requests
@@ -43,7 +42,7 @@ class MainPageState extends State<MainPage> {
           },
         ),
       ),
-      drawer: SideMenu(),
+      drawer: const SideMenu(),
       body: Container(
         color: Colors.white, // White background for the body
         child: _pages[_currentIndex], // Show the current page based on index
@@ -90,6 +89,12 @@ class ProjectsListViewPage extends StatefulWidget {
   _ProjectsListViewPageState createState() => _ProjectsListViewPageState();
 }
 
+Future<String?> getToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs
+      .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+}
+
 class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
   late Future<List<Project>> _projectsFuture; // Future to store project data
   List<Project> _projects = []; // Store all projects
@@ -101,20 +106,15 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
   @override
   void initState() {
     super.initState();
-    _projectsFuture = fetchProjects(); // Fetch projects on page load
-  }
-
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs
-        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+    _projectsFuture = fetchProjects();
+    // Fetch projects on page load
   }
 
   Future<List<Project>> fetchProjects() async {
     final token = await getToken(); // Get the JWT token
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.8:3000/GP/v1/projects'),
+      Uri.parse('http://192.168.88.5:3000/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers

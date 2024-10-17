@@ -4,6 +4,10 @@ import 'package:flutter_project/components/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
+import 'package:http/http.dart' as http; // For HTTP requests
+import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
+import 'dart:convert';
+import 'package:flutter_project/screens/signin_screen.dart';
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -11,9 +15,55 @@ class SideMenu extends StatefulWidget {
   State<SideMenu> createState() => _SideMenuState();
 }
 
+Future<String?> getToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs
+      .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+}
+
+Future<Map<String, dynamic>?> getUser() async {
+  final String? token = await getToken();
+  final response = await http.get(
+    Uri.parse('http://192.168.88.5:3000/GP/v1/users/me'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return json.decode(
+        response.body); 
+  } else {
+    throw Exception('Failed to get user');
+  }
+}
+
 class _SideMenuState extends State<SideMenu> {
+  String fullName = "Loading...";
+  String role = "Loading..."; // Default value before data is fetched
   RiveAsset selectedMenu = sideMenus.first;
   Color activeTileColor = const Color(0xFF6792F5); // Default active color
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Load user data when the widget initializes
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await getUser();
+      if (userData != null) {
+        setState(() {
+          fullName = userData['data']['data']['FullName'] ?? 'Unknown User';
+          role = userData['data']['data']['Role'] ?? 'Unknown Role';
+        });
+      }
+    } catch (error) {
+      print('Failed to load user data: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +78,10 @@ class _SideMenuState extends State<SideMenu> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const InfoCard(
-                  name: "Yazan",
-                  profession: "Programmer",
+                // Display user data dynamically
+                InfoCard(
+                  name: fullName, // Use the full name from the state
+                  profession: role, // Use the role from the state
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
@@ -67,18 +118,35 @@ class _SideMenuState extends State<SideMenu> {
                       setState(() {
                         selectedMenu = menu;
                         activeTileColor =
-                            Color(0xFF4CAF50); // Custom color on press
+                            const Color(0xFF4CAF50); // Custom color on press
                       });
 
                       // Optionally reset the color back after a short delay
                       Future.delayed(const Duration(seconds: 1), () {
                         setState(() {
-                          activeTileColor = Color(0xFF6792F5); // Default color
+                          activeTileColor =
+                              const Color(0xFF6792F5); // Default color
                         });
                       });
                     },
                     isActive: selectedMenu == menu,
                   ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 24.0),
+                  child: Divider(color: Colors.white24, height: 1),
+                ),
+                ListTile(
+                  leading: Icon(Icons.logout, color: Colors.white),
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    // Handle logout action
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => SignInScreen()));
+                  },
                 ),
               ],
             ),
