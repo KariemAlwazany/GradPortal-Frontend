@@ -4,6 +4,7 @@ import 'dart:io'; // For handling image files
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter_project/widgets/categories_widget.dart';
 import 'package:flutter_project/widgets/items_widget.dart';
+import 'package:flutter_project/components/side_bar_menu.dart'; // Import your SideMenu widget
 
 class ShopHomePage extends StatefulWidget {
   @override
@@ -11,6 +12,7 @@ class ShopHomePage extends StatefulWidget {
 }
 
 class _ShopHomePageState extends State<ShopHomePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // GlobalKey for Scaffold
   File? _image; // To store the image file
   int _cartItemCount = 0; // Track cart item count
 
@@ -45,6 +47,8 @@ class _ShopHomePageState extends State<ShopHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
+      drawer: SideMenu(), // Add the SideBar as a drawer
       body: ListView(
         children: [
           // App Bar with cart icon and badge
@@ -53,10 +57,16 @@ class _ShopHomePageState extends State<ShopHomePage> {
             padding: EdgeInsets.all(25),
             child: Row(
               children: [
-                Icon(
-                  Icons.sort,
-                  size: 30,
-                  color: Color(0xFF4C53A5),
+                GestureDetector(
+                  onTap: () {
+                    // Open the drawer using the GlobalKey reference
+                    _scaffoldKey.currentState?.openDrawer();
+                  },
+                  child: Icon(
+                    Icons.sort,
+                    size: 30,
+                    color: Color(0xFF3B4280),
+                  ),
                 ),
                 Padding(
                   padding: EdgeInsets.only(left: 20),
@@ -65,7 +75,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                     style: TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                     ),
                   ),
                 ),
@@ -91,7 +101,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                       child: Icon(
                         Icons.shopping_bag_outlined,
                         size: 32,
-                        color: Color(0xFF4C53A5),
+                        color: Color(0xFF3B4280),
                       ),
                     ),
                   ),
@@ -138,7 +148,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                         icon: Icon(
                           Icons.camera_alt,
                           size: 27,
-                          color: Color(0xFF4C53A5),
+                          color: Color(0xFF3B4280),
                         ),
                         onPressed: _openCamera, // Open the camera when pressed
                       ),
@@ -155,7 +165,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFA4C53A5),
+                      color: Color(0xFF3B4280),
                     ),
                   ),
                 ),
@@ -172,7 +182,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                     ),
                   ),
                 ),

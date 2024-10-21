@@ -21,7 +21,7 @@ class CarBottomNavBar extends StatelessWidget {
                     "total",
                     style: TextStyle(
                       fontSize: 22,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -30,7 +30,7 @@ class CarBottomNavBar extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                     ),
                   ),
                 ],
@@ -41,7 +41,7 @@ class CarBottomNavBar extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  color: Color(0xFF4C53A5),
+                  color: Color(0xFF3B4280),
                 ),
                 child: Text(
                   "Check Out",

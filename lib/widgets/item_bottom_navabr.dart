@@ -16,7 +16,7 @@ class ItemBottomNavBar extends StatelessWidget{
               style: TextStyle(
                 fontSize: 25,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF4C53A5),
+                color: Color(0xFF3B4280),
               ),
             ),
             ElevatedButton.icon(
@@ -30,7 +30,7 @@ class ItemBottomNavBar extends StatelessWidget{
                 ),
               ),
               style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(Color(0xFF4C53A5)),
+                backgroundColor: WidgetStateProperty.all(Color(0xFF3B4280)),
                 padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 13, horizontal: 15)),
                 shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(

@@ -10,7 +10,7 @@ class SideMenuTile extends StatelessWidget {
     required this.press,
     required this.riveonInit,
     required this.isActive,
-    this.activeTileColor = const Color(0xFF6792F5), // Default active color
+    this.activeTileColor = const Color.fromRGBO(89,99, 194, 1), // Default active color
   });
 
   final RiveAsset menu;

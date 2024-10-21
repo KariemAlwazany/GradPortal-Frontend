@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_literals_to_create_immutables
+
 import 'package:flutter/material.dart';
 
 class ItemsWidget extends StatefulWidget {
@@ -38,7 +40,7 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                     Container(
                       padding: EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                        color: Color(0xFF4C53A5),
+                        color: Color(0xFF3B4280),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -81,7 +83,7 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                             isInCart[i - 1]
                                 ? Icons.shopping_cart // Filled cart icon if in cart
                                 : Icons.shopping_cart_outlined, // Outlined cart icon otherwise
-                            color: Color(0xFF4C53A5),
+                            color: Color(0xFF3B4280),
                           ),
                           onPressed: () {
                             setState(() {
@@ -137,7 +139,7 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                     "Product Title",
                     style: TextStyle(
                       fontSize: 18,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -149,7 +151,7 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                     "Product Description",
                     style: TextStyle(
                       fontSize: 15,
-                      color: Color(0xFF4C53A5),
+                      color: Color(0xFF3B4280),
                     ),
                   ),
                 ),
@@ -163,7 +165,7 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF4C53A5),
+                        color: Color(0xFF3B4280),
                       ),
                     ),
                   ],
