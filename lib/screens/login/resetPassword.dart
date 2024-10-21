@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/signin_screen.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:http/http.dart' as http; // Import http package
 import 'dart:convert';
 
@@ -39,7 +39,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       try {
         // Send the PATCH request to update the password
         final response = await http.patch(
-          Uri.parse('http://192.168.88.5:3000/GP/v1/users/changePassword'),
+          Uri.parse('http://192.168.88.8:3000/GP/v1/users/changePassword'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

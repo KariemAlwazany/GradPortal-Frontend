@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/components/info_card.dart';
-import 'package:flutter_project/components/side_menu_tile.dart';
+import 'package:flutter_project/components/MenuSideBar/info_card.dart';
+import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
 import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
 import 'dart:convert';
-import 'package:flutter_project/screens/signin_screen.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 
 class SideMenu extends StatefulWidget {
-  const SideMenu({super.key});
+  final Function(int, String) onMenuItemClicked; // Callback function
+
+  const SideMenu({super.key, required this.onMenuItemClicked});
+
   @override
   State<SideMenu> createState() => _SideMenuState();
 }
@@ -24,7 +27,7 @@ Future<String?> getToken() async {
 Future<Map<String, dynamic>?> getUser() async {
   final String? token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.5:3000/GP/v1/users/me'),
+    Uri.parse('http://192.168.88.8:3000/GP/v1/users/me'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -32,8 +35,7 @@ Future<Map<String, dynamic>?> getUser() async {
   );
 
   if (response.statusCode == 200) {
-    return json.decode(
-        response.body); 
+    return json.decode(response.body);
   } else {
     throw Exception('Failed to get user');
   }
@@ -73,7 +75,7 @@ class _SideMenuState extends State<SideMenu> {
         body: Container(
           width: 288,
           height: double.infinity,
-          color: const Color(0xFF17203A),
+          color: const Color(0xFF3B4280),
           child: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,6 +122,17 @@ class _SideMenuState extends State<SideMenu> {
                         activeTileColor =
                             const Color(0xFF4CAF50); // Custom color on press
                       });
+
+                      // Navigate to different pages based on the menu selected
+                      if (menu.title == "Projects") {
+                        widget.onMenuItemClicked(0, "Projects ListView");
+                      } else if (menu.title == "Profile") {
+                        widget.onMenuItemClicked(3, "Profile Page");
+                      } else if (menu.title == "Favorites") {
+                        widget.onMenuItemClicked(1, "Favorites Page");
+                      } else if (menu.title == "Store") {
+                        widget.onMenuItemClicked(2, "Store Page");
+                      }
 
                       // Optionally reset the color back after a short delay
                       Future.delayed(const Duration(seconds: 1), () {

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
+
+import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
-import 'package:flutter_project/screens/signup.dart';
+import 'package:flutter_project/screens/login/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:flutter_project/screens/user_page.dart';
-import 'package:flutter_project/screens/student.dart';
-import 'package:flutter_project/screens/main_screen.dart';
-import 'package:flutter_project/screens/forget_password_screen.dart';
+import 'package:flutter_project/screens/Student/student.dart';
+import 'package:flutter_project/screens/NormalUser/main_screen.dart';
+import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -21,7 +24,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     const url =
-        'http://192.168.88.5:3000/GP/v1/users/login'; // Update this to your API URL
+        'http://192.168.88.8:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -258,7 +261,8 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => StudentPage(),
+                                      builder: (context) =>
+                                          StatusCheckPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
                                 }
