@@ -42,7 +42,7 @@ class CartItemSamples extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF4C53A5),
+                          color: Color(0xFF3B4280),
                         ),
                       ),
                       Text(
@@ -93,7 +93,7 @@ class CartItemSamples extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF4C53A5),
+                                color: Color(0xFF3B4280),
                               ),
                             ),
                           ),

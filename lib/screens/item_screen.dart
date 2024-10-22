@@ -43,7 +43,7 @@ class ItemScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 28,
-                                color: Color(0xFF4C53A5,)
+                                color: Color(0xFF3B4280,)
                               ),
                             )
                           ],
@@ -63,7 +63,7 @@ class ItemScreen extends StatelessWidget {
                               itemPadding: EdgeInsets.symmetric(horizontal: 4),
                               itemBuilder: (context, _) => Icon(
                                 Icons.favorite,
-                                color: Color(0xFF4C53A5),
+                                color: Color(0xFF3B4280),
                               ),
                               onRatingUpdate: (index){},
                             ),
@@ -86,7 +86,7 @@ class ItemScreen extends StatelessWidget {
                                   child: Icon(
                                     CupertinoIcons.minus,
                                     size: 18,
-                                    color: Color(0xFF4C53A5),
+                                    color: Color(0xFF3B4280),
                                   ),
                                 ),
                                 Container(
@@ -96,7 +96,7 @@ class ItemScreen extends StatelessWidget {
                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4C53A5),
+                                        color: Color(0xFF3B4280),
                                      ),
                                   ),
                                 ),
@@ -117,7 +117,7 @@ class ItemScreen extends StatelessWidget {
                                   child: Icon(
                                     CupertinoIcons.plus,
                                     size: 18,
-                                    color: Color(0xFF4C53A5),
+                                    color: Color(0xFF3B4280),
                                   ),
                                 ),
                               ],
@@ -132,7 +132,7 @@ class ItemScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF4C53A5)
+                              color: Color(0xFF3B4280)
                             ),
                           ),
                         ),

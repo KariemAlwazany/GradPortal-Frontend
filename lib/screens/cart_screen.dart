@@ -36,7 +36,7 @@ class CartScreen extends StatelessWidget{
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: Color(0xFF4C53A5),
+                            color: Color(0xFF3B4280),
                             borderRadius: BorderRadius.circular(20)
                           ),
                           child: Icon(
@@ -49,7 +49,7 @@ class CartScreen extends StatelessWidget{
                           child: Text(
                             "Add Coupon Code",
                             style: TextStyle(
-                              color: Color(0xFF4C53A5),
+                              color: Color(0xFF3B4280),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),

@@ -29,7 +29,7 @@ class CategoriesWidget extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 17,
-                      color: Color(0xFF4C53A5), // Fixed the color hex code
+                      color: Color(0xFF3B4280), // Fixed the color hex code
                     ),
                   ),
                 ],

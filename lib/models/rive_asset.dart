@@ -15,6 +15,7 @@ class RiveAsset {
   }
 }
 
+// Bottom navigation menu
 List<RiveAsset> bottomNavs = [
   RiveAsset("assets/RiveAssets/icons.riv",
       artboard: "CHAT", stateMachineName: "CHAT_Interactivity", title: "Chat"),
@@ -34,20 +35,28 @@ List<RiveAsset> bottomNavs = [
       artboard: "USER",
       stateMachineName: "USER_Interactivity",
       title: "Profile"),
+  RiveAsset("assets/RiveAssets/icons.riv",
+      artboard: "LOGOUT",   // New logout icon
+      stateMachineName: "LOGOUT_Interactivity",
+      title: "Logout"),
 ];
+
+// Side menu items
 List<RiveAsset> sideMenus = [
-  RiveAsset('assets/RiverAssets/icons.riv',
-      artboard: "HOME",
-      stateMachineName: "HOME_interactivity",
-      title: "Projects"),
-  RiveAsset('assets/RiverAssets/icons.riv',
-      artboard: "SEARCH",
-      stateMachineName: "SEARCH_interactivity",
-      title: "Search"),
-  RiveAsset('assets/RiverAssets/icons.riv',
+  RiveAsset('assets/RiveAssets/profile_icon.riv',   // Update icon to profile icon
+      artboard: "USER",
+      stateMachineName: "USER_Interactivity",
+      title: "Profile"),  // Changed from "Projects" to "Profile"
+  RiveAsset('assets/RiveAssets/shop_icon.riv',   // Update icon to shop icon
+      artboard: "SHOP",
+      stateMachineName: "SHOP_Interactivity",
+      title: "Shop"),  // Changed from "Search" to "Shop"
+  RiveAsset('assets/RiveAssets/icons.riv',
       artboard: "LIKE/STAR",
-      stateMachineName: "STAR_interactivity",
-      title: "Favorites"),
-  RiveAsset('assets/RiverAssets/icons.riv',
-      artboard: "CHAT", stateMachineName: "CHAT_interactivity", title: "Help"),
+      stateMachineName: "STAR_Interactivity",
+      title: "Favorites"),  // No change
+  RiveAsset('assets/RiveAssets/icons.riv',
+      artboard: "CHAT",
+      stateMachineName: "CHAT_Interactivity",
+      title: "Help"),  // No change
 ];
