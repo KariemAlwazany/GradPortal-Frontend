@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/Student/meeting/meeting.dart';
-import 'package:intl/intl.dart'; // For formatting the selected date
+import 'package:flutter_project/screens/Student/navbarPages/deadline.dart';
+import 'package:flutter_project/screens/Student/navbarPages/profile.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_project/screens/Student/meeting/meeting.dart'; // Import MeetingRequestPage
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -21,139 +23,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class StudentPage extends StatelessWidget {
+class StudentPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Upper Section (Top bar with greeting and bell)
-          Container(
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 12,
-                        ),
-                        Text(
-                          'GradHub',
-                          style: TextStyle(
-                            fontSize: 22,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Yazan',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Icon(
-                      Icons.notifications,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ],
-                ),
-                SizedBox(height: 40),
-              ],
-            ),
-          ),
+  _StudentPageState createState() => _StudentPageState();
+}
 
-          // Categories Section
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Explore Categories',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text('See All'),
-                ),
-              ],
-            ),
-          ),
+class _StudentPageState extends State<StudentPage> {
+  int _selectedIndex = 0;
 
-          // Categories Grid with Date and Time Selector for "Request Meeting"
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              children: [
-                GestureDetector(
-                  onTap: () => _selectDateTime(context),
-                  child: _buildCategoryItem(
-                      'Request Meeting', '55 courses', Icons.computer),
-                ),
-                _buildCategoryItem('Store', '20 courses', Icons.store),
-                _buildCategoryItem(
-                    'Files', '16 courses', Icons.file_copy_outlined),
-                _buildCategoryItem(
-                    'Product Design', '25 courses', Icons.design_services),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Featured',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_circle_fill),
-            label: 'My Learning',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Wishlist',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
-    );
+  final List<Widget> _pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _pages.addAll([
+      HomeContent(selectDateTime: _selectDateTime),
+      DeadlinePage(),
+      MessagesPage(),
+      ProfilePage(),
+    ]);
   }
 
-  // Combined Date and Time Picker
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   Future<void> _selectDateTime(BuildContext context) async {
-    // Show date picker first
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -162,14 +59,12 @@ class StudentPage extends StatelessWidget {
     );
 
     if (selectedDate != null) {
-      // Show time picker after date selection
       TimeOfDay? selectedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
 
       if (selectedTime != null) {
-        // Combine date and time
         final DateTime selectedDateTime = DateTime(
           selectedDate.year,
           selectedDate.month,
@@ -178,7 +73,6 @@ class StudentPage extends StatelessWidget {
           selectedTime.minute,
         );
 
-        // Navigate to the Meeting Request Page with the selected date and time
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -189,6 +83,167 @@ class StudentPage extends StatelessWidget {
         );
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Deadlines',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeContent extends StatelessWidget {
+  final Function(BuildContext) selectDateTime;
+
+  HomeContent({required this.selectDateTime});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+          ),
+          padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 12),
+                      Text(
+                        'GradHub',
+                        style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Yazan',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Icon(
+                    Icons.notifications,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ],
+              ),
+              SizedBox(height: 40),
+            ],
+          ),
+        ),
+
+        // Categories
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Explore Categories',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: Text('See All'),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            children: [
+              GestureDetector(
+                onTap: () => selectDateTime(context),
+                child: _buildCategoryItem(
+                  'Request Meeting',
+                  'Schedule a meeting',
+                  Icons.video_call,
+                ),
+              ),
+              _buildCategoryItem(
+                'Store',
+                'Browse resources',
+                Icons.shopping_cart_outlined,
+              ),
+              _buildCategoryItem(
+                'Files',
+                'Manage your files',
+                Icons.file_copy_outlined,
+              ),
+              _buildCategoryItem(
+                'Product Design',
+                'Learn design skills',
+                Icons.design_services,
+              ),
+              _buildCategoryItem(
+                'Community',
+                'Connect with peers',
+                Icons.people,
+              ),
+              _buildCategoryItem(
+                'Discussion Table',
+                'Join discussions',
+                Icons.table_chart,
+              ),
+              _buildCategoryItem(
+                'View All Projects',
+                'Explore student projects',
+                Icons.folder_special,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildCategoryItem(String title, String subtitle, IconData icon) {
@@ -229,10 +284,19 @@ class StudentPage extends StatelessWidget {
                 fontSize: 14,
                 color: Colors.grey,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+// Placeholder Widgets for MessagesPage and ProfilePage
+class MessagesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text("Messages Page"));
   }
 }
