@@ -37,7 +37,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken();
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.8:3000/GP/v1/projects'),
+      Uri.parse('http://192.168.88.2:3000/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -62,7 +62,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken();
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.8:3000/GP/v1/projects/favorites'),
+      Uri.parse('http://192.168.88.2:3000/GP/v1/projects/favorites'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -149,7 +149,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
       // Unfavorite the project (delete from favorites table)
       final response = await http.delete(
         Uri.parse(
-            'http://192.168.88.8:3000/GP/v1/projects/favorites/${project.gpId}'),
+            'http://192.168.88.2:3000/GP/v1/projects/favorites/${project.gpId}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -167,7 +167,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     } else {
       // Favorite the project (insert into favorites table)
       final response = await http.post(
-        Uri.parse('http://192.168.88.8:3000/GP/v1/projects/favorites'),
+        Uri.parse('http://192.168.88.2:3000/GP/v1/projects/favorites'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

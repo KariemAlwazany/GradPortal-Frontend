@@ -27,7 +27,7 @@ Future<String?> getToken() async {
 Future<Map<String, dynamic>?> getUser() async {
   final String? token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.8:3000/GP/v1/users/me'),
+    Uri.parse('http://192.168.88.2:3000/GP/v1/users/me'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

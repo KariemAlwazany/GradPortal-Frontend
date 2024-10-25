@@ -28,7 +28,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
 
     final response = await http.get(
       Uri.parse(
-          'http://192.168.88.8:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
+          'http://192.168.88.2:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -58,7 +58,12 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
                   onPrevious: () {},
                 )),
       );
-    } else if (status == 'completed') {
+    } else if (status == 'completed' || status == 'waitapprove') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => FifthPage()),
+      );
+    } else if (status == 'approved') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => StudentPage()),
