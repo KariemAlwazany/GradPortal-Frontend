@@ -48,7 +48,9 @@ dependencies:
   rive: ^0.11.1 
   intl: ^0.17.0
   flutter_typeahead: ^4.0.0 
-  
+  pdf: ^3.8.1
+  printing: ^5.9.1
+  fl_chart: ^0.35.0
 
 
 dev_dependencies:

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Admin/admin.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
@@ -255,7 +257,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserPage(),
+                                      builder: (context) => AdminPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Student') {
@@ -264,6 +266,14 @@ class SignInScreenState extends State<SignInScreen> {
                                     MaterialPageRoute(
                                       builder: (context) =>
                                           StatusCheckPage(), // Ensure Widget193 is correctly wrapped
+                                    ),
+                                  );
+                                } else if (userRole == 'Head') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          HeadDoctorPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
                                 }
