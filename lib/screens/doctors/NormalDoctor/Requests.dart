@@ -1,4 +1,6 @@
+// main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/api_service.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/meetingApproval.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/projectApproval.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/studentApproval.dart';
@@ -32,7 +34,7 @@ class RequestsDashboardPage extends StatelessWidget {
         title:
             Text('Requests Dashboard', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white), // White back arrow
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -41,17 +43,23 @@ class RequestsDashboardPage extends StatelessWidget {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           children: [
-            _buildRequestCard(
-              context,
-              icon: Icons.person_add,
-              title: 'Student Approval Requests',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => StudentApprovalPage(),
-                ),
-              ),
-              requestCount: 5, // Mock notification count
+            FutureBuilder<int>(
+              future: ApiService.fetchStudentRequestCount(),
+              builder: (context, snapshot) {
+                int requestCount = snapshot.data ?? 0;
+                return _buildRequestCard(
+                  context,
+                  icon: Icons.person_add,
+                  title: 'Student Approval Requests',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentApprovalPage(),
+                    ),
+                  ),
+                  requestCount: requestCount,
+                );
+              },
             ),
             _buildRequestCard(
               context,
@@ -63,7 +71,7 @@ class RequestsDashboardPage extends StatelessWidget {
                   builder: (context) => ProjectApprovalPage(),
                 ),
               ),
-              requestCount: 2, // Mock notification count
+              requestCount: 2,
             ),
             _buildRequestCard(
               context,
@@ -75,7 +83,7 @@ class RequestsDashboardPage extends StatelessWidget {
                   builder: (context) => MeetingApprovalPage(),
                 ),
               ),
-              requestCount: 3, // Mock notification count
+              requestCount: 3,
             ),
           ],
         ),

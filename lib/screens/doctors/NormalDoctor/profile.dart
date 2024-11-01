@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -105,7 +106,12 @@ class DoctorProfilePage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/SignInScreen');
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SignInScreen()), // Directly passing the widget
+                  );
                 },
                 icon: Icon(Icons.logout, color: Colors.white),
                 label: Text(

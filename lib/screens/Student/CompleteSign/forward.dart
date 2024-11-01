@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/Page2.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/Page5.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/Student/student.dart';
 import 'package:http/http.dart' as http;
@@ -28,7 +32,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
 
     final response = await http.get(
       Uri.parse(
-          'http://192.168.88.2:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
+          'http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -48,14 +52,33 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
     if (status == 'start') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProjectStepper()),
+        MaterialPageRoute(
+            builder: (context) => ProjectStepper(
+                  initialStep: 0,
+                )),
+      );
+    } else if (status == 'waitpartner' || status == 'declinedpartner') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProjectStepper(
+                  initialStep: 1,
+                )),
+      );
+    } else if (status == 'declineDoctor' || status == 'approvedpartner') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProjectStepper(
+                  initialStep: 2,
+                )),
       );
     } else if (status == 'waiting') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => FourthPage(
-                  onPrevious: () {},
+            builder: (context) => ProjectStepper(
+                  initialStep: 3,
                 )),
       );
     } else if (status == 'completed' || status == 'waitapprove') {

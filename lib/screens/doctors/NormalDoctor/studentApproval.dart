@@ -1,20 +1,157 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
-class StudentApprovalPage extends StatelessWidget {
-  final List<Map<String, String>> studentRequests = [
-    {
-      'name': 'John Doe',
-      'registrationNumber': '2023001',
-      'email': 'johndoe@example.com',
-    },
-    {
-      'name': 'Jane Smith',
-      'registrationNumber': '2023002',
-      'email': 'janesmith@example.com',
-    },
-  ];
+class StudentApprovalPage extends StatefulWidget {
+  @override
+  _StudentApprovalPageState createState() => _StudentApprovalPageState();
+}
+
+class _StudentApprovalPageState extends State<StudentApprovalPage> {
+  List<Map<String, dynamic>> studentRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudentRequests();
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs
+        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+  }
+
+  Future<int> fetchStudentRequestCount() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse(
+            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['status'] == 'success') {
+          final waitingList = responseData['data']['waitingList'];
+          return waitingList
+              .length; // Assuming waitingList is a list of requests
+        } else {
+          throw Exception('Failed to parse student requests');
+        }
+      } else {
+        throw Exception('Failed to load student requests');
+      }
+    } catch (e) {
+      print('Error: $e');
+      return 0; // Return 0 in case of an error
+    }
+  }
+
+  Future<void> fetchStudentRequests() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse(
+            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['status'] == 'success') {
+          final waitingList = responseData['data']['waitingList'];
+          setState(() {
+            studentRequests = [
+              {
+                'Partner_1': waitingList['Partner_1'],
+                'Registration_number': waitingList['Registration_number'],
+                'Username': waitingList['StudentUsername'],
+                'ProjectType': waitingList['ProjectType'],
+                'ProjectStatus': waitingList['ProjectStatus'],
+              }
+            ];
+          });
+        } else {
+          throw Exception('Failed to parse student requests');
+        }
+      } else {
+        throw Exception('Failed to load student requests');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> approveRequest(
+      String registrationNumber, String username) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse(
+            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/student/approve'),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          'Registration_number': registrationNumber,
+          'Username': username,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          studentRequests.removeWhere((request) =>
+              request['Registration_number'] == registrationNumber);
+        });
+      } else {
+        throw Exception('Failed to approve request');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> declineRequest(
+      String registrationNumber, String username) async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse(
+            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/student/decline'),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          'Registration_number': registrationNumber,
+          'Username': username,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          studentRequests.removeWhere((request) =>
+              request['Registration_number'] == registrationNumber);
+        });
+      } else {
+        throw Exception('Failed to decline request');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +163,7 @@ class StudentApprovalPage extends StatelessWidget {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white), // White back arrow
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,9 +172,10 @@ class StudentApprovalPage extends StatelessWidget {
           itemBuilder: (context, index) {
             final request = studentRequests[index];
             return _buildRequestCard(
-              name: request['name']!,
-              registrationNumber: request['registrationNumber']!,
-              email: request['email']!,
+              name: request['Partner_1']!,
+              registrationNumber: request['Registration_number']!,
+              email: request['Username']!,
+              username: request['Username']!,
             );
           },
         ),
@@ -49,6 +187,7 @@ class StudentApprovalPage extends StatelessWidget {
     required String name,
     required String registrationNumber,
     required String email,
+    required String username,
   }) {
     return Card(
       shape: RoundedRectangleBorder(
@@ -80,7 +219,7 @@ class StudentApprovalPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => approveRequest(registrationNumber, username),
                   icon: Icon(
                     Icons.check_circle,
                     color: Colors.green,
@@ -88,7 +227,7 @@ class StudentApprovalPage extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => declineRequest(registrationNumber, username),
                   icon: Icon(
                     Icons.cancel,
                     color: Colors.red,
