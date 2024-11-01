@@ -71,7 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<bool> isUsernameOrEmailTaken(String username, String email) async {
     try {
       // Replace 'your_api_url' with the actual endpoint to check username/email availability
-      const url = 'http://192.168.88.8:3000/GP/v1/users/check';
+      const url = 'http://192.168.0.131:3000/GP/v1/users/check';
       final uri = Uri.parse(url);
       final response = await http.post(
         uri,
@@ -130,7 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.88.8:3000/GP/v1/users/signup';
+        const url = 'http://192.168.0.131:3000/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,
@@ -153,8 +153,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else {
           // If the API request fails, show an error message
           var responseData = jsonDecode(response.body);
+          print(responseData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${responseData['message']}')),
+            
           );
         }
       } catch (e) {

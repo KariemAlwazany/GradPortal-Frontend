@@ -6,15 +6,23 @@ import 'package:flutter_project/screens/cart_screen.dart';
 import 'package:flutter_project/screens/item_screen.dart';
 import 'package:flutter_project/screens/seller_profile_screen.dart';
 import 'package:flutter_project/screens/student.dart';
-import 'package:flutter_project/screens/user_first_screen.dart'; // For SignIn/SignUp
+import 'package:flutter_project/screens/user_first_screen.dart';
 import 'package:flutter_project/screens/user_page.dart';
 import 'package:flutter_project/widgets/cart_item_samples.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter_project/screens/shop_home_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+
+// Initialize Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+);
   runApp(
     DevicePreview(
       enabled: !kReleaseMode,
@@ -36,13 +44,13 @@ class MyApp extends StatelessWidget {
       theme: lightMode,
       // initialRoute: '/', // Start with the Welcome Screen
       // routes: {
-      //   '/': (context) => ShopHomePage(),  // Welcome page with SignIn/SignUp
+      //   '/': (context) => WelcomeScreen(),  // Welcome page with SignIn/SignUp
       //   '/signin': (context) => UserFirstScreen(username: null,),  // SignIn/SignUp screen
       //   '/student': (context) => StudentPage(),  // Student home screen
-      //   '/shoptextColor,,xt) => ShopHomePage(),  // Shop Home with HomeAppBar
+      //   '/shoptextColor':(context) => ShopHomePage(),  // Shop Home with HomeAppBar
       //   '/cart': (context) => CartScreen(),  // Cart screen for shopping
       // },
-      home: SellerProfileScreen(),
+      home: WelcomeScreen(),
     );
   }
 }

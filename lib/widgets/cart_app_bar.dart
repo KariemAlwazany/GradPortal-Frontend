@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/shop_home_page.dart';
 
 class CartAppBar extends StatelessWidget{
   @override
@@ -10,8 +11,12 @@ class CartAppBar extends StatelessWidget{
         children: [
           InkWell(
             onTap: (){
-              // back to previous screen
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShopHomePage(),
+                ),
+              );
             },
             child: 
             Icon(

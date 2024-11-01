@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/seller_profile_screen.dart';
+import 'package:flutter_project/screens/shop_home_page.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/signup.dart';
@@ -21,7 +23,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     const url =
-        'http://192.168.88.8:3000/GP/v1/users/login'; // Update this to your API URL
+        'http://192.168.0.131:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -244,7 +246,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserPage(),
+                                      builder: (context) => ShopHomePage(),
                                     ),
                                   );
                                 } else if (userRole == 'Admin') {
