@@ -3,7 +3,9 @@ import 'package:flutter_project/components/info_card.dart';
 import 'package:flutter_project/components/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
+import 'package:flutter_project/screens/seller_profile_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
+import 'package:flutter_project/screens/profile_screen.dart'; // Import the Profile screen
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
 import 'package:http/http.dart' as http;
@@ -114,7 +116,6 @@ class _SideMenuState extends State<SideMenu> {
                   name: userName,
                   role: userRole,
                 ),
-                // Rest of your SideMenu widgets
                 Padding(
                   padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
                   child: Text(
@@ -125,6 +126,7 @@ class _SideMenuState extends State<SideMenu> {
                         .copyWith(color: Colors.white70),
                   ),
                 ),
+                // Menu Items
                 ...sideMenus.map((menu) => SideMenuTile(
                       menu: menu,
                       riveonInit: (artboard) {
@@ -141,6 +143,18 @@ class _SideMenuState extends State<SideMenu> {
                           selectedMenu = menu;
                           activeTileColor = const Color(0xFF4CAF50);
                         });
+                        
+                        // Navigate to ProfileScreen if the "Profile" item is clicked
+                        if (menu.title == "Profile") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SellerProfileScreen(),
+                            ),
+                          );
+                        }
+
+                        // Reset active tile color after delay
                         Future.delayed(const Duration(seconds: 1), () {
                           setState(() {
                             activeTileColor = const Color(0xFF4C53A5);
@@ -207,8 +221,7 @@ class _SideMenuState extends State<SideMenu> {
                           builder: (context) => const WelcomeScreen(),
                         ),
                       );
-                    },////
-                    ////
+                    },
                     isActive: false,
                   ),
                 ),

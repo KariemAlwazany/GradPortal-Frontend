@@ -1,6 +1,7 @@
 // ignore_for_file: use_key_in_widget_constructors, prefer_const_literals_to_create_immutables, sort_child_properties_last
 
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/add_item_screen.dart';
 import 'package:flutter_project/widgets/profile_menu_widget.dart';
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 
@@ -10,7 +11,9 @@ class SellerProfileScreen extends StatelessWidget{
     var isDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: (){}, icon: const Icon(LineAwesomeIcons.angle_left)),
+        leading: IconButton(onPressed: (){
+          Navigator.pop(context);
+        }, icon: const Icon(LineAwesomeIcons.angle_left)),
         title: Text(
           "Profile",
           style: TextStyle(
@@ -77,7 +80,9 @@ class SellerProfileScreen extends StatelessWidget{
                 //MENU
                 ProfileMenuWidget(title: "Settings", icon: LineAwesomeIcons.cog, onPress: (){}),
                 ProfileMenuWidget(title: "Components Selled", icon: LineAwesomeIcons.wallet, onPress: (){}),
-                ProfileMenuWidget(title: "Add Items", icon: LineAwesomeIcons.plus, onPress: (){}),
+                ProfileMenuWidget(title: "Add Items", icon: LineAwesomeIcons.plus, onPress: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemScreen()));
+                }),
                 ProfileMenuWidget(title: "Account Information", icon: LineAwesomeIcons.info, onPress: (){}),
                 ProfileMenuWidget(
                   title: "Logout",
