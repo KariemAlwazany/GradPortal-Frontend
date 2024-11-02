@@ -26,7 +26,7 @@ class _HeadDoctorPageState extends State<HeadDoctorPage> {
     HeadDoctorHomeTab(notificationCount: 5), // Home tab with common fields
     HeadDoctorManageTab(), // Manage tab with new fields
     SchedulePage(), // Schedule tab
-    ProfilePage(), // Profile tab
+    HeadDoctorProfilePage(), // Profile tab
   ];
 
   void _onItemTapped(int index) {
@@ -78,7 +78,7 @@ class HeadDoctorHomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Top Bar
+        // Top Bar with Notification Dropdown
         Container(
           decoration: BoxDecoration(
             color: primaryColor,
@@ -109,13 +109,56 @@ class HeadDoctorHomeTab extends StatelessWidget {
                   ),
                 ],
               ),
+              // Notification Icon with Dropdown Menu
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
-                    Icons.notifications,
-                    color: Colors.white,
-                    size: 30,
+                  PopupMenuButton(
+                    icon: Icon(Icons.notifications,
+                        color: Colors.white, size: 30),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading:
+                              Icon(Icons.request_page, color: primaryColor),
+                          title: Text("New Request Received"),
+                          subtitle: Text("5 minutes ago"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RequestsDashboardPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.timeline, color: primaryColor),
+                          title: Text("New Event Added to Timeline"),
+                          subtitle: Text("10 minutes ago"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ScrollableCalendarPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.message, color: primaryColor),
+                          title: Text("New Message"),
+                          subtitle: Text("1 hour ago"),
+                          onTap: () {
+                            // Navigate to Messages page
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   if (notificationCount > 0)
                     Positioned(
@@ -143,7 +186,7 @@ class HeadDoctorHomeTab extends StatelessWidget {
           ),
         ),
 
-        // Main Options Section - Same fields as Doctor Page
+        // Main Options Section
         Expanded(
           child: Padding(
             padding:

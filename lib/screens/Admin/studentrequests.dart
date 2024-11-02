@@ -5,24 +5,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
-class DoctorRequestsPage extends StatefulWidget {
+class StudentRequestsPage extends StatefulWidget {
   @override
-  _DoctorRequestsPageState createState() => _DoctorRequestsPageState();
+  _StudentRequestsPageState createState() => _StudentRequestsPageState();
 }
 
-class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
-  List<Map<String, dynamic>> doctorRequests = [];
+class _StudentRequestsPageState extends State<StudentRequestsPage> {
+  List<Map<String, dynamic>> studentRequests = [];
 
   @override
   void initState() {
     super.initState();
-    fetchDoctorRequests();
+    fetchStudentRequests();
   }
 
-  Future<void> fetchDoctorRequests() async {
+  Future<void> fetchStudentRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.7:3000/GP/v1/admin/doctors'),
+      Uri.parse('http://192.168.88.7:3000/GP/v1/admin/students'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -32,14 +32,13 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
       final data = jsonDecode(response.body);
       if (data['status'] == 'success') {
         setState(() {
-          doctorRequests =
-              List<Map<String, dynamic>>.from(data['data']['doctors']);
+          studentRequests =
+              List<Map<String, dynamic>>.from(data['data']['students']);
         });
       }
     } else {
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch doctor requests')),
+        SnackBar(content: Text('Failed to fetch data')),
       );
     }
   }
@@ -55,10 +54,10 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
         ? 'http://192.168.88.7:3000/GP/v1/admin/approve'
         : 'http://192.168.88.7:3000/GP/v1/admin/decline';
 
-    // Optimistic update: temporarily remove the item from the list
-    final removedRequest = doctorRequests[index];
+    // Optimistic update: remove the item from the list temporarily
+    final removedRequest = studentRequests[index];
     setState(() {
-      doctorRequests.removeAt(index);
+      studentRequests.removeAt(index);
     });
 
     final response = await http.post(
@@ -78,19 +77,10 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
     } else {
       // If the request fails, reinsert the removed request
       setState(() {
-        doctorRequests.insert(index, removedRequest);
+        studentRequests.insert(index, removedRequest);
       });
       _showResponseSnackBar(context, 'Failed to $action $username');
     }
-  }
-
-  void _showResponseSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: primaryColor,
-      ),
-    );
   }
 
   @override
@@ -99,7 +89,7 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
       appBar: AppBar(
         backgroundColor: primaryColor,
         title: Text(
-          'Doctor Approval Requests',
+          'Student Approval Requests',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -107,18 +97,18 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: doctorRequests.isEmpty
+        child: studentRequests.isEmpty
             ? Center(child: CircularProgressIndicator())
             : ListView.builder(
-                itemCount: doctorRequests.length,
+                itemCount: studentRequests.length,
                 itemBuilder: (context, index) {
-                  final request = doctorRequests[index];
+                  final request = studentRequests[index];
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DoctorRequestDetailPage(
+                          builder: (context) => StudentRequestDetailPage(
                             name: request['User']['FullName'] ?? 'Unknown',
                             email: request['User']['Email'] ?? 'No email',
                             details:
@@ -127,10 +117,12 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
                             onAccept: () {
                               handleResponse(
                                   request['Username'], 'accept', index);
+                              Navigator.pop(context);
                             },
                             onDecline: () {
                               handleResponse(
                                   request['Username'], 'decline', index);
+                              Navigator.pop(context);
                             },
                           ),
                         ),
@@ -215,9 +207,18 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
       ),
     );
   }
+
+  void _showResponseSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: primaryColor,
+      ),
+    );
+  }
 }
 
-class DoctorRequestDetailPage extends StatelessWidget {
+class StudentRequestDetailPage extends StatelessWidget {
   final String name;
   final String email;
   final String details;
@@ -225,7 +226,7 @@ class DoctorRequestDetailPage extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
-  DoctorRequestDetailPage({
+  StudentRequestDetailPage({
     required this.name,
     required this.email,
     required this.details,

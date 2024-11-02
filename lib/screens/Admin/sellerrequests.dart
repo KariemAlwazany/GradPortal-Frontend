@@ -1,12 +1,90 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
-class SellerRequestsPage extends StatelessWidget {
-  final List<Map<String, String>> sellerRequests = [
-    {'name': 'Tech Solutions', 'details': 'Request for vendor approval'},
-    {'name': 'Smart Gadgets Co.', 'details': 'Product listing request'},
-  ];
+class SellerRequestsPage extends StatefulWidget {
+  @override
+  _SellerRequestsPageState createState() => _SellerRequestsPageState();
+}
+
+class _SellerRequestsPageState extends State<SellerRequestsPage> {
+  List<Map<String, dynamic>> sellerRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSellerRequests();
+  }
+
+  Future<void> fetchSellerRequests() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('http://192.168.88.7:3000/GP/v1/admin/sellers'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'success') {
+        setState(() {
+          sellerRequests =
+              List<Map<String, dynamic>>.from(data['data']['sellers']);
+        });
+      }
+    } else {
+      // Handle error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch seller requests')),
+      );
+    }
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
+
+  Future<void> handleResponse(int index, String username, String action) async {
+    final token = await getToken();
+    final url = action == 'accept'
+        ? 'http://192.168.88.7:3000/GP/v1/admin/approve'
+        : 'http://192.168.88.7:3000/GP/v1/admin/decline';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'Username': username}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        sellerRequests.removeAt(index); // Remove the card instantly
+      });
+      _showResponseSnackBar(
+        context,
+        '${action == 'accept' ? 'Accepted' : 'Declined'} $username',
+      );
+    } else {
+      _showResponseSnackBar(context, 'Failed to $action $username');
+    }
+  }
+
+  void _showResponseSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: primaryColor,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,29 +100,31 @@ class SellerRequestsPage extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: sellerRequests.length,
-          itemBuilder: (context, index) {
-            final request = sellerRequests[index];
-            return _buildRequestCard(
-              name: request['name']!,
-              details: request['details']!,
-              onAccept: () {
-                _showResponseSnackBar(context, 'Accepted ${request['name']}');
-              },
-              onDecline: () {
-                _showResponseSnackBar(context, 'Declined ${request['name']}');
-              },
-            );
-          },
-        ),
+        child: sellerRequests.isEmpty
+            ? Center(child: CircularProgressIndicator())
+            : ListView.builder(
+                itemCount: sellerRequests.length,
+                itemBuilder: (context, index) {
+                  final request = sellerRequests[index];
+                  return _buildRequestCard(
+                    name: request['User']['FullName'] ?? 'Unknown',
+                    phoneNumber: request['Phone_number'] ?? 'No phone',
+                    shopName: request['Shop_name'] ?? 'No shop name',
+                    onAccept: () =>
+                        handleResponse(index, request['Username'], 'accept'),
+                    onDecline: () =>
+                        handleResponse(index, request['Username'], 'decline'),
+                  );
+                },
+              ),
       ),
     );
   }
 
   Widget _buildRequestCard({
     required String name,
-    required String details,
+    required String phoneNumber,
+    required String shopName,
     required Function onAccept,
     required Function onDecline,
   }) {
@@ -69,7 +149,15 @@ class SellerRequestsPage extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              details,
+              'Phone: $phoneNumber',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Shop: $shopName',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
@@ -92,15 +180,6 @@ class SellerRequestsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showResponseSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: primaryColor,
       ),
     );
   }

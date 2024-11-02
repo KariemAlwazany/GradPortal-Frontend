@@ -152,13 +152,57 @@ class DoctorHomePage extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // Notification Icon with Dropdown Menu
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Icon(
-                        Icons.notifications,
-                        color: Colors.white,
-                        size: 30,
+                      PopupMenuButton(
+                        icon: Icon(Icons.notifications,
+                            color: Colors.white, size: 30),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: Icon(Icons.people, color: primaryColor),
+                              title: Text("New Request from Student"),
+                              subtitle: Text("5 minutes ago"),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        RequestsDashboardPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading:
+                                  Icon(Icons.folder_open, color: primaryColor),
+                              title: Text("New File Uploaded"),
+                              subtitle: Text("10 minutes ago"),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ViewFilesPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: Icon(Icons.message, color: primaryColor),
+                              title: Text("New Message Received"),
+                              subtitle: Text("1 hour ago"),
+                              onTap: () {
+                                // Navigate to the Messages page
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                       if (notificationCount > 0)
                         Positioned(
@@ -250,7 +294,9 @@ class DoctorHomePage extends StatelessWidget {
                   context,
                   icon: Icons.message_outlined,
                   title: 'Messages',
-                  onTap: () {},
+                  onTap: () {
+                    // Navigate to the Messages page
+                  },
                 ),
               ],
             ),

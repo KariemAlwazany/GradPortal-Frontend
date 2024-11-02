@@ -126,6 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Add the image to the userData if an image was selected and encoded
         if (imageBase64 != null) "Degree": imageBase64,
         if (selectedRole == "Seller") "phoneNumber": phoneNumber,
+        "shopName": shopName
       };
 
       try {

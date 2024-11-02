@@ -3,7 +3,7 @@ import 'package:flutter_project/screens/Admin/doctorrequests.dart';
 import 'package:flutter_project/screens/Admin/profile.dart';
 import 'package:flutter_project/screens/Admin/sellerrequests.dart';
 import 'package:flutter_project/screens/Admin/statistics.dart';
-import 'package:flutter_project/screens/Admin/studentapproval.dart';
+import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/Admin/transfer.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
@@ -73,7 +73,7 @@ class AdminHomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Top Bar
+        // Top Bar with Notification Dropdown
         Container(
           decoration: BoxDecoration(
             color: primaryColor,
@@ -104,18 +104,65 @@ class AdminHomeTab extends StatelessWidget {
                   ),
                 ],
               ),
+              // Notification Icon with Dropdown
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
-                    Icons.notifications,
-                    color: Colors.white,
-                    size: 30,
+                  PopupMenuButton(
+                    icon: Icon(Icons.notifications,
+                        color: Colors.white, size: 30),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.person, color: primaryColor),
+                          title: Text("New Doctor Request"),
+                          subtitle: Text("5 minutes ago"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DoctorRequestsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.person_add, color: primaryColor),
+                          title: Text("New Student Request"),
+                          subtitle: Text("10 minutes ago"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StudentRequestsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: ListTile(
+                          leading: Icon(Icons.store, color: primaryColor),
+                          title: Text("New Seller Request"),
+                          subtitle: Text("1 hour ago"),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SellerRequestsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   if (notificationCount > 0)
                     Positioned(
-                      right: -6,
-                      top: -6,
+                      right: 0, // Moves the badge closer to the icon
+                      top: -2, // Adjusts the vertical position
                       child: Container(
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
@@ -154,9 +201,10 @@ class AdminHomeTab extends StatelessWidget {
                   title: 'Doctor Requests',
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => DoctorRequestsPage()));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DoctorRequestsPage()),
+                    );
                   },
                 ),
                 _buildOptionCard(
@@ -165,9 +213,10 @@ class AdminHomeTab extends StatelessWidget {
                   title: 'Student Requests',
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => StudentRequestsPage()));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => StudentRequestsPage()),
+                    );
                   },
                 ),
                 _buildOptionCard(
@@ -176,9 +225,10 @@ class AdminHomeTab extends StatelessWidget {
                   title: 'Seller Requests',
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SellerRequestsPage()));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SellerRequestsPage()),
+                    );
                   },
                 ),
                 _buildOptionCard(
@@ -187,9 +237,9 @@ class AdminHomeTab extends StatelessWidget {
                   title: 'Statistics',
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => StatisticsPage()));
+                      context,
+                      MaterialPageRoute(builder: (context) => StatisticsPage()),
+                    );
                   },
                 ),
                 _buildOptionCard(
@@ -198,9 +248,10 @@ class AdminHomeTab extends StatelessWidget {
                   title: 'Manage Head Doctor',
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ManageDoctorsTransferPage()));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ManageDoctorsTransferPage()),
+                    );
                   },
                 ),
               ],

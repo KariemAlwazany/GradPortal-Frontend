@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -97,6 +98,9 @@ class AdminProfilePage extends StatelessWidget {
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.of(context).pop();
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => SignInScreen()));
+
                                 // Perform logout
                               },
                               style: ElevatedButton.styleFrom(

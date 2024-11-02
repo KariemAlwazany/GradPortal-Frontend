@@ -30,6 +30,7 @@ class StudentPage extends StatefulWidget {
 
 class _StudentPageState extends State<StudentPage> {
   int _selectedIndex = 0;
+  int _notificationCount = 3; // Example notification count
 
   final List<Widget> _pages = [];
 
@@ -37,7 +38,9 @@ class _StudentPageState extends State<StudentPage> {
   void initState() {
     super.initState();
     _pages.addAll([
-      HomeContent(selectDateTime: _selectDateTime),
+      HomeContent(
+          selectDateTime: _selectDateTime,
+          notificationCount: _notificationCount),
       DeadlinePage(),
       MessagesPage(),
       ProfilePage(),
@@ -121,8 +124,9 @@ class _StudentPageState extends State<StudentPage> {
 
 class HomeContent extends StatelessWidget {
   final Function(BuildContext) selectDateTime;
+  final int notificationCount;
 
-  HomeContent({required this.selectDateTime});
+  HomeContent({required this.selectDateTime, required this.notificationCount});
 
   @override
   Widget build(BuildContext context) {
@@ -164,10 +168,79 @@ class HomeContent extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Icon(
-                    Icons.notifications,
-                    color: Colors.white,
-                    size: 30,
+                  // Notification Icon with Dropdown
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      PopupMenuButton(
+                        icon: Icon(Icons.notifications,
+                            color: Colors.white, size: 30),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: Icon(Icons.calendar_today,
+                                  color: primaryColor),
+                              title: Text("Upcoming Deadline"),
+                              subtitle: Text("Due tomorrow"),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DeadlinePage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: Icon(Icons.message, color: primaryColor),
+                              title: Text("New Message"),
+                              subtitle: Text("5 minutes ago"),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MessagesPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading:
+                                  Icon(Icons.video_call, color: primaryColor),
+                              title: Text("Meeting Scheduled"),
+                              subtitle: Text("Today at 3:00 PM"),
+                              onTap: () {
+                                selectDateTime(context);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (notificationCount > 0)
+                        Positioned(
+                          right: -6,
+                          top: -6,
+                          child: Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$notificationCount',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -176,7 +249,7 @@ class HomeContent extends StatelessWidget {
           ),
         ),
 
-        // Categories
+        // Categories Section
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
