@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -25,15 +28,16 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
 
   // Placeholder function to simulate fetching the doctor's name from the backend
   Future<void> _fetchDoctorName() async {
-    // Simulate a network delay
-    await Future.delayed(Duration(seconds: 2));
-
-    // In a real app, this is where you'd make a network request.
-    // For now, let's set a hardcoded name for demonstration.
+    await Future.delayed(Duration(seconds: 2)); // Simulate a network delay
     setState(() {
       doctorName =
           "Dr. John Doe"; // Replace with the fetched name from the backend
     });
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
   }
 
   @override
@@ -57,7 +61,6 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title Section
             Text(
               'Meeting Details',
               style: TextStyle(
@@ -67,8 +70,6 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Doctor Section (displaying fetched doctor name)
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -95,8 +96,6 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Date Section with Icon
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -107,8 +106,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () =>
-                          _selectDate(context), // Open Date Picker on tap
+                      onTap: () => _selectDate(context),
                       child: Icon(Icons.calendar_today,
                           color: primaryColor, size: 30),
                     ),
@@ -140,8 +138,6 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
               ),
             ),
             SizedBox(height: 20),
-
-            // Time Section with Icon
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -152,8 +148,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () =>
-                          _selectTime(context), // Open Time Picker on tap
+                      onTap: () => _selectTime(context),
                       child: Icon(Icons.access_time,
                           color: primaryColor, size: 30),
                     ),
@@ -185,11 +180,8 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
               ),
             ),
             Spacer(),
-
-            // Submit Button with adjusted position
             Padding(
-              padding: const EdgeInsets.only(
-                  bottom: 20.0), // Adjust padding to raise the button
+              padding: const EdgeInsets.only(bottom: 20.0),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -221,7 +213,38 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
     );
   }
 
-  // Method to open the Date Picker
+  Future<void> _submitMeetingRequest(BuildContext context) async {
+    final token = await getToken();
+    final formattedDate =
+        DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime);
+
+    final response = await http.post(
+      Uri.parse('http://192.168.88.6:3000/GP/v1/meetings'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'Date': formattedDate}),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Meeting request submitted! Await doctor's response."),
+          backgroundColor: primaryColor,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to submit meeting request."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -243,7 +266,6 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
     }
   }
 
-  // Method to open the Time Picker
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -261,18 +283,5 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
         );
       });
     }
-  }
-
-  void _submitMeetingRequest(BuildContext context) {
-    // Simulate submitting the meeting request
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Meeting request submitted! Await doctor's response."),
-        backgroundColor: primaryColor,
-      ),
-    );
-
-    // Navigate back to the main student page
-    Navigator.pop(context);
   }
 }

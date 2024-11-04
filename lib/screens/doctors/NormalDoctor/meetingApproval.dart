@@ -1,12 +1,90 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
-class MeetingApprovalPage extends StatelessWidget {
-  final List<Map<String, String>> meetingRequests = [
-    {'name': 'John Doe', 'details': 'Meeting request for 2024-03-10'},
-    {'name': 'Jane Smith', 'details': 'Meeting request for 2024-03-11'},
-  ];
+class MeetingApprovalPage extends StatefulWidget {
+  @override
+  _MeetingApprovalPageState createState() => _MeetingApprovalPageState();
+}
+
+class _MeetingApprovalPageState extends State<MeetingApprovalPage> {
+  List<Map<String, dynamic>> meetingRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMeetingRequests();
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
+
+  Future<void> _fetchMeetingRequests() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('http://192.168.88.6:3000/GP/v1/meetings'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      // Check if the data contains meetings
+      if (responseData['status'] == 'success' && responseData['data'] != null) {
+        final List<dynamic> meetings = responseData['data']['meetings'];
+
+        setState(() {
+          meetingRequests = meetings.map((meeting) {
+            return {
+              'id': meeting['id'],
+              'GP_Type': meeting['GP_Type'],
+              'GP_Title': meeting['GP_Title'],
+              'Date': meeting['Date'],
+              'Student_1': meeting['Student_1'],
+              'Student_2': meeting['Student_2'],
+            };
+          }).toList();
+        });
+      } else {
+        _showResponseSnackBar(context, 'No meeting requests available');
+      }
+    } else {
+      _showResponseSnackBar(context, 'Failed to load meeting requests');
+    }
+  }
+
+  Future<bool> _approveRequest(String id) async {
+    final token = await getToken();
+    final response = await http.patch(
+      Uri.parse('http://192.168.88.6:3000/GP/v1/meetings/approve'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({'id': id}),
+    );
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> _declineRequest(String id) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('http://192.168.88.6:3000/GP/v1/meetings/decline'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({'id': id}), // Send ID in the body
+    );
+
+    return response.statusCode == 204;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +105,48 @@ class MeetingApprovalPage extends StatelessWidget {
           itemBuilder: (context, index) {
             final request = meetingRequests[index];
             return _buildRequestCard(
-              name: request['name']!,
-              details: request['details']!,
-              onAccept: () {
-                _showResponseSnackBar(context, 'Accepted ${request['name']}');
+              name: '${request['Student_1']} & ${request['Student_2']}',
+              details:
+                  '${request['GP_Type']} - ${request['GP_Title']} on ${request['Date']}',
+              onAccept: () async {
+                // Remove request from list immediately and update UI
+                setState(() {
+                  meetingRequests.removeAt(index);
+                });
+
+                // Send accept request to server
+                final result = await _approveRequest(request['id'].toString());
+
+                // If request fails, re-add the item and show an error message
+                if (!result) {
+                  setState(() {
+                    meetingRequests.insert(
+                        index, request); // Reinsert at the original index
+                  });
+                  _showResponseSnackBar(context, 'Failed to approve meeting');
+                } else {
+                  _showResponseSnackBar(context, 'Meeting Approved');
+                }
               },
-              onDecline: () {
-                _showResponseSnackBar(context, 'Declined ${request['name']}');
+              onDecline: () async {
+                // Remove request from list immediately and update UI
+                setState(() {
+                  meetingRequests.removeAt(index);
+                });
+
+                // Send decline request to server
+                final result = await _declineRequest(request['id'].toString());
+
+                // If request fails, re-add the item and show an error message
+                if (!result) {
+                  setState(() {
+                    meetingRequests.insert(
+                        index, request); // Reinsert at the original index
+                  });
+                  _showResponseSnackBar(context, 'Failed to decline meeting');
+                } else {
+                  _showResponseSnackBar(context, 'Meeting Declined');
+                }
               },
             );
           },

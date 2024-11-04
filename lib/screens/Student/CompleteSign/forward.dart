@@ -32,7 +32,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
 
     final response = await http.get(
       Uri.parse(
-          'http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
+          'http://192.168.88.6:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/resources/auth_method.dart';
+import 'package:flutter_project/resources/home_screen.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 
@@ -27,7 +29,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     const url =
-        'http://192.168.88.7:3000/GP/v1/users/login'; // Update this to your API URL
+        'http://192.168.88.6:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -57,6 +59,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class SignInScreenState extends State<SignInScreen> {
+  final AuthMethods _authMethods = AuthMethods();
   final formSignInKey = GlobalKey<FormState>();
   bool rememberMe = true;
   String? email;
@@ -326,7 +329,22 @@ class SignInScreenState extends State<SignInScreen> {
                           Logo(Logos.facebook_f),
                           Logo(Logos.twitter),
                           Logo(Logos.apple),
-                          Logo(Logos.google),
+                          GestureDetector(
+                            onTap: () async {
+                              bool res =
+                                  await _authMethods.signInWithGoogle(context);
+                              if (res) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        HomeScreen(), // Ensure Widget193 is correctly wrapped
+                                  ),
+                                );
+                              }
+                            }, // Call sign-in method
+                            child: Logo(Logos.google),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 18),

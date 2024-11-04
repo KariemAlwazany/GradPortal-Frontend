@@ -15,7 +15,7 @@ class ApiService {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/student/count'),
+            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/student/count'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",

@@ -256,7 +256,7 @@ Future<void> addToWaitingList({
   };
 
   final response = await http.post(
-    Uri.parse('http://192.168.88.7:3000/GP/v1/projects/WaitingList'),
+    Uri.parse('http://192.168.88.6:3000/GP/v1/projects/WaitingList'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -351,7 +351,7 @@ class ProjectTypePage extends StatelessWidget {
 Future<List<String>> fetchStudents() async {
   final token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.7:3000/GP/v1/students'),
+    Uri.parse('http://192.168.88.6:3000/GP/v1/students'),
     headers: {
       'Authorization': 'Bearer $token',
     },
@@ -368,7 +368,7 @@ Future<List<String>> fetchStudents() async {
 // Function to fetch doctors from the API
 Future<List<String>> fetchDoctors() async {
   final response =
-      await http.get(Uri.parse('http://192.168.88.7:3000/GP/v1/doctors'));
+      await http.get(Uri.parse('http://192.168.88.6:3000/GP/v1/doctors'));
 
   if (response.statusCode == 200) {
     List<dynamic> doctors = json.decode(response.body);

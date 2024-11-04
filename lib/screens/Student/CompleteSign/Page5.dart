@@ -81,7 +81,7 @@ class _FifthPageState extends State<FifthPage> {
   Future<void> _checkApprovalStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse('http://192.168.88.6:3000/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -121,7 +121,7 @@ class _FifthPageState extends State<FifthPage> {
   Future<void> _fetchStudentStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse('http://192.168.88.6:3000/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -159,7 +159,7 @@ class _FifthPageState extends State<FifthPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/getCurrent'),
+            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/getCurrent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -198,7 +198,7 @@ class _FifthPageState extends State<FifthPage> {
     try {
       final response = await http.patch(
         Uri.parse(
-            'http://192.168.88.7:3000/GP/v1/projects/WaitingList/current'),
+            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/current'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization':

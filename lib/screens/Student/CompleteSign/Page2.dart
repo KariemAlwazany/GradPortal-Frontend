@@ -67,7 +67,7 @@ class _SecondPageState extends State<SecondPage> {
       });
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse('http://192.168.88.6:3000/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ class _SecondPageState extends State<SecondPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.7:3000/GP/v1/WaitingPartnerList/getCurrent'),
+            'http://192.168.88.6:3000/GP/v1/WaitingPartnerList/getCurrent'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -159,8 +159,8 @@ class _SecondPageState extends State<SecondPage> {
   Future<void> _respondToPartnerRequest(
       String partnerUsername, bool accepted) async {
     final url = accepted
-        ? 'http://192.168.88.7:3000/GP/v1/WaitingPartnerList/approve'
-        : 'http://192.168.88.7:3000/GP/v1/WaitingPartnerList/decline';
+        ? 'http://192.168.88.6:3000/GP/v1/WaitingPartnerList/approve'
+        : 'http://192.168.88.6:3000/GP/v1/WaitingPartnerList/decline';
     try {
       final token = await getToken();
       await http.post(
@@ -203,7 +203,7 @@ class _SecondPageState extends State<SecondPage> {
     try {
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('http://192.168.88.7:3000/GP/v1/students'),
+        Uri.parse('http://192.168.88.6:3000/GP/v1/students'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ class _SecondPageState extends State<SecondPage> {
     try {
       final token = await getToken();
       await http.post(
-        Uri.parse('http://192.168.88.7:3000/GP/v1/WaitingPartnerList'),
+        Uri.parse('http://192.168.88.6:3000/GP/v1/WaitingPartnerList'),
         body: json.encode({'Partner_2': selectedPartner}),
         headers: {
           'Authorization': 'Bearer $token',
@@ -275,7 +275,7 @@ class _SecondPageState extends State<SecondPage> {
         final token = await getToken();
         final response = await http.get(
           Uri.parse(
-              'http://192.168.88.7:3000/GP/v1/students/getCurrentStudent'),
+              'http://192.168.88.6:3000/GP/v1/students/getCurrentStudent'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
