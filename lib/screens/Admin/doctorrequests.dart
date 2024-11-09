@@ -22,7 +22,7 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
   Future<void> fetchDoctorRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.6:3000/GP/v1/admin/doctors'),
+      Uri.parse('http://192.168.88.10:3000/GP/v1/admin/doctors'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -52,8 +52,8 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
   Future<void> handleResponse(String username, String action, int index) async {
     final token = await getToken();
     final url = action == 'accept'
-        ? 'http://192.168.88.6:3000/GP/v1/admin/approve'
-        : 'http://192.168.88.6:3000/GP/v1/admin/decline';
+        ? 'http://192.168.88.10:3000/GP/v1/admin/approve'
+        : 'http://192.168.88.10:3000/GP/v1/admin/decline';
 
     // Optimistic update: temporarily remove the item from the list
     final removedRequest = doctorRequests[index];

@@ -219,7 +219,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
         DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime);
 
     final response = await http.post(
-      Uri.parse('http://192.168.88.6:3000/GP/v1/meetings'),
+      Uri.parse('http://192.168.88.10:3000/GP/v1/meetings'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

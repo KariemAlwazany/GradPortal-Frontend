@@ -45,7 +45,7 @@ class _ProjectApprovalPageState extends State<ProjectApprovalPage> {
   Future<void> approveProject(String studentUser) async {
     final token = await getToken();
     final url = Uri.parse(
-        'http://192.168.88.6:3000/GP/v1/projects/WaitingList/project/approve');
+        'http://192.168.88.10:3000/GP/v1/projects/WaitingList/project/approve');
 
     try {
       final response = await http.post(
@@ -75,7 +75,7 @@ class _ProjectApprovalPageState extends State<ProjectApprovalPage> {
   Future<void> declineProject(String studentUser) async {
     final token = await getToken();
     final url = Uri.parse(
-        'http://192.168.88.6:3000/GP/v1/projects/WaitingList/project/decline');
+        'http://192.168.88.10:3000/GP/v1/projects/WaitingList/project/decline');
 
     try {
       final response = await http.post(

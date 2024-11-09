@@ -22,7 +22,7 @@ class _SellerRequestsPageState extends State<SellerRequestsPage> {
   Future<void> fetchSellerRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.6:3000/GP/v1/admin/sellers'),
+      Uri.parse('http://192.168.88.10:3000/GP/v1/admin/sellers'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -52,8 +52,8 @@ class _SellerRequestsPageState extends State<SellerRequestsPage> {
   Future<void> handleResponse(int index, String username, String action) async {
     final token = await getToken();
     final url = action == 'accept'
-        ? 'http://192.168.88.6:3000/GP/v1/admin/approve'
-        : 'http://192.168.88.6:3000/GP/v1/admin/decline';
+        ? 'http://192.168.88.10:3000/GP/v1/admin/approve'
+        : 'http://192.168.88.10:3000/GP/v1/admin/decline';
 
     final response = await http.post(
       Uri.parse(url),

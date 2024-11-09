@@ -11,6 +11,10 @@
 <key>NSPhotoLibraryAddUsageDescription</key>
 <string>We need access to add photos to your library for saving profile pictures.</string>
 
+<key>NSCameraUsageDescription</key>
+<string>We need access to your camera for capturing photos.</string>
+
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -54,22 +58,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
-<!-- Google Sign-in Section -->
-<key>CFBundleURLTypes</key>
-<array>
-	<dict>
-		<key>CFBundleTypeRole</key>
-		<string>Editor</string>
-		<key>CFBundleURLSchemes</key>
-		<array>
-			<!-- TODO Replace this value: -->
-			<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-			<string>com.googleusercontent.apps.574128569485-est03011u6tutn385aleo451j8g37a6h</string>
-		</array>
-	</dict>
-</array>
-<!-- End of the Google Sign-in Section -->
-</dict>
 
+<key>NSMicrophoneUsageDescription</key>
+<string>We require microphone access to connect</string>
+
+</dict>
 </plist>

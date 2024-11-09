@@ -29,7 +29,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     const url =
-        'http://192.168.88.6:3000/GP/v1/users/login'; // Update this to your API URL
+        'http://192.168.88.10:3000/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -59,7 +59,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class SignInScreenState extends State<SignInScreen> {
-  final AuthMethods _authMethods = AuthMethods();
+  // final AuthMethods _authMethods = AuthMethods();
   final formSignInKey = GlobalKey<FormState>();
   bool rememberMe = true;
   String? email;
@@ -239,7 +239,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MainPage(),
+                                      builder: (context) => HomeScreen(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {
@@ -331,16 +331,16 @@ class SignInScreenState extends State<SignInScreen> {
                           Logo(Logos.apple),
                           GestureDetector(
                             onTap: () async {
-                              bool res =
-                                  await _authMethods.signInWithGoogle(context);
+                              bool res = false;
+                              // await _authMethods.signInWithGoogle(context);
                               if (res) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        HomeScreen(), // Ensure Widget193 is correctly wrapped
-                                  ),
-                                );
+                                // Navigator.pushReplacement(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) =>
+                                //        // HomeScreen(), // Ensure Widget193 is correctly wrapped
+                                //   ),
+                                // );
                               }
                             }, // Call sign-in method
                             child: Logo(Logos.google),

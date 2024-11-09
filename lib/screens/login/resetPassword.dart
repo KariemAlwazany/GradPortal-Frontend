@@ -39,7 +39,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       try {
         // Send the PATCH request to update the password
         final response = await http.patch(
-          Uri.parse('http://192.168.88.6:3000/GP/v1/users/changePassword'),
+          Uri.parse('http://192.168.88.10:3000/GP/v1/users/changePassword'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

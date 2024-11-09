@@ -22,7 +22,7 @@ class _StudentRequestsPageState extends State<StudentRequestsPage> {
   Future<void> fetchStudentRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.6:3000/GP/v1/admin/students'),
+      Uri.parse('http://192.168.88.10:3000/GP/v1/admin/students'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -51,8 +51,8 @@ class _StudentRequestsPageState extends State<StudentRequestsPage> {
   Future<void> handleResponse(String username, String action, int index) async {
     final token = await getToken();
     final url = action == 'accept'
-        ? 'http://192.168.88.6:3000/GP/v1/admin/approve'
-        : 'http://192.168.88.6:3000/GP/v1/admin/decline';
+        ? 'http://192.168.88.10:3000/GP/v1/admin/approve'
+        : 'http://192.168.88.10:3000/GP/v1/admin/decline';
 
     // Optimistic update: remove the item from the list temporarily
     final removedRequest = studentRequests[index];

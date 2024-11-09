@@ -30,7 +30,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -99,7 +99,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.post(
         Uri.parse(
-            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/student/approve'),
+            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/student/approve'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -129,7 +129,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.post(
         Uri.parse(
-            'http://192.168.88.6:3000/GP/v1/projects/WaitingList/student/decline'),
+            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/student/decline'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
