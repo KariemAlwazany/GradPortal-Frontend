@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert'; // For JSON decoding
 import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
@@ -37,7 +38,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken();
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/projects'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -62,7 +63,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     final token = await getToken();
 
     final response = await http.get(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/projects/favorites'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects/favorites'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
@@ -149,7 +150,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
       // Unfavorite the project (delete from favorites table)
       final response = await http.delete(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/favorites/${project.gpId}'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/favorites/${project.gpId}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -167,7 +168,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
     } else {
       // Favorite the project (insert into favorites table)
       final response = await http.post(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/projects/favorites'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects/favorites'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

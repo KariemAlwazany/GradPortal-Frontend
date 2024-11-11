@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +28,7 @@ class _MeetingApprovalPageState extends State<MeetingApprovalPage> {
   Future<void> _fetchMeetingRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/meetings'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -61,7 +62,7 @@ class _MeetingApprovalPageState extends State<MeetingApprovalPage> {
   Future<bool> _approveRequest(String id) async {
     final token = await getToken();
     final response = await http.patch(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/meetings/approve'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings/approve'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json'
@@ -75,7 +76,7 @@ class _MeetingApprovalPageState extends State<MeetingApprovalPage> {
   Future<bool> _declineRequest(String id) async {
     final token = await getToken();
     final response = await http.post(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/meetings/decline'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings/decline'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json'

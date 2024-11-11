@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +23,7 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
   Future<void> fetchDoctorRequests() async {
     final token = await getToken();
     final response = await http.get(
-      Uri.parse('http://192.168.88.10:3000/GP/v1/admin/doctors'),
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/admin/doctors'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -52,8 +53,8 @@ class _DoctorRequestsPageState extends State<DoctorRequestsPage> {
   Future<void> handleResponse(String username, String action, int index) async {
     final token = await getToken();
     final url = action == 'accept'
-        ? 'http://192.168.88.10:3000/GP/v1/admin/approve'
-        : 'http://192.168.88.10:3000/GP/v1/admin/decline';
+        ? '${dotenv.env['API_BASE_URL']}/GP/v1/admin/approve'
+        : '${dotenv.env['API_BASE_URL']}/GP/v1/admin/decline';
 
     // Optimistic update: temporarily remove the item from the list
     final removedRequest = doctorRequests[index];

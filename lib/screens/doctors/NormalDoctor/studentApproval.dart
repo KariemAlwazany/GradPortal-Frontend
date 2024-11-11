@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +31,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -60,7 +61,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/getCurrent/doctor-list'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -99,7 +100,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.post(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/student/approve'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/student/approve'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -129,7 +130,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
       final token = await getToken();
       final response = await http.post(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/student/decline'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/student/decline'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",

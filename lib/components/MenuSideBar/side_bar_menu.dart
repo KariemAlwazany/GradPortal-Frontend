@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/components/MenuSideBar/info_card.dart';
 import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
@@ -27,7 +28,7 @@ Future<String?> getToken() async {
 Future<Map<String, dynamic>?> getUser() async {
   final String? token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.10:3000/GP/v1/users/me'),
+    Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

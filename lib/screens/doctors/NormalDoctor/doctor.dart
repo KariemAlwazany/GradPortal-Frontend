@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/resources/home_screen.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/postdeadlines.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/Requests.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeting.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/discussionTable.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/meetings.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/profile.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/studentsproject.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/timeline.dart';
@@ -281,6 +285,25 @@ class DoctorHomePage extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (context) => DiscussionTablePage()),
                         )),
+
+                _buildOptionCard(
+                  context,
+                  icon: Icons.message_outlined,
+                  title: 'Messages',
+                  onTap: () {
+                    // Navigate to the Messages page
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.video_call,
+                  title: 'Meetings',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MeetingsPage()),
+                  ),
+                ),
+
                 _buildOptionCard(
                   context,
                   icon: Icons.folder_open,
@@ -290,14 +313,15 @@ class DoctorHomePage extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => ViewFilesPage()),
                   ),
                 ),
-                _buildOptionCard(
-                  context,
-                  icon: Icons.message_outlined,
-                  title: 'Messages',
-                  onTap: () {
-                    // Navigate to the Messages page
-                  },
-                ),
+                _buildOptionCard(context,
+                    icon: Icons.post_add, title: 'Post Deadline', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PostDeadlinesPage()),
+                  );
+                }),
+                // New Card for Meetings
               ],
             ),
           ),

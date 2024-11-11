@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
@@ -67,7 +68,8 @@ class _SecondPageState extends State<SecondPage> {
       });
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -101,7 +103,7 @@ class _SecondPageState extends State<SecondPage> {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/WaitingPartnerList/getCurrent'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/WaitingPartnerList/getCurrent'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -159,8 +161,8 @@ class _SecondPageState extends State<SecondPage> {
   Future<void> _respondToPartnerRequest(
       String partnerUsername, bool accepted) async {
     final url = accepted
-        ? 'http://192.168.88.10:3000/GP/v1/WaitingPartnerList/approve'
-        : 'http://192.168.88.10:3000/GP/v1/WaitingPartnerList/decline';
+        ? '${dotenv.env['API_BASE_URL']}/GP/v1/WaitingPartnerList/approve'
+        : '${dotenv.env['API_BASE_URL']}/GP/v1/WaitingPartnerList/decline';
     try {
       final token = await getToken();
       await http.post(
@@ -203,7 +205,7 @@ class _SecondPageState extends State<SecondPage> {
     try {
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/students'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -255,7 +257,7 @@ class _SecondPageState extends State<SecondPage> {
     try {
       final token = await getToken();
       await http.post(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/WaitingPartnerList'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/WaitingPartnerList'),
         body: json.encode({'Partner_2': selectedPartner}),
         headers: {
           'Authorization': 'Bearer $token',
@@ -275,7 +277,7 @@ class _SecondPageState extends State<SecondPage> {
         final token = await getToken();
         final response = await http.get(
           Uri.parse(
-              'http://192.168.88.10:3000/GP/v1/students/getCurrentStudent'),
+              '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',

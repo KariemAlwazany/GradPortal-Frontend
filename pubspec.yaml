@@ -51,6 +51,7 @@ dependencies:
   rive: ^0.11.1
   shared_preferences: ^2.0.6
   zego_uikit_prebuilt_video_conference: ^2.9.5
+  file_picker: ^5.0.1
 
 dev_dependencies:
   flutter_lints: ^4.0.0

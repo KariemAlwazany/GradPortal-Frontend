@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -26,7 +27,7 @@ TextEditingController _newPasswordController = TextEditingController();
 Future<Map<String, dynamic>?> getUser() async {
   final String? token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.10:3000/GP/v1/users/me'),
+    Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -63,7 +64,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     final response;
     if (!_oldPasswordController.text.isEmpty) {
       response = await http.patch(
-          Uri.parse('http://192.168.88.10:3000/GP/v1/users/updatePassword'),
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updatePassword'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -85,7 +86,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       }
       if (!_fullNameController.text.isEmpty && _emailController.text.isEmpty) {
         final response2 = await http.patch(
-            Uri.parse('http://192.168.88.10:3000/GP/v1/users/updateMe'),
+            Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updateMe'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
@@ -107,7 +108,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       }
     } else if (!_fullNameController.text.isEmpty) {
       response = await http.patch(
-          Uri.parse('http://192.168.88.10:3000/GP/v1/users/updateMe'),
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updateMe'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',

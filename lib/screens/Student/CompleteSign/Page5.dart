@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_project/screens/Student/student.dart';
@@ -81,7 +82,8 @@ class _FifthPageState extends State<FifthPage> {
   Future<void> _checkApprovalStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -121,7 +123,8 @@ class _FifthPageState extends State<FifthPage> {
   Future<void> _fetchStudentStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.88.10:3000/GP/v1/students/getCurrentStudent'),
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -159,7 +162,7 @@ class _FifthPageState extends State<FifthPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/getCurrent'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/getCurrent'),
         headers: {
           'Authorization':
               'Bearer $_token', // Add the token to the Authorization header
@@ -198,7 +201,7 @@ class _FifthPageState extends State<FifthPage> {
     try {
       final response = await http.patch(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/current'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/current'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization':

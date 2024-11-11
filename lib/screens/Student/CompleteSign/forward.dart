@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page2.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
@@ -32,7 +33,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
 
     final response = await http.get(
       Uri.parse(
-          'http://192.168.88.10:3000/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
+          '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers

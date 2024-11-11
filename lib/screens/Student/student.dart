@@ -1,27 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/discussionTable.dart';
+import 'package:flutter_project/screens/Student/files.dart';
+
+import 'package:flutter_project/screens/Student/meeting/meeting.dart';
 import 'package:flutter_project/screens/Student/navbarPages/deadline.dart';
 import 'package:flutter_project/screens/Student/navbarPages/profile.dart';
+import 'package:flutter_project/screens/Student/meeting/meeting_options_page.dart'; // New options page import
+import 'package:flutter_project/screens/Student/projectsPage.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_project/screens/Student/meeting/meeting.dart'; // Import MeetingRequestPage
 
 const Color primaryColor = Color(0xFF3B4280);
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'StudentPage',
-      theme: ThemeData(
-        primaryColor: primaryColor,
-      ),
-      home: StudentPage(),
-    );
-  }
-}
 
 class StudentPage extends StatefulWidget {
   @override
@@ -30,7 +18,7 @@ class StudentPage extends StatefulWidget {
 
 class _StudentPageState extends State<StudentPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 3; // Example notification count
+  int _notificationCount = 3;
 
   final List<Widget> _pages = [];
 
@@ -132,6 +120,7 @@ class HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Top bar with greeting and notifications
         Container(
           decoration: BoxDecoration(
             color: primaryColor,
@@ -275,42 +264,74 @@ class HomeContent extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             children: [
               GestureDetector(
-                onTap: () => selectDateTime(context),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MeetingsOptionsPage()),
+                ),
                 child: _buildCategoryItem(
-                  'Request Meeting',
-                  'Schedule a meeting',
+                  'Meetings',
+                  'Manage meetings',
                   Icons.video_call,
                 ),
               ),
-              _buildCategoryItem(
-                'Store',
-                'Browse resources',
-                Icons.shopping_cart_outlined,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MeetingsOptionsPage()),
+                ),
+                child: _buildCategoryItem(
+                  'Store',
+                  'Browse resources',
+                  Icons.shopping_cart_outlined,
+                ),
               ),
-              _buildCategoryItem(
-                'Files',
-                'Manage your files',
-                Icons.file_copy_outlined,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => UploadFilesPage()),
+                ),
+                child: _buildCategoryItem(
+                  'Files',
+                  'Manage your files',
+                  Icons.file_copy_outlined,
+                ),
               ),
-              _buildCategoryItem(
-                'Product Design',
-                'Learn design skills',
-                Icons.design_services,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MeetingsOptionsPage()),
+                ),
+                child: _buildCategoryItem(
+                  'Community',
+                  'Connect with peers',
+                  Icons.people,
+                ),
               ),
-              _buildCategoryItem(
-                'Community',
-                'Connect with peers',
-                Icons.people,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => DiscussionTablePage()),
+                ),
+                child: _buildCategoryItem(
+                  'Discussion Table',
+                  'Join discussions',
+                  Icons.table_chart,
+                ),
               ),
-              _buildCategoryItem(
-                'Discussion Table',
-                'Join discussions',
-                Icons.table_chart,
-              ),
-              _buildCategoryItem(
-                'View All Projects',
-                'Explore student projects',
-                Icons.folder_special,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProjectsPage()),
+                ),
+                child: _buildCategoryItem(
+                  'View All Projects',
+                  'Explore student projects',
+                  Icons.folder_special,
+                ),
               ),
             ],
           ),

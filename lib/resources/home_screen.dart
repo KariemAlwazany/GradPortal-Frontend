@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:zego_uikit_prebuilt_video_conference/zego_uikit_prebuilt_video_conference.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  HomeScreen({Key? key, required String conferenceId}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -12,11 +15,56 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final conferenceIdController = TextEditingController();
-  final String userId = Random().nextInt(900000 + 100000).toString();
   final String randomConferenceId =
       (Random().nextInt(1000000000) * 10 + Random().nextInt(10))
           .toString()
           .padLeft(10, '0');
+  String userId = 'Fetching...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    try {
+      final token = await getToken();
+      if (token != null) {
+        final response = await http.get(
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final userData = json.decode(response.body);
+          setState(() {
+            userId = userData['data']['data']['Username'] ?? 'Unknown User';
+          });
+        } else {
+          setState(() {
+            userId = 'Error fetching Username';
+          });
+        }
+      } else {
+        setState(() {
+          userId = 'Token not found';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userId = 'Error: $e';
+      });
+    }
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs
+        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +180,7 @@ class VideoConferencePage extends StatelessWidget {
         appSign: appSign,
         conferenceID: conferenceID,
         userID: userId,
-        userName: 'user_$userId',
+        userName: '$userId',
         config: ZegoUIKitPrebuiltVideoConferenceConfig(),
       ),
     );

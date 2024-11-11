@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/resources/auth_method.dart';
 import 'package:flutter_project/resources/home_screen.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
@@ -28,8 +29,8 @@ Future<Map<String, dynamic>> login(String email, String password) async {
 
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
-    const url =
-        'http://192.168.88.10:3000/GP/v1/users/login'; // Update this to your API URL
+    final url =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -239,7 +240,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => HomeScreen(),
+                                      builder: (context) => MainPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {

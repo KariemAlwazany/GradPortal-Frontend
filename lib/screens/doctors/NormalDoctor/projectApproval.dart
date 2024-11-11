@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -45,7 +46,7 @@ class _ProjectApprovalPageState extends State<ProjectApprovalPage> {
   Future<void> approveProject(String studentUser) async {
     final token = await getToken();
     final url = Uri.parse(
-        'http://192.168.88.10:3000/GP/v1/projects/WaitingList/project/approve');
+        '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/project/approve');
 
     try {
       final response = await http.post(
@@ -75,7 +76,7 @@ class _ProjectApprovalPageState extends State<ProjectApprovalPage> {
   Future<void> declineProject(String studentUser) async {
     final token = await getToken();
     final url = Uri.parse(
-        'http://192.168.88.10:3000/GP/v1/projects/WaitingList/project/decline');
+        '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/project/decline');
 
     try {
       final response = await http.post(

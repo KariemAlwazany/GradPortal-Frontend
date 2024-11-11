@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +16,7 @@ class ApiService {
       final token = await getToken();
       final response = await http.get(
         Uri.parse(
-            'http://192.168.88.10:3000/GP/v1/projects/WaitingList/student/count'),
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/student/count'),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 // package:flutter_project/screens/Student/CompleteSign/ProjectStepper.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page1.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page2.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
@@ -256,7 +257,7 @@ Future<void> addToWaitingList({
   };
 
   final response = await http.post(
-    Uri.parse('http://192.168.88.10:3000/GP/v1/projects/WaitingList'),
+    Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -351,7 +352,7 @@ class ProjectTypePage extends StatelessWidget {
 Future<List<String>> fetchStudents() async {
   final token = await getToken();
   final response = await http.get(
-    Uri.parse('http://192.168.88.10:3000/GP/v1/students'),
+    Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students'),
     headers: {
       'Authorization': 'Bearer $token',
     },
@@ -368,7 +369,7 @@ Future<List<String>> fetchStudents() async {
 // Function to fetch doctors from the API
 Future<List<String>> fetchDoctors() async {
   final response =
-      await http.get(Uri.parse('http://192.168.88.10:3000/GP/v1/doctors'));
+      await http.get(Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors'));
 
   if (response.statusCode == 200) {
     List<dynamic> doctors = json.decode(response.body);
