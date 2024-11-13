@@ -6,6 +6,8 @@ import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeti
 import 'package:flutter_project/screens/doctors/NormalDoctor/discussionTable.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/meetings.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/profile.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/receiveMessages.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/sendMessages.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/studentsproject.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/timeline.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/viewfiles.dart';
@@ -41,7 +43,7 @@ class _DoctorPageState extends State<DoctorPage> {
   final List<Widget> _pages = [
     DoctorHomePage(notificationCount: 3),
     ScrollableCalendarPage(),
-    Center(child: Text('Notifications Page')), // Replace with actual page
+    ReceivedMessagesPage(), // Replace with actual page
     DoctorProfilePage(), // Navigate to Profile Page
   ];
 
@@ -72,33 +74,8 @@ class _DoctorPageState extends State<DoctorPage> {
             label: 'Schedule',
           ),
           BottomNavigationBarItem(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(Icons.notifications),
-                if (_notificationCount > 0)
-                  Positioned(
-                    right: -6,
-                    top: -6,
-                    child: Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '$_notificationCount',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            label: 'Notifications',
+            icon: Icon(Icons.message),
+            label: 'Messages', // Changed label to "Messages"
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
@@ -259,6 +236,23 @@ class DoctorHomePage extends StatelessWidget {
                 ),
                 _buildOptionCard(
                   context,
+                  icon: Icons.video_call,
+                  title: 'Meetings',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MeetingsPage()),
+                  ),
+                ),
+                _buildOptionCard(context,
+                    icon: Icons.post_add, title: 'Post Deadline', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PostDeadlinesPage()),
+                  );
+                }),
+                _buildOptionCard(
+                  context,
                   icon: Icons.timeline,
                   title: 'Timeline',
                   onTap: () => Navigator.push(
@@ -289,19 +283,14 @@ class DoctorHomePage extends StatelessWidget {
                 _buildOptionCard(
                   context,
                   icon: Icons.message_outlined,
-                  title: 'Messages',
+                  title: 'Send Messages',
                   onTap: () {
-                    // Navigate to the Messages page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SendMessagePage()),
+                    );
                   },
-                ),
-                _buildOptionCard(
-                  context,
-                  icon: Icons.video_call,
-                  title: 'Meetings',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MeetingsPage()),
-                  ),
                 ),
 
                 _buildOptionCard(
@@ -313,14 +302,7 @@ class DoctorHomePage extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => ViewFilesPage()),
                   ),
                 ),
-                _buildOptionCard(context,
-                    icon: Icons.post_add, title: 'Post Deadline', onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => PostDeadlinesPage()),
-                  );
-                }),
+
                 // New Card for Meetings
               ],
             ),

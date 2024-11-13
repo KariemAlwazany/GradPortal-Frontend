@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   permission_handler_windows
   printing
   rive_common
+  url_launcher_windows
   zego_express_engine
 )
 

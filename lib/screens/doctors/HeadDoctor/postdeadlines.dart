@@ -54,7 +54,8 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
                     'title': deadline['Title'],
                     'description': deadline['Description'],
                     'date': DateTime.parse(deadline['Date']),
-                    'file': deadline['File'],
+                    'file': deadline[
+                        'File'], // Highlighting the file URL storage here
                   }));
         });
       }
@@ -213,7 +214,7 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
       'title': title,
       'description': description,
       'date': dateTime,
-      'file': fileName,
+      'file': fileName, // Saving file name/URL here
     };
     setState(() {
       deadlines.add(newDeadline);
@@ -244,7 +245,7 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
         'Title': deadline['title'],
         'Description': deadline['description'],
         'Date': deadline['date']?.toIso8601String(),
-        'File': deadline['file'],
+        'File': deadline['file'], // Highlighted to store file as URL here
       }),
     );
 
@@ -266,7 +267,7 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
         'title': title,
         'description': description,
         'date': dateTime,
-        'file': fileName,
+        'file': fileName, // File URL or name maintained here for updates
       };
     });
     updateDeadline(deadlines[index]);
@@ -290,7 +291,7 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
         'Title': deadline['title'],
         'Description': deadline['description'],
         'Date': deadline['date']?.toIso8601String(),
-        'File': deadline['file'],
+        'File': deadline['file'], // Highlighted to store file as URL here
       }),
     );
 

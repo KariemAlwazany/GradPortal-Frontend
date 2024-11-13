@@ -7,6 +7,7 @@ import 'package:flutter_project/screens/Student/navbarPages/deadline.dart';
 import 'package:flutter_project/screens/Student/navbarPages/profile.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting_options_page.dart'; // New options page import
 import 'package:flutter_project/screens/Student/projectsPage.dart';
+import 'package:flutter_project/screens/Student/messages.dart';
 import 'package:intl/intl.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
@@ -290,7 +291,7 @@ class HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => UploadFilesPage()),
+                  MaterialPageRoute(builder: (context) => DeadlinesPage()),
                 ),
                 child: _buildCategoryItem(
                   'Files',
@@ -388,9 +389,4 @@ class HomeContent extends StatelessWidget {
 }
 
 // Placeholder Widgets for MessagesPage and ProfilePage
-class MessagesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text("Messages Page"));
-  }
-}
+
