@@ -7,6 +7,9 @@ import 'package:flutter_project/screens/doctors/HeadDoctor/transfer.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/viewcurrentprojects.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/Requests.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/discussionTable.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/meetings.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/receiveMessages.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/sendMessages.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/studentsproject.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/timeline.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/viewfiles.dart';
@@ -25,7 +28,7 @@ class _HeadDoctorPageState extends State<HeadDoctorPage> {
   final List<Widget> _pages = [
     HeadDoctorHomeTab(notificationCount: 5), // Home tab with common fields
     HeadDoctorManageTab(), // Manage tab with new fields
-    SchedulePage(), // Schedule tab
+    ReceivedMessagesPage(), // Schedule tab
     HeadDoctorProfilePage(), // Profile tab
   ];
 
@@ -56,8 +59,8 @@ class _HeadDoctorPageState extends State<HeadDoctorPage> {
             label: 'Manage',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.schedule),
-            label: 'Schedule',
+            icon: Icon(Icons.message),
+            label: 'Messages', // Changed label to "Messages"
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
@@ -196,51 +199,82 @@ class HeadDoctorHomeTab extends StatelessWidget {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               children: [
-                _buildOptionCard(context,
-                    icon: Icons.people_outline, title: 'Requests', onTap: () {
-                  Navigator.push(
+                _buildOptionCard(
+                  context,
+                  icon: Icons.people_outline,
+                  title: 'Requests',
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => RequestsDashboardPage()),
+                  ),
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.video_call,
+                  title: 'Meetings',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MeetingsPage()),
+                  ),
+                ),
+                _buildOptionCard(context,
+                    icon: Icons.post_add, title: 'Post Deadline', onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PostDeadlinesPage()),
                   );
                 }),
-                _buildOptionCard(context,
-                    icon: Icons.timeline, title: 'Timeline', onTap: () {
-                  Navigator.push(
+                _buildOptionCard(
+                  context,
+                  icon: Icons.timeline,
+                  title: 'Timeline',
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => ScrollableCalendarPage()),
-                  );
-                }),
-                _buildOptionCard(context,
-                    icon: Icons.work_outline,
-                    title: 'Students & Projects', onTap: () {
-                  Navigator.push(
+                  ),
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.work_outline,
+                  title: 'Students & Projects',
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => StudentsProjectsPage()),
-                  );
-                }),
+                  ),
+                ),
                 _buildOptionCard(context,
                     icon: Icons.table_chart,
-                    title: 'Discussion Table', onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => DiscussionTablePage()),
-                  );
-                }),
-                _buildOptionCard(context,
-                    icon: Icons.folder_open, title: 'View Files', onTap: () {
-                  Navigator.push(
+                    title: 'Discussion Table',
+                    onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DiscussionTablePage()),
+                        )),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.message_outlined,
+                  title: 'Send Messages',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SendMessagePage()),
+                    );
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.folder_open,
+                  title: 'View Files',
+                  onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ViewFilesPage()),
-                  );
-                }),
-                _buildOptionCard(context,
-                    icon: Icons.message_outlined,
-                    title: 'Messages',
-                    onTap: () {}),
+                  ),
+                ),
               ],
             ),
           ),
@@ -349,18 +383,6 @@ class HeadDoctorManageTab extends StatelessWidget {
                   );
                 }),
                 _buildOptionCard(context,
-                    icon: Icons.message_outlined,
-                    title: 'Messages & Assignments',
-                    onTap: () {}),
-                _buildOptionCard(context,
-                    icon: Icons.post_add, title: 'Post Deadline', onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => PostDeadlinesPage()),
-                  );
-                }),
-                _buildOptionCard(context,
                     icon: Icons.transfer_within_a_station,
                     title: 'Transfer Students', onTap: () {
                   Navigator.push(
@@ -434,16 +456,6 @@ class SchedulePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Schedule'), backgroundColor: primaryColor),
       body: Center(child: Text('Schedule Page Content')),
-    );
-  }
-}
-
-class HeadDoctorProfilePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Profile'), backgroundColor: primaryColor),
-      body: Center(child: Text('Head Doctor Profile Page Content')),
     );
   }
 }
