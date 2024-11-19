@@ -11,10 +11,15 @@ import 'package:flutter_project/screens/doctors/NormalDoctor/sendMessages.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/studentsproject.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/timeline.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/viewfiles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 const Color primaryColor = Color(0xFF3B4280);
 
-void main() {
+void main() async {
+  await dotenv.load();
   runApp(MyApp());
 }
 
@@ -41,10 +46,10 @@ class _DoctorPageState extends State<DoctorPage> {
   int _notificationCount = 3; // Example notification count
 
   final List<Widget> _pages = [
-    DoctorHomePage(notificationCount: 3),
+    DoctorHomePage(),
     ScrollableCalendarPage(),
-    ReceivedMessagesPage(), // Replace with actual page
-    DoctorProfilePage(), // Navigate to Profile Page
+    ReceivedMessagesPage(),
+    DoctorProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -75,7 +80,7 @@ class _DoctorPageState extends State<DoctorPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
-            label: 'Messages', // Changed label to "Messages"
+            label: 'Messages',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
@@ -88,9 +93,32 @@ class _DoctorPageState extends State<DoctorPage> {
 }
 
 class DoctorHomePage extends StatelessWidget {
-  final int notificationCount;
+  Future<String> fetchDoctorName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
 
-  DoctorHomePage({required this.notificationCount});
+      if (token == null) {
+        return "Error fetching name";
+      }
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors/current'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return "Dr. ${data['FullName']}";
+      } else {
+        return "Error fetching name";
+      }
+    } catch (e) {
+      return "Error fetching name";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,13 +151,39 @@ class DoctorHomePage extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      Text(
-                        'Dr. Raed Alqadi',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      FutureBuilder<String>(
+                        future: fetchDoctorName(),
+                        initialData: 'Dr. Placeholder',
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text(
+                              'Dr. Placeholder',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text(
+                              'Error fetching name',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            );
+                          }
+                          return Text(
+                            snapshot.data!,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -185,26 +239,25 @@ class DoctorHomePage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (notificationCount > 0)
-                        Positioned(
-                          right: -6,
-                          top: -6,
-                          child: Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              '$notificationCount',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '3',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ],
@@ -279,7 +332,6 @@ class DoctorHomePage extends StatelessWidget {
                           MaterialPageRoute(
                               builder: (context) => DiscussionTablePage()),
                         )),
-
                 _buildOptionCard(
                   context,
                   icon: Icons.message_outlined,
@@ -292,7 +344,6 @@ class DoctorHomePage extends StatelessWidget {
                     );
                   },
                 ),
-
                 _buildOptionCard(
                   context,
                   icon: Icons.folder_open,
@@ -302,8 +353,6 @@ class DoctorHomePage extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => ViewFilesPage()),
                   ),
                 ),
-
-                // New Card for Meetings
               ],
             ),
           ),

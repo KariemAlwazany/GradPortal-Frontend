@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/Student/discussionTable.dart';
 import 'package:flutter_project/screens/Student/files.dart';
-
 import 'package:flutter_project/screens/Student/meeting/meeting.dart';
 import 'package:flutter_project/screens/Student/navbarPages/deadline.dart';
 import 'package:flutter_project/screens/Student/navbarPages/profile.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting_options_page.dart'; // New options page import
 import 'package:flutter_project/screens/Student/projectsPage.dart';
 import 'package:flutter_project/screens/Student/messages.dart';
-import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -117,6 +119,33 @@ class HomeContent extends StatelessWidget {
 
   HomeContent({required this.selectDateTime, required this.notificationCount});
 
+  Future<String> fetchStudentName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        return "Error fetching name";
+      }
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors/cur'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['FullName'];
+      } else {
+        return "Error fetching name";
+      }
+    } catch (e) {
+      return "Error fetching name";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -148,13 +177,39 @@ class HomeContent extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      Text(
-                        'Yazan',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      FutureBuilder<String>(
+                        future: fetchStudentName(),
+                        initialData: 'Fetching...',
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text(
+                              'Fetching...',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text(
+                              'Error fetching name',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            );
+                          }
+                          return Text(
+                            snapshot.data!,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -387,6 +442,3 @@ class HomeContent extends StatelessWidget {
     );
   }
 }
-
-// Placeholder Widgets for MessagesPage and ProfilePage
-

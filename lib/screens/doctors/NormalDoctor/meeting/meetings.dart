@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/resources/home_screen.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/create.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeting.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
@@ -25,10 +26,10 @@ class MeetingsPage extends StatelessWidget {
               _buildOptionCard(
                 context,
                 icon: Icons.add_box_outlined,
-                title: 'Create Meeting for All',
+                title: 'Create Meetings',
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ViewMeetingsPage()),
+                  MaterialPageRoute(builder: (context) => CreateMeetingsPage()),
                 ),
               ),
               SizedBox(height: 16),

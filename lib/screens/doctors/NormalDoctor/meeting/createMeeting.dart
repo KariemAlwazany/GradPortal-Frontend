@@ -129,6 +129,103 @@ class _ViewMeetingsPageState extends State<ViewMeetingsPage> {
     }
   }
 
+  Future<void> cancelMeeting(int id) async {
+    final token = await getToken();
+    if (token == null) {
+      print("Token not found");
+      return;
+    }
+
+    try {
+      final response = await http.delete(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings/deleteMeeting'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({"id": id}),
+      );
+
+      if (response.statusCode == 200) {
+        print("Meeting successfully canceled");
+        fetchMeetings(); // Refresh the list
+      } else {
+        print("Failed to cancel meeting: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error canceling meeting: $e");
+    }
+  }
+
+  Future<void> editMeetingDate(int id) async {
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+
+    if (selectedDate != null) {
+      TimeOfDay? selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (selectedTime != null) {
+        final updatedDateTime = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+
+        if (updatedDateTime.isBefore(DateTime.now())) {
+          // Show an error message if the selected date and time are in the past
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Selected date and time must be in the future.",
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
+        final token = await getToken();
+        if (token == null) {
+          print("Token not found");
+          return;
+        }
+
+        try {
+          final response = await http.patch(
+            Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings/editDate'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode({
+              "id": id,
+              "Date": updatedDateTime.toIso8601String(),
+            }),
+          );
+
+          if (response.statusCode == 200) {
+            print("Meeting date successfully updated");
+            fetchMeetings(); // Refresh the list
+          } else {
+            print("Failed to update meeting date: ${response.statusCode}");
+          }
+        } catch (e) {
+          print("Error updating meeting date: $e");
+        }
+      }
+    }
+  }
+
   void filterAndSortMeetings(String query, String sortBy) {
     List<dynamic> filtered = meetings.where((meeting) {
       final gpTitle = meeting['GP_Title'].toLowerCase();
@@ -253,9 +350,13 @@ class _ViewMeetingsPageState extends State<ViewMeetingsPage> {
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            Icon(
-                                              Icons.calendar_today,
-                                              color: primaryColor,
+                                            GestureDetector(
+                                              onTap: () => editMeetingDate(
+                                                  meeting['id']),
+                                              child: Icon(
+                                                Icons.calendar_today,
+                                                color: primaryColor,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -283,47 +384,94 @@ class _ViewMeetingsPageState extends State<ViewMeetingsPage> {
                                           value: meeting['Date'],
                                         ),
                                         SizedBox(height: 16),
-                                        Align(
-                                          alignment: Alignment.centerRight,
-                                          child: ElevatedButton(
-                                            onPressed: () async {
-                                              final randomMeetingId = (Random()
-                                                              .nextInt(
-                                                                  1000000000) *
-                                                          10 +
-                                                      Random().nextInt(10))
-                                                  .toString()
-                                                  .padLeft(10, '0');
-
-                                              // Pass meeting['id'] and randomMeetingId to createNewMeeting
-                                              await createNewMeeting(
-                                                  randomMeetingId,
-                                                  meeting['id']);
-
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      VideoConferencePage(
-                                                    conferenceID:
-                                                        randomMeetingId,
-                                                    userId: userId,
-                                                    meetingId: meeting['id'],
-                                                  ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            OutlinedButton(
+                                              onPressed: () =>
+                                                  cancelMeeting(meeting['id']),
+                                              style: OutlinedButton.styleFrom(
+                                                side: BorderSide(
+                                                    color: primaryColor),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
                                                 ),
-                                              );
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: primaryColor,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10.0),
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 12),
                                               ),
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 20, vertical: 12),
+                                              child: Text(
+                                                'Cancel',
+                                                style: TextStyle(
+                                                    color: primaryColor),
+                                              ),
                                             ),
-                                            child: Text('Create Meeting'),
-                                          ),
+                                            SizedBox(width: 10),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                // Parse the meeting's date and time
+                                                DateTime meetingDateTime =
+                                                    DateTime.parse(
+                                                        meeting['Date']);
+
+                                                // Check if the current time is past the meeting time
+                                                if (!DateTime.now()
+                                                    .isAfter(meetingDateTime)) {
+                                                  // Show a message if the meeting date and time are in the future
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                          "Meeting can only be created on or after the scheduled time."),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return null; // Disable button
+                                                }
+
+                                                // Proceed with meeting creation logic if the time is valid
+                                                final randomMeetingId = (Random()
+                                                                .nextInt(
+                                                                    1000000000) *
+                                                            10 +
+                                                        Random().nextInt(10))
+                                                    .toString()
+                                                    .padLeft(10, '0');
+
+                                                await createNewMeeting(
+                                                    randomMeetingId,
+                                                    meeting['id']);
+
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        VideoConferencePage(
+                                                      conferenceID:
+                                                          randomMeetingId,
+                                                      userId: userId,
+                                                      meetingId: meeting['id'],
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: primaryColor,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.0),
+                                                ),
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 12),
+                                              ),
+                                              child: Text('Start Meeting'),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

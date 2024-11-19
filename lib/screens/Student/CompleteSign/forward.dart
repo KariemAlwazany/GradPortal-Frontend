@@ -6,6 +6,7 @@ import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page5.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/Student/student.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart'; // For JWT token storage
@@ -33,7 +34,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
 
     final response = await http.get(
       Uri.parse(
-          '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'), // Replace with your actual API endpoint
+          '${dotenv.env['API_BASE_URL']}/GP/v1/doctors/currentStudent'), // Replace with your actual API endpoint
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token', // Include JWT token in the headers
