@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -8,48 +13,129 @@ class TransferStudentPage extends StatefulWidget {
 }
 
 class _TransferStudentPageState extends State<TransferStudentPage> {
-  // Sample list of students with assigned doctors
-  final List<Map<String, dynamic>> students = [
-    {
-      'id': 1,
-      'name': 'John Doe',
-      'currentDoctor': 'Dr. Raed Alqadi',
-      'newDoctor': null,
-    },
-    {
-      'id': 2,
-      'name': 'Jane Smith',
-      'currentDoctor': 'Dr. Emily Williams',
-      'newDoctor': null,
-    },
-  ];
+  List<Map<String, dynamic>> students = [];
+  List<Map<String, dynamic>> doctors = [];
+  String? selectedStudent;
+  String? selectedDoctor;
+  TextEditingController studentController = TextEditingController();
+  TextEditingController doctorController = TextEditingController();
 
-  final List<String> doctorOptions = [
-    'Dr. Raed Alqadi',
-    'Dr. Smith Johnson',
-    'Dr. Emily Williams',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchStudents();
+    fetchDoctors();
+  }
 
-  // Function to transfer a student to a new doctor
-  void transferStudent(int index) {
-    if (students[index]['newDoctor'] != null &&
-        students[index]['newDoctor'] != students[index]['currentDoctor']) {
-      setState(() {
-        students[index]['currentDoctor'] = students[index]['newDoctor'];
-        students[index]['newDoctor'] = null; // Reset newDoctor after transfer
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Transferred ${students[index]['name']} to ${students[index]['currentDoctor']}')),
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs
+        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+  }
+
+  Future<void> fetchStudents() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${dotenv.env['API_BASE_URL']}/GP/v1/students/all"),
       );
-    } else {
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          students = List<Map<String, dynamic>>.from(data['data']['students']);
+        });
+      } else {
+        throw Exception('Failed to load students');
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Please select a different doctor for ${students[index]['name']}')),
+        SnackBar(content: Text('Error fetching students: $e')),
       );
     }
+  }
+
+  Future<void> fetchDoctors() async {
+    try {
+      final response = await http.get(
+        Uri.parse("${dotenv.env['API_BASE_URL']}/GP/v1/doctors"),
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          doctors = List<Map<String, dynamic>>.from(json.decode(response.body));
+        });
+      } else {
+        throw Exception('Failed to load doctors');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching doctors: $e')),
+      );
+    }
+  }
+
+  Future<void> transferStudent() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await http.post(
+        Uri.parse("${dotenv.env['API_BASE_URL']}/GP/v1/doctors/transfer"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: json.encode({
+          "student": selectedStudent,
+          "doctor": selectedDoctor,
+        }),
+      );
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transfer successful')),
+        );
+        setState(() {
+          studentController.clear();
+          doctorController.clear();
+          selectedStudent = null;
+          selectedDoctor = null;
+        });
+      } else {
+        throw Exception('Failed to transfer student');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error transferring student: $e')),
+      );
+    }
+  }
+
+  void confirmTransfer() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirm Transfer'),
+          content: Text(
+            'Are you sure you want to transfer $selectedStudent to $selectedDoctor?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+              onPressed: () {
+                Navigator.pop(context);
+                transferStudent();
+              },
+              child: Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -58,104 +144,159 @@ class _TransferStudentPageState extends State<TransferStudentPage> {
       appBar: AppBar(
         backgroundColor: primaryColor,
         title: Text(
-          'Transfer Student to Another Doctor',
+          'Transfer Students',
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: students.isEmpty
-            ? Center(
-                child: Text(
-                  'No students available for transfer.',
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          elevation: 8,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Transfer Student',
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
                   ),
                 ),
-              )
-            : ListView.builder(
-                itemCount: students.length,
-                itemBuilder: (context, index) {
-                  final student = students[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: primaryColor, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    margin: EdgeInsets.symmetric(vertical: 8),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                      margin: EdgeInsets.zero,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Student Name: ${student['name']}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
-                              ),
+                SizedBox(height: 16),
+                Divider(),
+                SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TypeAheadFormField<String>(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: studentController,
+                          decoration: InputDecoration(
+                            labelText: 'Search Student',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'Current Doctor: ${student['currentDoctor']}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                labelText: 'Transfer to Doctor',
-                                border: OutlineInputBorder(),
-                              ),
-                              value: student['newDoctor'],
-                              items: doctorOptions
-                                  .where((doctor) =>
-                                      doctor !=
-                                      student[
-                                          'currentDoctor']) // Exclude current doctor from options
-                                  .map((doctor) {
-                                return DropdownMenuItem(
-                                  value: doctor,
-                                  child: Text(doctor),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  student['newDoctor'] = value;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 16),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: ElevatedButton(
-                                onPressed: () => transferStudent(index),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryColor,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 12),
-                                ),
-                                child: Text('Transfer Student'),
-                              ),
-                            ),
-                          ],
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
                         ),
+                        suggestionsCallback: (pattern) async {
+                          return students
+                              .where((student) =>
+                                  student['Username'] != null &&
+                                  student['Username']
+                                      .toLowerCase()
+                                      .contains(pattern.toLowerCase()))
+                              .map<String>((student) => student['Username']!)
+                              .toList();
+                        },
+                        itemBuilder: (context, suggestion) {
+                          return ListTile(
+                            title: Text(suggestion),
+                          );
+                        },
+                        onSuggestionSelected: (suggestion) {
+                          setState(() {
+                            selectedStudent = suggestion;
+                            studentController.text = suggestion;
+                          });
+                        },
+                        noItemsFoundBuilder: (context) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'No students found',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  );
-                },
-              ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child:
+                          Icon(Icons.swap_horiz, color: primaryColor, size: 32),
+                    ),
+                    Expanded(
+                      child: TypeAheadFormField<String>(
+                        textFieldConfiguration: TextFieldConfiguration(
+                          controller: doctorController,
+                          decoration: InputDecoration(
+                            labelText: 'Search New Doctor',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                        ),
+                        suggestionsCallback: (pattern) async {
+                          return doctors
+                              .where((doctor) =>
+                                  doctor['Username'] != null &&
+                                  doctor['Username']
+                                      .toLowerCase()
+                                      .contains(pattern.toLowerCase()))
+                              .map<String>((doctor) => doctor['Username']!)
+                              .toList();
+                        },
+                        itemBuilder: (context, suggestion) {
+                          return ListTile(
+                            title: Text(suggestion),
+                          );
+                        },
+                        onSuggestionSelected: (suggestion) {
+                          setState(() {
+                            selectedDoctor = suggestion;
+                            doctorController.text = suggestion;
+                          });
+                        },
+                        noItemsFoundBuilder: (context) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'No doctors found',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: selectedStudent != null && selectedDoctor != null
+                        ? confirmTransfer
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Transfer Student',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

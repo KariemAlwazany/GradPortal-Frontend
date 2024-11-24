@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/postdeadlines.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeting.dart';
 
 import 'package:intl/intl.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Colors.white;
@@ -15,13 +21,78 @@ class ScrollableCalendarPage extends StatefulWidget {
 
 class _ScrollableCalendarPageState extends State<ScrollableCalendarPage> {
   DateTime _selectedDate = DateTime.now();
+  Map<String, List<Map<String, dynamic>>> tasks = {};
 
-  final Map<String, List<String>> tasks = {
-    '2025-01-05': ['Project Proposal Submission'],
-    '2024-01-20': ['Midterm Review'],
-    '2024-02-15': ['Project Presentation'],
-    '2024-03-01': ['Final Report Submission'],
-  };
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    final token = await getToken();
+    if (token == null) return;
+
+    final deadlinesUrl =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/deadlines/doctor/deadlines';
+    final meetingsUrl =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/meetings/myMeetings';
+
+    try {
+      final deadlinesResponse = await http.get(
+        Uri.parse(deadlinesUrl),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      final meetingsResponse = await http.get(
+        Uri.parse(meetingsUrl),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (deadlinesResponse.statusCode == 200 &&
+          meetingsResponse.statusCode == 200) {
+        final deadlinesData =
+            jsonDecode(deadlinesResponse.body)['data']['deadLines'] as List;
+        final meetingsData =
+            jsonDecode(meetingsResponse.body)['data']['meetings'] as List;
+
+        Map<String, List<Map<String, dynamic>>> loadedTasks = {};
+
+        for (var deadline in deadlinesData) {
+          final dateTime = DateTime.parse(deadline['Date']);
+          final date = DateFormat('yyyy-MM-dd').format(dateTime);
+          loadedTasks[date] = (loadedTasks[date] ?? [])
+            ..add({
+              'type': 'deadline',
+              'title': deadline['Title'] ?? 'No Title',
+              'time': DateFormat.jm().format(dateTime),
+            });
+        }
+
+        for (var meeting in meetingsData) {
+          final dateTime = DateTime.parse(meeting['Date']);
+          final date = DateFormat('yyyy-MM-dd').format(dateTime);
+          loadedTasks[date] = (loadedTasks[date] ?? [])
+            ..add({
+              'type': 'meeting',
+              'title': meeting['GP_Title'],
+              'time': DateFormat.jm().format(dateTime),
+            });
+        }
+
+        setState(() {
+          tasks = loadedTasks;
+        });
+      }
+    } catch (e) {
+      print('Error fetching data: $e');
+    }
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +106,8 @@ class _ScrollableCalendarPageState extends State<ScrollableCalendarPage> {
         ),
         centerTitle: true,
         iconTheme: IconThemeData(color: Colors.white),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => DoctorPage()),
-            );
-          },
+        leading: BackButton(
+          color: Colors.white,
         ),
       ),
       body: Column(
@@ -186,20 +251,43 @@ class _ScrollableCalendarPageState extends State<ScrollableCalendarPage> {
     }
   }
 
-  void _showTasksDialog(BuildContext context, String date, List<String> tasks) {
+  void _showTasksDialog(
+      BuildContext context, String date, List<Map<String, dynamic>> tasks) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Tasks for $date"),
+          title: Text("Events for $date"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: tasks
-                .map((task) => ListTile(
-                      leading: Icon(Icons.task, color: primaryColor),
-                      title: Text(task),
-                    ))
-                .toList(),
+            children: tasks.map((task) {
+              IconData icon = task['type'] == 'deadline'
+                  ? Icons.file_present
+                  : Icons.video_call;
+
+              return ListTile(
+                leading: Icon(icon, color: primaryColor),
+                title: Text("${task['title']} (${task['time']})"),
+                subtitle:
+                    Text(task['type'] == 'deadline' ? 'Deadline' : 'Meeting'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  if (task['type'] == 'deadline') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => PostDeadlinesPage()),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ViewMeetingsPage()),
+                    );
+                  }
+                },
+              );
+            }).toList(),
           ),
           actions: [
             TextButton(

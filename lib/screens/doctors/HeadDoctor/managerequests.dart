@@ -45,7 +45,7 @@ class _ManageStudentRequestsPageState extends State<ManageStudentRequestsPage> {
 
         // Fetch student registration number using studentName
         final studentResponse = await http.get(Uri.parse(
-            '${dotenv.env['API_BASE_URL']}/GP/v1/students/$studentName'));
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/specific/$studentName'));
 
         if (studentResponse.statusCode == 200) {
           final studentData = json.decode(studentResponse.body);
