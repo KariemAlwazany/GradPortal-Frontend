@@ -5,7 +5,6 @@ import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
 import 'package:flutter_project/screens/seller_profile_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
-import 'package:flutter_project/screens/profile_screen.dart'; // Import the Profile screen
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
 import 'package:http/http.dart' as http;
@@ -33,9 +32,9 @@ class _SideMenuState extends State<SideMenu> {
     fetchUserData();
   }
 
+
   Future<void> fetchUserData() async {
-    final profileUrl = Uri.parse('http://192.168.0.131:3000/GP/v1/seller/profile');
-    final roleUrl = Uri.parse('http://192.168.0.131:3000/GP/v1/seller/role');
+    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -44,56 +43,36 @@ class _SideMenuState extends State<SideMenu> {
       if (token == null) {
         setState(() {
           userName = "Not logged in";
-          userRole = "";
+          userRole = "Not logged in";
         });
         return;
       }
 
-      // First API
-      final profileResponse = await http.get(
-        profileUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (profileResponse.statusCode == 200) {
-        final profileData = json.decode(profileResponse.body);
-        setState(() {
-          userName = profileData['Username'] ?? "No name found";
-        });
-      } else {
-        setState(() {
-          userName = "Error loading user";
-        });
-      }
-
-      // Second API
-      final roleResponse = await http.get(
+      // Fetch Role Data
+      final response = await http.get(
         roleUrl,
         headers: {
           'Authorization': 'Bearer $token',
         },
       );
 
-      if (roleResponse.statusCode == 200) {
-        final roleData = json.decode(roleResponse.body);
-        final role = roleData['Role'];
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
         setState(() {
-          userRole = role ?? "No role found";
-          // Show the button only if the role is not "Seller"
-          showProjectsButton = (userRole != "Seller");
+          userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
+          userRole = data['Role']?? "No role found"; // Assuming the response contains 'RoleName'
         });
       } else {
         setState(() {
-          userRole = "Error loading role";
+          userName = "Error loading user";
+          userRole = "Error loeading Role"; // Assuming the response contains 'RoleName'
+
         });
       }
     } catch (e) {
       setState(() {
-        userName = "Network error";
-        userRole = "Network error";
-        print(e);
+        userName = "Error loading user";
+        userRole = "Error loeading Role"; // Assuming the response contains 'RoleName'
       });
     }
   }

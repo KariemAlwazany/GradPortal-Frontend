@@ -1,255 +1,321 @@
 import 'package:flutter/material.dart';
-import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddItemScreen extends StatefulWidget {
-  const AddItemScreen({super.key});
+  const AddItemScreen({Key? key}) : super(key: key);
 
   @override
-  _AddItemScreenState createState() => _AddItemScreenState();
+  State<AddItemScreen> createState() => _AddItemScreenState();
 }
 
 class _AddItemScreenState extends State<AddItemScreen> {
-  String username = 'Loading...';
-  String fullName = 'Loading...';
-  String email = 'Loading...';
-  String phoneNumber = 'Loading...';
+  final TextEditingController itemNameController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
 
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-  }
+  File? _selectedImage;
+  String selectedType = 'Hardware'; // Default dropdown value
 
-  Future<void> fetchUserData() async {
-    final profileUrl = Uri.parse('http://192.168.0.131:3000/GP/v1/seller/profile');
-    final userUrl = Uri.parse('http://192.168.0.131:3000/GP/v1/seller/role');
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token');
-
-      if (token == null) {
-        setState(() {
-          username = "Not logged in";
-          fullName = "Not logged in";
-          email = "Not logged in";
-          phoneNumber = "Not logged in";
-        });
-        return;
-      }
-
-      // Fetch Profile Information
-      final userResponse = await http.get(
-        userUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (userResponse.statusCode == 200) {
-        final userData = json.decode(userResponse.body);
-
-        setState(() {
-          username = userData['Username'] ?? "No username found";
-          fullName = userData['FullName'] ?? "No full name found";
-          email = userData['Email'] ?? "No email found";
-        });
-      } else {
-        setState(() {
-          username = "Error loading username";
-          fullName = "Error loading full name";
-          email = "Error loading email";
-        });
-      }
-
-      // Fetch Phone Number
-      final sellerResponse = await http.get(
-        profileUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (sellerResponse.statusCode == 200) {
-        final userData = json.decode(sellerResponse.body);
-        setState(() {
-          phoneNumber = userData['Phone_number'] ?? "No phone number found";
-        });
-      } else {
-        setState(() {
-          phoneNumber = "Error loading phone number";
-        });
-      }
-    } catch (e) {
+  // Method to select an image
+  Future<void> _selectImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
       setState(() {
-        username = "Network error";
-        fullName = "Network error";
-        email = "Network error";
-        phoneNumber = "Network error";
+        _selectedImage = File(pickedFile.path);
       });
-      print(e);
+      print("Selected Image Path: ${_selectedImage!.path}");
+    } else {
+      print("No image selected.");
     }
   }
 
+  // Fetch shop name using an API call
+  Future<String?> _fetchShopName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return null;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://192.168.100.128:3000/GP/v1/seller/profile'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final shopData = json.decode(response.body);
+        print("Fetched Shop Name: ${shopData['Shop_name']}");
+        return shopData['Shop_name'];
+      } else {
+        print("Failed to fetch shop details. Status Code: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to fetch shop details')),
+        );
+        return null;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching shop details')),
+      );
+      print(e);
+      return null;
+    }
+  }
+
+  // Upload item to the API
+ Future<void> _uploadItem() async {
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  final shopName = await _fetchShopName();
+  if (shopName == null) return;
+
+  try {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://192.168.100.128:3000/GP/v1/seller/items/additem'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['item_name'] = itemNameController.text.trim();
+    request.fields['Quantity'] = quantityController.text.trim();
+    request.fields['Price'] = priceController.text.trim();
+    request.fields['Description'] = descriptionController.text.trim();
+    request.fields['Type'] = selectedType;
+    request.fields['Available'] = 'true';
+
+    if (_selectedImage != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'Picture', // This must match the backend field name
+        _selectedImage!.path,
+      ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an image')),
+      );
+      return;
+    }
+
+    print("Request Fields: ${request.fields}");
+    print("Selected Image: ${_selectedImage!.path}");
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item added successfully!')),
+      );
+      Navigator.pop(context);
+    } else {
+      final errorMessage = json.decode(responseBody)['message'] ?? 'Failed to upload item';
+      print("Error Response: $responseBody");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
+  } catch (e) {
+    print("Exception occurred: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('An error occurred. Please try again.')),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(LineAwesomeIcons.angle_left),
-        ),
         title: const Text(
-          "Edit Profile",
-          style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF3B4280),
-          ),
+          'Add Item',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF3B4280)),
+        backgroundColor: const Color(0xFF3B4280),
       ),
       body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  SizedBox(
-                    width: 120,
-                    height: 120,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Add Item Details',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3B4280),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildTextField(
+                  controller: itemNameController,
+                  label: 'Item Name',
+                  hint: 'Enter item name',
+                  icon: Icons.label,
+                ),
+
+                _buildTextField(
+                  controller: quantityController,
+                  label: 'Quantity',
+                  hint: 'Enter item quantity',
+                  icon: Icons.confirmation_number,
+                  keyboardType: TextInputType.number,
+                ),
+
+                _buildTextField(
+                  controller: priceController,
+                  label: 'Price (NIS)',
+                  hint: 'Enter item price',
+                  icon: Icons.attach_money,
+                  keyboardType: TextInputType.number,
+                ),
+
+                _buildTextField(
+                  controller: descriptionController,
+                  label: 'Description',
+                  hint: 'Enter item description',
+                  icon: Icons.description,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Type Field as Dropdown
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'Type',
+                    hintText: 'Select item type',
+                    prefixIcon: const Icon(Icons.category),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(100),
-                        color: const Color(0xFF3B4280),
-                      ),
-                      child: const Icon(
-                        LineAwesomeIcons.camera,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 50),
-              Form(
-                child: Column(
-                  children: [
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: fullName,
-                        hintText: fullName,
-                        prefixIcon: const Icon(LineAwesomeIcons.user),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: username,
-                        hintText: username,
-                        prefixIcon: const Icon(LineAwesomeIcons.user),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: email,
-                        hintText: email,
-                        prefixIcon: const Icon(LineAwesomeIcons.envelope_1),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        labelText: phoneNumber,
-                        hintText: phoneNumber,
-                        prefixIcon: const Icon(LineAwesomeIcons.phone),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                    ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(LineAwesomeIcons.fingerprint),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                      obscureText: true,
-                    ),
-                      const SizedBox(height: 20),
-                      TextFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Rewrite Password',
-                        prefixIcon: const Icon(LineAwesomeIcons.fingerprint),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: Color(0xFF3B4280), width: 2.0),
-                        ),
-                      ),
-                      obscureText: true,
-                    ),
+                  items: const [
+                    DropdownMenuItem(value: 'Hardware', child: Text('Hardware')),
+                    DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
                   ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedType = value ?? 'Hardware';
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a type';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 16),
+
+                GestureDetector(
+                  onTap: _selectImage,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _selectedImage == null
+                          ? 'Upload Picture'
+                          : 'Picture Selected: ${_selectedImage!.path.split('/').last}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF3B4280),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _uploadItem,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      backgroundColor: const Color(0xFF3B4280),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Add Item',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+            prefixIcon: Icon(icon),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 }

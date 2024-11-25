@@ -71,7 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<bool> isUsernameOrEmailTaken(String username, String email) async {
     try {
       // Replace 'your_api_url' with the actual endpoint to check username/email availability
-      const url = 'http://192.168.0.131:3000/GP/v1/users/check';
+      const url = 'http://192.168.100.128:3000/GP/v1/users/check';
       final uri = Uri.parse(url);
       final response = await http.post(
         uri,
