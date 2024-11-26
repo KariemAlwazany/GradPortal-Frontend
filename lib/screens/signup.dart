@@ -153,8 +153,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else {
           // If the API request fails, show an error message
           var responseData = jsonDecode(response.body);
+          print(responseData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${responseData['message']}')),
+            
           );
         }
       } catch (e) {

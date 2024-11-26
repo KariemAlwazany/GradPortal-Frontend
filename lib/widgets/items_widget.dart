@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/item_screen.dart';
 
 class ItemsWidget extends StatefulWidget {
   final VoidCallback onCartIconPressed;
@@ -118,8 +119,12 @@ class _ItemsWidgetState extends State<ItemsWidget> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      Navigator.pushNamed(context, "itemScreen");
-                    },
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ItemScreen(),
+                        ),
+                      );                    },
                     child: Container(
                       margin: EdgeInsets.all(10),
                       child: Image.asset(

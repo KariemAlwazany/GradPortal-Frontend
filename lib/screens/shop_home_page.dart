@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/cart_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For handling image files
 import 'package:badges/badges.dart' as badges;
@@ -96,8 +97,13 @@ class _ShopHomePageState extends State<ShopHomePage> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
-                        // Navigate to cart or perform an action
-                      },
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CartScreen(),
+                        ),
+                      );               
+                        },
                       child: Icon(
                         Icons.shopping_bag_outlined,
                         size: 32,
