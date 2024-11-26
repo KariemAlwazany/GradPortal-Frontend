@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/components/info_card.dart';
-import 'package:flutter_project/components/side_menu_tile.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/components/MenuSideBar/info_card.dart';
+import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
+
 import 'package:flutter_project/models/rive_asset.dart';
+import 'package:flutter_project/screens/NormalUser/main_screen.dart';
 import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
 import 'package:flutter_project/screens/seller_profile_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
@@ -12,7 +15,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SideMenu extends StatefulWidget {
-  const SideMenu({super.key});
+  const SideMenu(
+      {super.key,
+      void Function(int index, String newTitle)? onMenuItemClicked});
 
   @override
   State<SideMenu> createState() => _SideMenuState();
@@ -24,7 +29,8 @@ class _SideMenuState extends State<SideMenu> {
 
   String userName = "Loading...";
   String userRole = "Loading...";
-  bool showProjectsButton = false; // Control visibility of "Return to Projects" button
+  bool showProjectsButton =
+      false; // Control visibility of "Return to Projects" button
 
   @override
   void initState() {
@@ -32,13 +38,13 @@ class _SideMenuState extends State<SideMenu> {
     fetchUserData();
   }
 
-
   Future<void> fetchUserData() async {
-    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
+    final roleUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token'); 
+      final token = prefs.getString('jwt_token');
 
       if (token == null) {
         setState(() {
@@ -59,20 +65,23 @@ class _SideMenuState extends State<SideMenu> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
-          userRole = data['Role']?? "No role found"; // Assuming the response contains 'RoleName'
+          userName = data['Username'] ??
+              "No name found"; // Assuming the response contains 'Username'
+          userRole = data['Role'] ??
+              "No role found"; // Assuming the response contains 'RoleName'
         });
       } else {
         setState(() {
           userName = "Error loading user";
-          userRole = "Error loeading Role"; // Assuming the response contains 'RoleName'
-
+          userRole =
+              "Error loeading Role"; // Assuming the response contains 'RoleName'
         });
       }
     } catch (e) {
       setState(() {
         userName = "Error loading user";
-        userRole = "Error loeading Role"; // Assuming the response contains 'RoleName'
+        userRole =
+            "Error loeading Role"; // Assuming the response contains 'RoleName'
       });
     }
   }
@@ -122,7 +131,7 @@ class _SideMenuState extends State<SideMenu> {
                           selectedMenu = menu;
                           activeTileColor = const Color(0xFF4CAF50);
                         });
-                        
+
                         // Navigate to ProfileScreen if the "Profile" item is clicked
                         if (menu.title == "Profile") {
                           Navigator.push(
@@ -165,7 +174,8 @@ class _SideMenuState extends State<SideMenu> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => MainPage(), // Your project screen
+                              builder: (context) =>
+                                  MainPage(), // Your project screen
                             ),
                           );
                         },
