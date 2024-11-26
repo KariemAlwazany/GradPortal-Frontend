@@ -2,69 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/components/MenuSideBar/info_card.dart';
 import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
+
 import 'package:flutter_project/models/rive_asset.dart';
+import 'package:flutter_project/screens/NormalUser/main_screen.dart';
+import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
+import 'package:flutter_project/screens/seller_profile_screen.dart';
+import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
-import 'package:http/http.dart' as http; // For HTTP requests
-import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
+import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_project/screens/login/signin_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SideMenu extends StatefulWidget {
-  final Function(int, String) onMenuItemClicked; // Callback function
-
-  const SideMenu({super.key, required this.onMenuItemClicked});
+  const SideMenu(
+      {super.key,
+      void Function(int index, String newTitle)? onMenuItemClicked});
 
   @override
   State<SideMenu> createState() => _SideMenuState();
 }
 
-Future<String?> getToken() async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs
-      .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
-}
-
-Future<Map<String, dynamic>?> getUser() async {
-  final String? token = await getToken();
-  final response = await http.get(
-    Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else {
-    throw Exception('Failed to get user');
-  }
-}
-
 class _SideMenuState extends State<SideMenu> {
-  String fullName = "Loading...";
-  String role = "Loading..."; // Default value before data is fetched
   RiveAsset selectedMenu = sideMenus.first;
-  Color activeTileColor = const Color(0xFF6792F5); // Default active color
+  Color activeTileColor = const Color(0xFF4C53A5);
+
+  String userName = "Loading...";
+  String userRole = "Loading...";
+  bool showProjectsButton =
+      false; // Control visibility of "Return to Projects" button
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Load user data when the widget initializes
+    fetchUserData();
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> fetchUserData() async {
+    final roleUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
+
     try {
-      final userData = await getUser();
-      if (userData != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
         setState(() {
-          fullName = userData['data']['data']['FullName'] ?? 'Unknown User';
-          role = userData['data']['data']['Role'] ?? 'Unknown Role';
+          userName = "Not logged in";
+          userRole = "Not logged in";
+        });
+        return;
+      }
+
+      // Fetch Role Data
+      final response = await http.get(
+        roleUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userName = data['Username'] ??
+              "No name found"; // Assuming the response contains 'Username'
+          userRole = data['Role'] ??
+              "No role found"; // Assuming the response contains 'RoleName'
+        });
+      } else {
+        setState(() {
+          userName = "Error loading user";
+          userRole =
+              "Error loeading Role"; // Assuming the response contains 'RoleName'
         });
       }
-    } catch (error) {
-      print('Failed to load user data: $error');
+    } catch (e) {
+      setState(() {
+        userName = "Error loading user";
+        userRole =
+            "Error loeading Role"; // Assuming the response contains 'RoleName'
+      });
     }
   }
 
@@ -81,10 +99,10 @@ class _SideMenuState extends State<SideMenu> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display user data dynamically
+                // Info Card displaying dynamic user data
                 InfoCard(
-                  name: fullName, // Use the full name from the state
-                  profession: role, // Use the role from the state
+                  name: userName,
+                  role: userRole,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 24, top: 32, bottom: 16),
@@ -96,71 +114,105 @@ class _SideMenuState extends State<SideMenu> {
                         .copyWith(color: Colors.white70),
                   ),
                 ),
-                // Iterate through each menu and display it
-                ...sideMenus.map(
-                  (menu) => SideMenuTile(
-                    menu: menu,
+                // Menu Items
+                ...sideMenus.map((menu) => SideMenuTile(
+                      menu: menu,
+                      riveonInit: (artboard) {
+                        final controller = RiveUtils.getRiveController(
+                          artboard,
+                          stateMachineName: menu.stateMachineName,
+                        );
+                        if (controller != null) {
+                          menu.input = controller.findSMI("active") as SMIBool?;
+                        }
+                      },
+                      press: () {
+                        setState(() {
+                          selectedMenu = menu;
+                          activeTileColor = const Color(0xFF4CAF50);
+                        });
+
+                        // Navigate to ProfileScreen if the "Profile" item is clicked
+                        if (menu.title == "Profile") {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SellerProfileScreen(),
+                            ),
+                          );
+                        }
+
+                        // Reset active tile color after delay
+                        Future.delayed(const Duration(seconds: 1), () {
+                          setState(() {
+                            activeTileColor = const Color(0xFF4C53A5);
+                          });
+                        });
+                      },
+                      isActive: selectedMenu == menu,
+                    )),
+                const Spacer(),
+
+                // Conditionally show the "Return to Projects" button and divider
+                Visibility(
+                  visible: showProjectsButton,
+                  child: Column(
+                    children: [
+                      const Divider(color: Colors.white24, height: 1),
+                      SideMenuTile(
+                        menu: RiveAsset(
+                          'assets/RiveAssets/projects_icon.riv', // Replace with your projects icon asset
+                          artboard: "PROJECTS",
+                          stateMachineName: "PROJECTS_interactivity",
+                          title: "Return to Projects",
+                        ),
+                        riveonInit: (artboard) {
+                          // Initialize Rive animations or state machine if required
+                        },
+                        press: () {
+                          // Navigate to the ProjectScreen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  MainPage(), // Your project screen
+                            ),
+                          );
+                        },
+                        isActive: false,
+                      ),
+                    ],
+                  ),
+                ),
+
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SideMenuTile(
+                    menu: RiveAsset(
+                      'assets/RiveAssets/logout_icon.riv',
+                      artboard: "LOGOUT",
+                      stateMachineName: "LOGOUT_interactivity",
+                      title: "Logout",
+                    ),
                     riveonInit: (artboard) {
                       final controller = RiveUtils.getRiveController(
                         artboard,
-                        stateMachineName: menu.stateMachineName,
+                        stateMachineName: "LOGOUT_interactivity",
                       );
-
-                      if (controller != null) {
-                        menu.input = controller.findSMI("active") as SMIBool?;
-                        if (menu.input == null) {
-                          print("Input 'active' not found in state machine.");
-                        }
-                      } else {
-                        print(
-                            "Controller not found for artboard: ${menu.artboard}");
-                      }
                     },
-                    press: () {
-                      // Change the active background color manually
-                      setState(() {
-                        selectedMenu = menu;
-                        activeTileColor =
-                            const Color(0xFF4CAF50); // Custom color on press
-                      });
-
-                      // Navigate to different pages based on the menu selected
-                      if (menu.title == "Projects") {
-                        widget.onMenuItemClicked(0, "Projects ListView");
-                      } else if (menu.title == "Profile") {
-                        widget.onMenuItemClicked(3, "Profile Page");
-                      } else if (menu.title == "Favorites") {
-                        widget.onMenuItemClicked(1, "Favorites Page");
-                      } else if (menu.title == "Store") {
-                        widget.onMenuItemClicked(2, "Store Page");
-                      }
-
-                      // Optionally reset the color back after a short delay
-                      Future.delayed(const Duration(seconds: 1), () {
-                        setState(() {
-                          activeTileColor =
-                              const Color(0xFF6792F5); // Default color
-                        });
-                      });
+                    press: () async {
+                      // Clear token and navigate to WelcomeScreen
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('jwt_token');
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WelcomeScreen(),
+                        ),
+                      );
                     },
-                    isActive: selectedMenu == menu,
+                    isActive: false,
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(left: 24.0),
-                  child: Divider(color: Colors.white24, height: 1),
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.white),
-                  title: Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    // Handle logout action
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => SignInScreen()));
-                  },
                 ),
               ],
             ),

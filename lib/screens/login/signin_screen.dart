@@ -8,6 +8,8 @@ import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
+import 'package:flutter_project/screens/seller_profile_screen.dart';
+import 'package:flutter_project/screens/shop_home_page.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/login/signup.dart';
@@ -254,7 +256,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserPage(),
+                                      builder: (context) => ShopHomePage(),
                                     ),
                                   );
                                 } else if (userRole == 'Admin') {
