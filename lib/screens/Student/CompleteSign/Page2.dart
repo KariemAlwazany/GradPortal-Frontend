@@ -1,4 +1,3 @@
-// package:flutter_project/screens/Student/CompleteSign/Page2.dart
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -18,6 +17,7 @@ class SecondPage extends StatefulWidget {
 
   const SecondPage({required this.onNext, required this.onPrevious, Key? key})
       : super(key: key);
+
   @override
   _SecondPageState createState() => _SecondPageState();
 }
@@ -30,6 +30,15 @@ class _SecondPageState extends State<SecondPage> {
   String? partnerRequesting;
   List<String> students = [];
   String? selectedPartner;
+
+  // New fields for additional information
+  String? age;
+  String? gender;
+  String? projectType;
+  String? preferredFEFramework;
+  String? preferredBEFramework;
+  String? database;
+
   Timer? _statusCheckTimer;
 
   @override
@@ -139,7 +148,6 @@ class _SecondPageState extends State<SecondPage> {
           actions: [
             TextButton(
               onPressed: () {
-                // Pass the partnerUsername to the accept function
                 _respondToPartnerRequest(partnerUsername, true);
                 Navigator.of(context).pop();
               },
@@ -175,22 +183,19 @@ class _SecondPageState extends State<SecondPage> {
       );
 
       if (accepted) {
-        // Navigate to ProjectStepper with the partner's username directly after approval
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => ProjectStepper(
               initialStep: 2,
-              partnerUsername:
-                  partnerRequesting, // Pass the partner's username shown in the dialog
+              partnerUsername: partnerRequesting,
             ),
           ),
         );
       } else {
-        // Stay on SecondPage; update any state if needed
         setState(() {
+          isWaitingForApproval = false;
           isLoadingScreen = false;
-          hasRequest = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You declined the partner request.')),
@@ -232,7 +237,6 @@ class _SecondPageState extends State<SecondPage> {
       selectedPartner = null;
     });
 
-    // If "No" is selected, directly navigate to ProjectStepper
     if (!hasPartner) {
       Navigator.push(
         context,
@@ -288,13 +292,12 @@ class _SecondPageState extends State<SecondPage> {
           final data = json.decode(response.body);
           if (data['Status'] == 'approvedpartner') {
             timer.cancel();
-            // Navigate to ProjectStepper with the partner username when approved
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => ProjectStepper(
                   initialStep: 2,
-                  partnerUsername: selectedPartner, // Pass the selected partner
+                  partnerUsername: selectedPartner,
                 ),
               ),
             );
