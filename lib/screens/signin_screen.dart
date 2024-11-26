@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/resources/auth_method.dart';
+import 'package:flutter_project/resources/home_screen.dart';
+import 'package:flutter_project/screens/Admin/admin.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
+
+import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
+import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:flutter_project/screens/seller_profile_screen.dart';
 import 'package:flutter_project/screens/shop_home_page.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
-import 'package:flutter_project/screens/signup.dart';
+import 'package:flutter_project/screens/login/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:flutter_project/screens/user_page.dart';
-import 'package:flutter_project/screens/student.dart';
-import 'package:flutter_project/screens/main_screen.dart';
-import 'package:flutter_project/screens/forget_password_screen.dart';
+import 'package:flutter_project/screens/Student/student.dart';
+import 'package:flutter_project/screens/NormalUser/main_screen.dart';
+import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -22,8 +31,8 @@ Future<Map<String, dynamic>> login(String email, String password) async {
 
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
-    const url =
-        'http://192.168.100.128:3000/GP/v1/users/login'; // Update this to your API URL
+    final url =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -53,6 +62,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class SignInScreenState extends State<SignInScreen> {
+  // final AuthMethods _authMethods = AuthMethods();
   final formSignInKey = GlobalKey<FormState>();
   bool rememberMe = true;
   String? email;
@@ -232,14 +242,14 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserPage(),
+                                      builder: (context) => MainPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MainPage(),
+                                      builder: (context) => DoctorPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Seller') {
@@ -253,14 +263,23 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => UserPage(),
+                                      builder: (context) => AdminPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Student') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => StudentPage(),
+                                      builder: (context) =>
+                                          StatusCheckPage(), // Ensure Widget193 is correctly wrapped
+                                    ),
+                                  );
+                                } else if (userRole == 'Head') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          HeadDoctorPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
                                 }
@@ -313,7 +332,22 @@ class SignInScreenState extends State<SignInScreen> {
                           Logo(Logos.facebook_f),
                           Logo(Logos.twitter),
                           Logo(Logos.apple),
-                          Logo(Logos.google),
+                          GestureDetector(
+                            onTap: () async {
+                              bool res = false;
+                              // await _authMethods.signInWithGoogle(context);
+                              if (res) {
+                                // Navigator.pushReplacement(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) =>
+                                //        // HomeScreen(), // Ensure Widget193 is correctly wrapped
+                                //   ),
+                                // );
+                              }
+                            }, // Call sign-in method
+                            child: Logo(Logos.google),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 18),

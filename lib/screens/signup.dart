@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_project/screens/signin_screen.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'dart:typed_data'; 
+import 'dart:io'; // For File
+import 'dart:typed_data'; // For Uint8List
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -155,8 +155,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else {
           // If the API request fails, show an error message
           var responseData = jsonDecode(response.body);
+          print(responseData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${responseData['message']}')),
+            
           );
         }
       } catch (e) {
