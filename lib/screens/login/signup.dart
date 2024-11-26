@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:icons_plus/icons_plus.dart';
-import 'package:flutter_project/screens/signin_screen.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 import 'package:http/http.dart' as http;
@@ -71,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<bool> isUsernameOrEmailTaken(String username, String email) async {
     try {
       // Replace 'your_api_url' with the actual endpoint to check username/email availability
-      const url = 'http://192.168.88.5:3000/GP/v1/users/check';
+      final url = '${dotenv.env['API_BASE_URL']}/GP/v1/users/check';
       final uri = Uri.parse(url);
       final response = await http.post(
         uri,
@@ -126,11 +127,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Add the image to the userData if an image was selected and encoded
         if (imageBase64 != null) "Degree": imageBase64,
         if (selectedRole == "Seller") "phoneNumber": phoneNumber,
+        "shopName": shopName
       };
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        const url = 'http://192.168.88.5:3000/GP/v1/users/signup';
+        final url = '${dotenv.env['API_BASE_URL']}/GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,

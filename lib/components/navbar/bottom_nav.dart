@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'user_page.dart'; // Import the UserPage
+import '../../screens/user_page.dart'; // Import the UserPage
 
 class BottomNav extends StatefulWidget {
   @override
@@ -11,8 +11,8 @@ class BottomNavState extends State<BottomNav> {
 
   final List<Widget> pages = [
     UserPage(), // Your UserPage
+    Center(child: Text('Store Page')), // Placeholder for other pages
     Center(child: Text('Favorites Page')), // Placeholder for other pages
-    Center(child: Text('Settings Page')), // Placeholder for other pages
     Center(child: Text('Profile Page')), // Placeholder for other pages
   ];
 

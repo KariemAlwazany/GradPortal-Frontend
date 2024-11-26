@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/components/MenuSideBar/side_bar_menu.dart';
 import 'package:flutter_project/screens/cart_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For handling image files
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter_project/widgets/categories_widget.dart';
 import 'package:flutter_project/widgets/items_widget.dart';
-import 'package:flutter_project/components/side_bar_menu.dart'; // Import your SideMenu widget
 
 class ShopHomePage extends StatefulWidget {
   @override
@@ -13,14 +13,16 @@ class ShopHomePage extends StatefulWidget {
 }
 
 class _ShopHomePageState extends State<ShopHomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // GlobalKey for Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey =
+      GlobalKey<ScaffoldState>(); // GlobalKey for Scaffold
   File? _image; // To store the image file
   int _cartItemCount = 0; // Track cart item count
 
   // Function to open the camera
   Future<void> _openCamera() async {
     final ImagePicker _picker = ImagePicker();
-    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.camera);
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.camera);
 
     if (pickedImage != null) {
       setState(() {
@@ -82,7 +84,8 @@ class _ShopHomePageState extends State<ShopHomePage> {
                 ),
                 Spacer(),
                 badges.Badge(
-                  showBadge: _cartItemCount > 0, // Show badge only when count > 0
+                  showBadge:
+                      _cartItemCount > 0, // Show badge only when count > 0
                   badgeStyle: badges.BadgeStyle(
                     badgeColor: Colors.red,
                     padding: EdgeInsets.all(7),
@@ -97,13 +100,13 @@ class _ShopHomePageState extends State<ShopHomePage> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CartScreen(),
-                        ),
-                      );               
-                        },
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CartScreen(),
+                          ),
+                        );
+                      },
                       child: Icon(
                         Icons.shopping_bag_outlined,
                         size: 32,

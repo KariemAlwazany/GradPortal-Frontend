@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'bottom_nav.dart';
+import '../components/navbar/bottom_nav.dart';
 
 class UserPage extends StatelessWidget {
   const UserPage({Key? key}) : super(key: key);
