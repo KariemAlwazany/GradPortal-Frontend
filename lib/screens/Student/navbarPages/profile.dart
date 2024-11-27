@@ -5,6 +5,8 @@ const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Color(0xFFF5F5F5); // Light background color
 
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +21,7 @@ class ProfilePage extends StatelessWidget {
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
               ),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 10.0,
@@ -29,7 +31,7 @@ class ProfilePage extends StatelessWidget {
             ),
             padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             child: Column(
-              children: [
+              children: const [
                 CircleAvatar(
                   radius: 60,
                   backgroundImage: AssetImage(
@@ -135,8 +137,8 @@ class ProfileInfoItem extends StatelessWidget {
   final String label;
   final String value;
 
-  ProfileInfoItem(
-      {required this.icon, required this.label, required this.value});
+  const ProfileInfoItem(
+      {super.key, required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {

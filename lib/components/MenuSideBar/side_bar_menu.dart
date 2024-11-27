@@ -5,8 +5,7 @@ import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
 
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
-import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
-import 'package:flutter_project/screens/seller_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/seller_profile_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
@@ -40,7 +39,7 @@ class _SideMenuState extends State<SideMenu> {
 
   Future<void> fetchUserData() async {
     final roleUrl =
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
+        Uri.parse('${dotenv.env['API_BASE_URL']}GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -122,10 +121,8 @@ class _SideMenuState extends State<SideMenu> {
                           artboard,
                           stateMachineName: menu.stateMachineName,
                         );
-                        if (controller != null) {
-                          menu.input = controller.findSMI("active") as SMIBool?;
-                        }
-                      },
+                        menu.input = controller.findSMI("active") as SMIBool?;
+                                            },
                       press: () {
                         setState(() {
                           selectedMenu = menu;

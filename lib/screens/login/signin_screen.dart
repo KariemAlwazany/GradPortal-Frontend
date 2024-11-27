@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_project/resources/auth_method.dart';
-import 'package:flutter_project/resources/home_screen.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 
-import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
-import 'package:flutter_project/screens/seller_profile_screen.dart';
-import 'package:flutter_project/screens/shop_home_page.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/login/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
-import 'package:flutter_project/screens/user_page.dart';
-import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
 import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
@@ -32,7 +26,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     final url =
-        '${dotenv.env['API_BASE_URL']}/GP/v1/users/login'; // Update this to your API URL
+        '${dotenv.env['API_BASE_URL']}GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,

@@ -7,6 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class ViewFilesPage extends StatefulWidget {
+  const ViewFilesPage({super.key});
+
   @override
   _ViewFilesPageState createState() => _ViewFilesPageState();
 }

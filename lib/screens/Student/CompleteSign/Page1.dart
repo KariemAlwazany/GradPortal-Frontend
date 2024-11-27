@@ -1,6 +1,5 @@
 // package:flutter_project/screens/Student/CompleteSign/Page1.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 

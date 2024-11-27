@@ -15,8 +15,7 @@ class SecondPage extends StatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onPrevious;
 
-  const SecondPage({required this.onNext, required this.onPrevious, Key? key})
-      : super(key: key);
+  const SecondPage({required this.onNext, required this.onPrevious, super.key});
 
   @override
   _SecondPageState createState() => _SecondPageState();

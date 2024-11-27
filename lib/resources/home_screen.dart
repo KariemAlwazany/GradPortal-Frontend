@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key? key, required String conferenceId}) : super(key: key);
+  const HomeScreen({super.key, required String conferenceId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -155,9 +155,8 @@ class VideoConferencePage extends StatelessWidget {
   final String conferenceID;
   final String userId;
 
-  VideoConferencePage(
-      {Key? key, required this.conferenceID, required this.userId})
-      : super(key: key);
+  const VideoConferencePage(
+      {super.key, required this.conferenceID, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +179,7 @@ class VideoConferencePage extends StatelessWidget {
         appSign: appSign,
         conferenceID: conferenceID,
         userID: userId,
-        userName: '$userId',
+        userName: userId,
         config: ZegoUIKitPrebuiltVideoConferenceConfig(),
       ),
     );

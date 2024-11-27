@@ -6,6 +6,8 @@ import 'verification_code.dart'; // Import the OTPPage
 import 'signin_screen.dart'; // Import your SignInScreen
 
 class ResetPasswordPage extends StatefulWidget {
+  const ResetPasswordPage({super.key});
+
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
 }
@@ -33,8 +35,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   // Function to send OTP using Gmail SMTP via the `mailer` package
   Future<void> sendOTP(String email) async {
-    final String username = 'Yazan.mansour2003@gmail.com'; // Your Gmail
-    final String password = 'btgv vhcc sizg wqcm'; // Your App Password
+    const String username = 'Yazan.mansour2003@gmail.com'; // Your Gmail
+    const String password = 'btgv vhcc sizg wqcm'; // Your App Password
 
     final smtpServer = gmail(username, password);
 
@@ -51,7 +53,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       // Send the email
       final sendReport = await send(message, smtpServer);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
 
       // Navigate to the OTP verification page if the email is sent
       ScaffoldMessenger.of(context).showSnackBar(
@@ -124,7 +126,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(15.0),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10,

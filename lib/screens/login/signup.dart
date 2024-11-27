@@ -72,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<bool> isUsernameOrEmailTaken(String username, String email) async {
     try {
       // Replace 'your_api_url' with the actual endpoint to check username/email availability
-      final url = '${dotenv.env['API_BASE_URL']}/GP/v1/users/check';
+      final url = '${dotenv.env['API_BASE_URL']}GP/v1/users/check';
       final uri = Uri.parse(url);
       final response = await http.post(
         uri,
@@ -132,7 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       try {
         // Send data to API (replace 'your_api_url' with the actual endpoint)
-        final url = '${dotenv.env['API_BASE_URL']}/GP/v1/users/signup';
+        final url = '${dotenv.env['API_BASE_URL']}GP/v1/users/signup';
         final uri = Uri.parse(url);
         final response = await http.post(
           uri,

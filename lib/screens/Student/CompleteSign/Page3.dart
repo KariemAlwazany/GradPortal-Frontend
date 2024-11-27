@@ -18,8 +18,8 @@ class ThirdPage extends StatefulWidget {
     required this.onNext,
     required this.onPrevious,
     this.selectedPartner,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ThirdPageState createState() => _ThirdPageState();
@@ -70,7 +70,7 @@ class _ThirdPageState extends State<ThirdPage> {
   }
 
   void _sendProjectToWaitingList() async {
-    final String partner1 =
+    const String partner1 =
         'Partner_1_Name'; // Replace this with the actual partner1 value
     String? partner2 =
         widget.selectedPartner; // This will be null if "No" was selected

@@ -10,6 +10,8 @@ import 'package:intl/intl.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class DeadlinesPage extends StatefulWidget {
+  const DeadlinesPage({super.key});
+
   @override
   _DeadlinesPageState createState() => _DeadlinesPageState();
 }
@@ -200,10 +202,10 @@ class DeadlineDetailsPage extends StatefulWidget {
   final Function(String) onFileUpload;
 
   const DeadlineDetailsPage({
-    Key? key,
+    super.key,
     required this.deadline,
     required this.onFileUpload,
-  }) : super(key: key);
+  });
 
   @override
   _DeadlineDetailsPageState createState() => _DeadlineDetailsPageState();

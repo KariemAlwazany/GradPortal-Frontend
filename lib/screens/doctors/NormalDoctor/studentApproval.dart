@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentApprovalPage extends StatefulWidget {
+  const StudentApprovalPage({super.key});
+
   @override
   _StudentApprovalPageState createState() => _StudentApprovalPageState();
 }
@@ -202,7 +204,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$name',
+              name,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),

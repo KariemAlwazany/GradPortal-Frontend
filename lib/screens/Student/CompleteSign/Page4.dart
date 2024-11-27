@@ -17,8 +17,8 @@ class FourthPage extends StatefulWidget {
 
   const FourthPage({
     required this.onPrevious,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _FourthPageState createState() => _FourthPageState();

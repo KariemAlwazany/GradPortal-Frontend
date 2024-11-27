@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/components/MenuSideBar/side_bar_menu.dart';
-import 'package:flutter_project/screens/cart_screen.dart';
+import 'package:flutter_project/screens/Shop/cart_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For handling image files
 import 'package:badges/badges.dart' as badges;
@@ -8,6 +8,8 @@ import 'package:flutter_project/widgets/categories_widget.dart';
 import 'package:flutter_project/widgets/items_widget.dart';
 
 class ShopHomePage extends StatefulWidget {
+  const ShopHomePage({super.key});
+
   @override
   _ShopHomePageState createState() => _ShopHomePageState();
 }
@@ -20,9 +22,9 @@ class _ShopHomePageState extends State<ShopHomePage> {
 
   // Function to open the camera
   Future<void> _openCamera() async {
-    final ImagePicker _picker = ImagePicker();
+    final ImagePicker picker = ImagePicker();
     final XFile? pickedImage =
-        await _picker.pickImage(source: ImageSource.camera);
+        await picker.pickImage(source: ImageSource.camera);
 
     if (pickedImage != null) {
       setState(() {

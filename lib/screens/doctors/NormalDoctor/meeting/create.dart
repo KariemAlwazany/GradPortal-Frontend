@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class CreateMeetingsPage extends StatelessWidget {
-  const CreateMeetingsPage({Key? key}) : super(key: key);
+  const CreateMeetingsPage({super.key});
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();

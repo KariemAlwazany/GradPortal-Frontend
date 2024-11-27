@@ -1,13 +1,13 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/item_screen.dart';
+import 'package:flutter_project/screens/Shop/item_screen.dart';
 
 class ItemsWidget extends StatefulWidget {
   final VoidCallback onCartIconPressed;
   final VoidCallback onCartIconRemoved;
 
-  ItemsWidget({required this.onCartIconPressed, required this.onCartIconRemoved});
+  const ItemsWidget({super.key, required this.onCartIconPressed, required this.onCartIconRemoved});
 
   @override
   _ItemsWidgetState createState() => _ItemsWidgetState();

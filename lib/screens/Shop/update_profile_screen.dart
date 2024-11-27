@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -35,137 +36,139 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     fetchUserData();
   }
 
-  Future<void> fetchUserData() async {
-    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
-    final userUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/profile');
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token');
+Future<void> fetchUserData() async {
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final roleUrl = Uri.parse('${baseUrl}GP/v1/seller/role');
+  final userUrl = Uri.parse('${baseUrl}GP/v1/seller/profile');
 
-      if (token == null) {
-        setState(() {
-          username = "Not logged in";
-          email = "Not logged in";
-          role = "Not logged in";
-          phoneNumber = "Not logged in";
-          fullName = "Not logged in";
-          shopName = "Not logged in"; // New field
-        });
-        return;
-      }
-
-      // Fetch Role Data
-      final roleResponse = await http.get(
-        roleUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (roleResponse.statusCode == 200) {
-        final data = json.decode(roleResponse.body);
-        setState(() {
-          username = data['Username'] ?? "No username found";
-          email = data['Email'] ?? "No email found";
-          role = data['Role'] ?? "No role found";
-          fullName = data['FullName'] ?? "No name found";
-        });
-      } else {
-        setState(() {
-          username = "Error loading username";
-          email = "Error loading email";
-          role = "Error loading role";
-          fullName = "Error loading name";
-        });
-      }
-
-      // Fetch Profile Data
-      final profileResponse = await http.get(
-        userUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (profileResponse.statusCode == 200) {
-        final profileData = json.decode(profileResponse.body);
-        setState(() {
-          phoneNumber = profileData['Phone_number'] ?? "No phone number found";
-          shopName = profileData['Shop_name'] ?? "No shop name found"; // New field
-        });
-      } else {
-        setState(() {
-          phoneNumber = "Error loading phone number";
-          shopName = "Error loading shop name"; // New field
-        });
-      }
-    } catch (e) {
-      setState(() {
-        phoneNumber = "Error loading data";
-        shopName = "Error loading data"; // New field
-      });
-    }
-  }
-
-  Future<void> updateProfile() async {
-    final updateUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/updateSeller');
+  try {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
     if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
+      setState(() {
+        username = "Not logged in";
+        email = "Not logged in";
+        role = "Not logged in";
+        phoneNumber = "Not logged in";
+        fullName = "Not logged in";
+        shopName = "Not logged in"; // New field
+      });
       return;
     }
 
-    // Check password and confirm password match
-    if (passwordController.text.isNotEmpty &&
-        passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
-      return;
+    // Fetch Role Data
+    final roleResponse = await http.get(
+      roleUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (roleResponse.statusCode == 200) {
+      final data = json.decode(roleResponse.body);
+      setState(() {
+        username = data['Username'] ?? "No username found";
+        email = data['Email'] ?? "No email found";
+        role = data['Role'] ?? "No role found";
+        fullName = data['FullName'] ?? "No name found";
+      });
+    } else {
+      setState(() {
+        username = "Error loading username";
+        email = "Error loading email";
+        role = "Error loading role";
+        fullName = "Error loading name";
+      });
     }
 
-    // Build the data object with non-empty fields
-    Map<String, dynamic> updates = {};
-    if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
-    if (phoneNumberController.text.isNotEmpty) updates['Phone_number'] = phoneNumberController.text;
-    if (fullNameController.text.isNotEmpty) updates['FullName'] = fullNameController.text;
-    if (emailController.text.isNotEmpty) updates['Email'] = emailController.text;
-    if (passwordController.text.isNotEmpty) updates['Password'] = passwordController.text;
-    if (shopNameController.text.isNotEmpty) updates['Shop_name'] = shopNameController.text; // New field
+    // Fetch Profile Data
+    final profileResponse = await http.get(
+      userUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    try {
-      final response = await http.patch(
-        updateUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(updates),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
-        fetchUserData(); // Refresh data after successful update
-      } else {
-        final errorData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${errorData['message']}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network error')),
-      );
-      print(e);
+    if (profileResponse.statusCode == 200) {
+      final profileData = json.decode(profileResponse.body);
+      setState(() {
+        phoneNumber = profileData['Phone_number'] ?? "No phone number found";
+        shopName = profileData['Shop_name'] ?? "No shop name found"; // New field
+      });
+    } else {
+      setState(() {
+        phoneNumber = "Error loading phone number";
+        shopName = "Error loading shop name"; // New field
+      });
     }
+  } catch (e) {
+    setState(() {
+      phoneNumber = "Error loading data";
+      shopName = "Error loading data"; // New field
+    });
   }
+}
+Future<void> updateProfile() async {
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final updateUrl = Uri.parse('${baseUrl}GP/v1/seller/updateSeller');
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  // Check password and confirm password match
+  if (passwordController.text.isNotEmpty &&
+      passwordController.text != confirmPasswordController.text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Passwords do not match')),
+    );
+    return;
+  }
+
+  // Build the data object with non-empty fields
+  Map<String, dynamic> updates = {};
+  if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
+  if (phoneNumberController.text.isNotEmpty) updates['Phone_number'] = phoneNumberController.text;
+  if (fullNameController.text.isNotEmpty) updates['FullName'] = fullNameController.text;
+  if (emailController.text.isNotEmpty) updates['Email'] = emailController.text;
+  if (passwordController.text.isNotEmpty) updates['Password'] = passwordController.text;
+  if (shopNameController.text.isNotEmpty) updates['Shop_name'] = shopNameController.text; // New field
+
+  try {
+    final response = await http.patch(
+      updateUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(updates),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+      fetchUserData(); // Refresh data after successful update
+    } else {
+      final errorData = json.decode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${errorData['message']}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Network error')),
+    );
+    print(e);
+  }
+}
 
   @override
   Widget build(BuildContext context) {

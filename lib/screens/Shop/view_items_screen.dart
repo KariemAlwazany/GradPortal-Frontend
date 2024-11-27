@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/edit_item_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';  // For base64 decoding if needed
+import 'dart:typed_data';
 
 class ViewItemsScreen extends StatefulWidget {
-  const ViewItemsScreen({Key? key}) : super(key: key);
+  const ViewItemsScreen({super.key});
 
   @override
   State<ViewItemsScreen> createState() => _ViewItemsScreenState();
@@ -23,6 +24,9 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
   }
 
   Future<void> fetchItems() async {
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch base URL from .env
+    final itemsUrl = Uri.parse('${baseUrl}GP/v1/seller/items/getSelleritems');
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
@@ -35,37 +39,44 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.100.128:3000/GP/v1/seller/getAllitems'),
+        itemsUrl,
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+          setState(() {
+            items = List.from(data['items'] ?? []); // Convert 'items' to a list
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            items = [];
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No items found')),
+          );
+        }
+      } else {
         setState(() {
-          items = json.decode(response.body)['items']; // Adjust based on API response structure
           isLoading = false;
         });
-      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to load items')),
         );
       }
     } catch (e) {
       print("Error fetching items: $e");
+      setState(() {
+        isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error fetching items')),
       );
     }
-  }
-
-  void editItem(dynamic item) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditItemScreen(), // Create this screen for editing
-      ),
-    ).then((value) {
-      if (value == true) fetchItems(); // Refresh items after editing
-    });
   }
 
   @override
@@ -126,7 +137,7 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [
+                      children: const [
                         CategoryChip(label: 'Components'),
                         CategoryChip(label: 'Accessories'),
                         CategoryChip(label: 'Best Selling'),
@@ -158,10 +169,13 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
-                        return ItemCard(
-                          item: item,
-                          onEdit: () => editItem(item),
-                        );
+
+                        // Check if item is a map and if its fields are of the expected types
+                        if (item is Map<String, dynamic>) {
+                          return ItemCard(item: item);
+                        } else {
+                          return const SizedBox(); // Return empty widget if item is not a map
+                        }
                       },
                     ),
                   ),
@@ -175,7 +189,7 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
 class CategoryChip extends StatelessWidget {
   final String label;
 
-  const CategoryChip({Key? key, required this.label}) : super(key: key);
+  const CategoryChip({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -191,13 +205,35 @@ class CategoryChip extends StatelessWidget {
 }
 
 class ItemCard extends StatelessWidget {
-  final dynamic item;
-  final VoidCallback onEdit;
+  final Map<String, dynamic> item;
 
-  const ItemCard({Key? key, required this.item, required this.onEdit}) : super(key: key);
+  const ItemCard({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
+    String itemName = item['item_name'] ?? 'No name';
+    String description = item['Description'] ?? 'No description';
+    String price = item['Price'] != null ? "\$${item['Price']}" : 'No price';
+
+    // Handle Picture field if it's a Base64 string
+    Uint8List? pictureBytes;
+
+    if (item['Picture'] != null) {
+      // Check if Picture is a Base64-encoded string
+      if (item['Picture'] is String) {
+        try {
+          pictureBytes = base64Decode(item['Picture']); // Decode base64 string to bytes
+        } catch (e) {
+          print("Error decoding base64: $e");
+        }
+      }
+    }
+
+    // If pictureBytes is not null and not empty, use Image.memory to display the image from bytes
+    Widget imageWidget = pictureBytes != null && pictureBytes.isNotEmpty
+        ? Image.memory(pictureBytes)  // Use Image.memory for byte data
+        : const Center(child: Text('No image available'));  // More informative fallback
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
@@ -208,12 +244,7 @@ class ItemCard extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                item['Picture'], // Adjust based on your API's image URL field
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
-              ),
+              child: imageWidget,  // Display the image widget
             ),
           ),
 
@@ -224,37 +255,21 @@ class ItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['item_name'],
+                  itemName,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  item['Description'],
+                  description,
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "\$${item['Price']}",
+                  price,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: onEdit,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        // Handle delete
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),

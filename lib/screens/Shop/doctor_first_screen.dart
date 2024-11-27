@@ -3,14 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
 
-class StudentFirstScreen extends StatefulWidget {
-  const StudentFirstScreen({super.key, required username});
+class DoctorFirstScreen extends StatefulWidget {
+  const DoctorFirstScreen({super.key, required username});
 
   @override
-  _StudentFirstScreenState createState() =>  _StudentFirstScreenState();
+  _DoctorFirstScreenState createState() =>  _DoctorFirstScreenState();
 }
 
-class  _StudentFirstScreenState extends State<StudentFirstScreen> {
+class  _DoctorFirstScreenState extends State<DoctorFirstScreen> {
   final TextEditingController _shopNameController = TextEditingController();
 
   @override
@@ -74,7 +74,7 @@ class  _StudentFirstScreenState extends State<StudentFirstScreen> {
 class NextPage extends StatelessWidget {
   final String shopName;
 
-  const NextPage({super.key, required this.shopName});
+  const NextPage({Key? key, required this.shopName}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../screens/user_page.dart'; // Import the UserPage
 
 class BottomNav extends StatefulWidget {
+  const BottomNav({super.key});
+
   @override
   BottomNavState createState() => BottomNavState();
 }

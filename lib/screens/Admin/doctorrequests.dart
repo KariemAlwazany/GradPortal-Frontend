@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class DoctorRequestsPage extends StatefulWidget {
+  const DoctorRequestsPage({super.key});
+
   @override
   _DoctorRequestsPageState createState() => _DoctorRequestsPageState();
 }
@@ -226,7 +228,7 @@ class DoctorRequestDetailPage extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
-  DoctorRequestDetailPage({
+  const DoctorRequestDetailPage({super.key, 
     required this.name,
     required this.email,
     required this.details,
