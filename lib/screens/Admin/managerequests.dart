@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class ManageRequestsPage extends StatefulWidget {
+  const ManageRequestsPage({super.key});
+
   @override
   _ManageRequestsPageState createState() => _ManageRequestsPageState();
 }

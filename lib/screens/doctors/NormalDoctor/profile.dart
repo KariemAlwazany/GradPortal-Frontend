@@ -5,6 +5,8 @@ import 'package:flutter_project/screens/login/signin_screen.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class DoctorProfilePage extends StatelessWidget {
+  const DoctorProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

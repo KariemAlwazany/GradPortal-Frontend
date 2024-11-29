@@ -3,6 +3,8 @@ import 'package:flutter_project/screens/NormalUser/project_screen.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting.dart';
 
 class ProjectsPage extends StatelessWidget {
+  const ProjectsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -6,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddItemScreen extends StatefulWidget {
-  const AddItemScreen({Key? key}) : super(key: key);
+  const AddItemScreen({super.key});
 
   @override
-  State<AddItemScreen> createState() => _AddItemScreenState();
+  _AddItemScreenState createState() => _AddItemScreenState();
 }
 
 class _AddItemScreenState extends State<AddItemScreen> {
@@ -22,6 +23,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   File? _selectedImage;
   String selectedType = 'Hardware'; // Default dropdown value
+  String selectedCategory = 'Motors'; // Default category value
 
   // Method to select an image
   Future<void> _selectImage() async {
@@ -49,8 +51,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
 
     try {
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
       final response = await http.get(
-        Uri.parse('http://192.168.100.128:3000/GP/v1/seller/profile'),
+        Uri.parse('${baseUrl}GP/v1/seller/profile'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -75,76 +78,79 @@ class _AddItemScreenState extends State<AddItemScreen> {
   }
 
   // Upload item to the API
- Future<void> _uploadItem() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
+  Future<void> _uploadItem() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('jwt_token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
 
-  if (token == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User not logged in')),
-    );
-    return;
-  }
-
-  final shopName = await _fetchShopName();
-  if (shopName == null) return;
-
-  try {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('http://192.168.100.128:3000/GP/v1/seller/items/additem'),
-    );
-
-    request.headers['Authorization'] = 'Bearer $token';
-
-    request.fields['item_name'] = itemNameController.text.trim();
-    request.fields['Quantity'] = quantityController.text.trim();
-    request.fields['Price'] = priceController.text.trim();
-    request.fields['Description'] = descriptionController.text.trim();
-    request.fields['Type'] = selectedType;
-    request.fields['Available'] = 'true';
-
-    if (_selectedImage != null) {
-      request.files.add(await http.MultipartFile.fromPath(
-        'Picture', // This must match the backend field name
-        _selectedImage!.path,
-      ));
-    } else {
+    if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image')),
+        const SnackBar(content: Text('User not logged in')),
       );
       return;
     }
 
-    print("Request Fields: ${request.fields}");
-    print("Selected Image: ${_selectedImage!.path}");
+    final shopName = await _fetchShopName();
+    if (shopName == null) return;
 
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-
-    if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Item added successfully!')),
+    try {
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${baseUrl}GP/v1/seller/items/additem'),
       );
-      Navigator.pop(context);
-    } else {
-      final errorMessage = json.decode(responseBody)['message'] ?? 'Failed to upload item';
-      print("Error Response: $responseBody");
+
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.fields['item_name'] = itemNameController.text.trim();
+      request.fields['Quantity'] = quantityController.text.trim();
+      request.fields['Price'] = priceController.text.trim();
+      request.fields['Description'] = descriptionController.text.trim();
+      request.fields['Type'] = selectedType;
+      request.fields['Category'] = selectedCategory; // Added category field
+      request.fields['Available'] = 'true';
+
+      if (_selectedImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'Picture', // This must match the backend field name
+          _selectedImage!.path,
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an image')),
+        );
+        return;
+      }
+
+      print("Request Fields: ${request.fields}");
+      print("Selected Image: ${_selectedImage!.path}");
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Item added successfully!')),
+        );
+        Navigator.pop(context);
+      } else {
+        final errorMessage = json.decode(responseBody)['message'] ?? 'Failed to upload item';
+        print("Error Response: $responseBody");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      print("Exception occurred: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
-  } catch (e) {
-    print("Exception occurred: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('An error occurred. Please try again.')),
-    );
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,7 +217,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   decoration: InputDecoration(
                     labelText: 'Type',
                     hintText: 'Select item type',
-                    prefixIcon: const Icon(Icons.category),
+                    prefixIcon: const Icon(Icons.art_track),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -228,6 +234,44 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please select a type';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Category Field as Dropdown
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    hintText: 'Select item category',
+                    prefixIcon: const Icon(Icons.category),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Motors', child: Text('Motors')),
+                    DropdownMenuItem(value: 'Tubes', child: Text('Tubes')),
+                    DropdownMenuItem(value: 'Drivers', child: Text('Drivers')),
+                    DropdownMenuItem(value: 'Wires', child: Text('Wires')),
+                    DropdownMenuItem(value: 'Microcontrollers', child: Text('Microcontrollers')),
+                    DropdownMenuItem(value: 'Leds', child: Text('Leds')),
+                    DropdownMenuItem(value: 'LCDs', child: Text('LCDs')),
+                    DropdownMenuItem(value: 'Sensors', child: Text('Sensors')),
+                    DropdownMenuItem(value: 'Arms', child: Text('Arms')),
+                    DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCategory = value ?? 'Motors';
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a category';
                     }
                     return null;
                   },

@@ -15,13 +15,15 @@ import 'dart:convert';
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentPage extends StatefulWidget {
+  const StudentPage({super.key});
+
   @override
   _StudentPageState createState() => _StudentPageState();
 }
 
 class _StudentPageState extends State<StudentPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 3;
+  final int _notificationCount = 3;
 
   final List<Widget> _pages = [];
 
@@ -117,7 +119,7 @@ class HomeContent extends StatelessWidget {
   final Function(BuildContext) selectDateTime;
   final int notificationCount;
 
-  HomeContent({required this.selectDateTime, required this.notificationCount});
+  const HomeContent({super.key, required this.selectDateTime, required this.notificationCount});
 
   Future<String> fetchStudentName() async {
     try {

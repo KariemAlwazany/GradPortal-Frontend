@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class ManageStudentRequestsPage extends StatefulWidget {
+  const ManageStudentRequestsPage({super.key});
+
   @override
   _ManageStudentRequestsPageState createState() =>
       _ManageStudentRequestsPageState();

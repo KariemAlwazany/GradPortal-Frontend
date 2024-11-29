@@ -15,6 +15,8 @@ const Color selectedDayColor = Color(0xFFFF3B30);
 const Color textColor = Colors.black87;
 
 class ScrollableCalendarPage extends StatefulWidget {
+  const ScrollableCalendarPage({super.key});
+
   @override
   _ScrollableCalendarPageState createState() => _ScrollableCalendarPageState();
 }

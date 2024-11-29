@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class ViewCurrentProjectsPage extends StatefulWidget {
+  const ViewCurrentProjectsPage({super.key});
+
   @override
   _ViewCurrentProjectsPageState createState() =>
       _ViewCurrentProjectsPageState();
@@ -97,7 +99,7 @@ class _ViewCurrentProjectsPageState extends State<ViewCurrentProjectsPage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 165, // Fixed width for TextField
                       child: TextField(
                         decoration: InputDecoration(
@@ -115,7 +117,7 @@ class _ViewCurrentProjectsPageState extends State<ViewCurrentProjectsPage> {
                       ),
                     ),
                     SizedBox(width: 10),
-                    Container(
+                    SizedBox(
                       width: 202, // Fixed width for dropdown
                       child: DropdownButtonFormField<String>(
                         value: selectedProjectType,
@@ -225,7 +227,7 @@ class _ViewCurrentProjectsPageState extends State<ViewCurrentProjectsPage> {
 class ProjectDetailPage extends StatelessWidget {
   final Map<String, dynamic> project;
 
-  ProjectDetailPage({required this.project});
+  const ProjectDetailPage({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {

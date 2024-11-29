@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_project/screens/shop_home_page.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 
 class ItemAppBar extends StatelessWidget{
   @override
@@ -49,6 +49,5 @@ class ItemAppBar extends StatelessWidget{
         ],
       ),
     );
-;
 }
 }

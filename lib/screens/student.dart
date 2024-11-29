@@ -1,9 +1,9 @@
 // student_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/shop_home_page.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 
 class StudentPage extends StatelessWidget {
-  const StudentPage({Key? key}) : super(key: key);
+  const StudentPage({super.key});
 
   @override
   Widget build(BuildContext context) {

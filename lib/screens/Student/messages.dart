@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class MessagesPage extends StatefulWidget {
+  const MessagesPage({super.key});
+
   @override
   _MessagesPageState createState() => _MessagesPageState();
 }
@@ -115,7 +117,7 @@ class MessageDetailPage extends StatelessWidget {
   final String date;
   final String sender;
 
-  MessageDetailPage({
+  const MessageDetailPage({super.key, 
     required this.title,
     required this.message,
     required this.date,

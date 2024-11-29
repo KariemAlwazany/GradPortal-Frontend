@@ -7,6 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class SendMessagePage extends StatefulWidget {
+  const SendMessagePage({super.key});
+
   @override
   _SendMessagePageState createState() => _SendMessagePageState();
 }
@@ -183,6 +185,8 @@ class _SendMessagePageState extends State<SendMessagePage> {
 }
 
 class ViewMessagesPage extends StatefulWidget {
+  const ViewMessagesPage({super.key});
+
   @override
   _ViewMessagesPageState createState() => _ViewMessagesPageState();
 }

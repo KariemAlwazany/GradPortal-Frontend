@@ -4,6 +4,8 @@ const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Colors.white;
 
 class DiscussionTablePage extends StatefulWidget {
+  const DiscussionTablePage({super.key});
+
   @override
   _DiscussionTablePageState createState() => _DiscussionTablePageState();
 }
@@ -117,7 +119,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          columns: [
+          columns: const [
             DataColumn(
                 label:
                     Text('ID', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -174,7 +176,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                children: const [
                   Text(
                     'My Discussion',
                     style: TextStyle(
@@ -189,7 +191,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               Divider(color: Colors.grey[300]),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.access_time, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Time: 10:00 AM', style: TextStyle(fontSize: 14)),
@@ -197,7 +199,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.room, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Room: A-101', style: TextStyle(fontSize: 14)),
@@ -205,7 +207,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.calendar_today, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Date: 2024-01-10', style: TextStyle(fontSize: 14)),
@@ -213,7 +215,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.today, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Day: Monday', style: TextStyle(fontSize: 14)),
@@ -221,7 +223,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.person, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Supervisor: Dr. Supervisor',
@@ -230,7 +232,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.person, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Examiner 1: Examiner1', style: TextStyle(fontSize: 14)),
@@ -238,7 +240,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
               ),
               SizedBox(height: 8.0),
               Row(
-                children: [
+                children: const [
                   Icon(Icons.person, color: primaryColor),
                   SizedBox(width: 8.0),
                   Text('Examiner 2: Examiner2', style: TextStyle(fontSize: 14)),

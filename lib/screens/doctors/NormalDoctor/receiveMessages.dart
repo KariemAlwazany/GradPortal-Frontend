@@ -7,6 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class ReceivedMessagesPage extends StatefulWidget {
+  const ReceivedMessagesPage({super.key});
+
   @override
   _ReceivedMessagesPageState createState() => _ReceivedMessagesPageState();
 }
@@ -127,7 +129,7 @@ class DoctorMessageDetailPage extends StatelessWidget {
   final String message;
   final String date;
 
-  DoctorMessageDetailPage({
+  const DoctorMessageDetailPage({super.key, 
     required this.title,
     required this.message,
     required this.date,

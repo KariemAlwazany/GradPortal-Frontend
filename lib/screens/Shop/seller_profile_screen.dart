@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_project/screens/shop_management_screen.dart';
-import 'package:flutter_project/screens/update_profile_screen.dart';
-import 'package:flutter_project/screens/view_items_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
+import 'package:flutter_project/screens/Shop/update_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/view_items_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
-import 'package:flutter_project/screens/add_item_screen.dart';
+import 'package:flutter_project/screens/Shop/add_item_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,49 +24,52 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
     super.initState();
     fetchUserData();
   }
+  
+Future<void> fetchUserData() async {
+  // Fetch the base URL from the .env file
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final roleUrl = Uri.parse('${baseUrl}GP/v1/seller/role'); // Use the dynamic base URL
 
-  Future<void> fetchUserData() async {
-    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token'); 
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token'); 
+    if (token == null) {
+      setState(() {
+        userName = "Not logged in";
+        email = "Not logged in";
+      });
+      return;
+    }
 
-      if (token == null) {
-        setState(() {
-          userName = "Not logged in";
-          email = "Not logged in";
-        });
-        return;
-      }
+    // Fetch Role Data
+    final response = await http.get(
+      roleUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-      // Fetch Role Data
-      final response = await http.get(
-        roleUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
-          email = data['Email'] ?? "No role found";
-        });
-      } else {
-        setState(() {
-          userName = "Error loading user";
-          email = "Error loading role";
-        });
-      }
-    } catch (e) {
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
+        email = data['Email'] ?? "No role found";
+      });
+    } else {
       setState(() {
         userName = "Error loading user";
         email = "Error loading role";
       });
     }
+  } catch (e) {
+    setState(() {
+      userName = "Error loading user";
+      email = "Error loading role";
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -185,7 +189,7 @@ class ProfileMenuWidget extends StatelessWidget {
   final Color? textColor;
   final bool endIcon;
 
-  const ProfileMenuWidget({
+  const ProfileMenuWidget({super.key, 
     required this.title,
     required this.icon,
     required this.onPress,

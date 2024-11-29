@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../components/navbar/bottom_nav.dart';
 
 class UserPage extends StatelessWidget {
-  const UserPage({Key? key}) : super(key: key);
+  const UserPage({super.key});
 
   @override
   Widget build(BuildContext context) {

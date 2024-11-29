@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentRequestsPage extends StatefulWidget {
+  const StudentRequestsPage({super.key});
+
   @override
   _StudentRequestsPageState createState() => _StudentRequestsPageState();
 }
@@ -227,7 +229,7 @@ class StudentRequestDetailPage extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
-  StudentRequestDetailPage({
+  const StudentRequestDetailPage({super.key, 
     required this.name,
     required this.email,
     required this.details,

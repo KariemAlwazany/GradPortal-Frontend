@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class PostDeadlinesPage extends StatefulWidget {
+  const PostDeadlinesPage({super.key});
+
   @override
   _PostDeadlinesPageState createState() => _PostDeadlinesPageState();
 }
@@ -196,10 +198,10 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
               clearInputs();
               Navigator.pop(context);
             },
-            child: Text('Save'),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
             ),
+            child: Text('Save'),
           ),
         ],
       ),
