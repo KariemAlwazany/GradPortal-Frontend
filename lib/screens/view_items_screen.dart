@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/edit_item_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -35,13 +36,14 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.100.128:3000/GP/v1/seller/getAllitems'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/getAllitems'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
         setState(() {
-          items = json.decode(response.body)['items']; // Adjust based on API response structure
+          items = json.decode(
+              response.body)['items']; // Adjust based on API response structure
           isLoading = false;
         });
       } else {
@@ -61,7 +63,8 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditItemScreen(), // Create this screen for editing
+        builder: (context) =>
+            EditItemScreen(), // Create this screen for editing
       ),
     ).then((value) {
       if (value == true) fetchItems(); // Refresh items after editing
@@ -149,7 +152,8 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
                   const SizedBox(height: 8),
                   Expanded(
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
@@ -194,7 +198,8 @@ class ItemCard extends StatelessWidget {
   final dynamic item;
   final VoidCallback onEdit;
 
-  const ItemCard({Key? key, required this.item, required this.onEdit}) : super(key: key);
+  const ItemCard({Key? key, required this.item, required this.onEdit})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +212,14 @@ class ItemCard extends StatelessWidget {
           // Item Image
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 item['Picture'], // Adjust based on your API's image URL field
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.error),
               ),
             ),
           ),
@@ -225,7 +232,8 @@ class ItemCard extends StatelessWidget {
               children: [
                 Text(
                   item['item_name'],
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -238,7 +246,8 @@ class ItemCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   "\$${item['Price']}",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Row(

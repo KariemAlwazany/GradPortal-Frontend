@@ -3,11 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/matching.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+// Import the new MatchingPage
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -231,6 +233,7 @@ class _SecondPageState extends State<SecondPage> {
     }
   }
 
+  // Update the `onAnswer` method to navigate to MatchingPage when "No" is pressed
   void onAnswer(bool hasPartner) {
     setState(() {
       answered = hasPartner;
@@ -238,13 +241,11 @@ class _SecondPageState extends State<SecondPage> {
     });
 
     if (!hasPartner) {
+      // Navigate to MatchingPage when "No" is pressed
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProjectStepper(
-            initialStep: 2,
-            partnerUsername: null,
-          ),
+          builder: (context) => MatchingPage(),
         ),
       );
     }

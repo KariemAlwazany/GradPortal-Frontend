@@ -1,9 +1,13 @@
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/rooms.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -19,22 +23,72 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
   DateTime? endDateTime;
   bool isTableCreated = false;
 
-  List<String> days = [];
   List<Map<String, dynamic>> discussionTable = [];
+  List<String> days = [];
 
   final List<String> tableHeaders = [
-    'Time',
     'GP#',
+    'Time',
     'Room',
     'Project\'s Title',
     'Type',
+    'Student 1',
+    'Student 2',
     'Supervisor',
     'Examiner 1',
-    'Examiner 2',
-    'Supervisor 2'
+    'Examiner 2'
   ];
 
-  // Combines date and time into a single DateTime value
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
+
+  Future<void> fetchTableFromApi() async {
+    final token = await getToken();
+    final url = '${dotenv.env['API_BASE_URL']}/GP/v1/table';
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)['data']['table'];
+      discussionTable = data.map<Map<String, dynamic>>((item) {
+        final time = DateTime.parse(item['Time']);
+        return {
+          'gp': null, // Placeholder for GP# counter
+          'time': TimeOfDay(hour: time.hour, minute: time.minute),
+          'day': DateFormat('EEEE').format(time),
+          'room': item['Room'],
+          'projectTitle': item['GP_Title'],
+          'type': item['GP_Type'],
+          'student1': item['Student_1'],
+          'student2': item['Student_2'],
+          'supervisor': item['Supervisor_1'],
+          'examiner1': item['Examiner_1'],
+          'examiner2': item['Examiner_2'],
+        };
+      }).toList();
+
+      // Group rows by time and assign GP# counters
+      discussionTable.asMap().forEach((index, row) {
+        row['gp'] = index + 1;
+      });
+
+      setState(() {
+        isTableCreated = true;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch table data')),
+      );
+    }
+  }
+
   Future<DateTime?> selectDateTime(BuildContext context, String label) async {
     DateTime? selectedDate = await showDatePicker(
       context: context,
@@ -61,98 +115,78 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     return null;
   }
 
-  void createTable() {
-    int rows = int.tryParse(rowsController.text) ?? 0;
+  Future<void> editTime(int index) async {
+    TimeOfDay? selectedTime = await showTimePicker(
+      context: context,
+      initialTime: discussionTable[index]['time'],
+    );
 
-    if (startDateTime != null && endDateTime != null) {
-      days = [];
-      DateTime currentDate = startDateTime!;
-      while (currentDate.isBefore(endDateTime!.add(Duration(days: 1)))) {
-        days.add(DateFormat('EEEE').format(currentDate));
-        currentDate = currentDate.add(Duration(days: 1));
-      }
+    if (selectedTime != null) {
+      setState(() {
+        discussionTable[index]['time'] = selectedTime;
+      });
     }
-
-    discussionTable = [];
-    for (var day in days) {
-      for (int i = 1; i <= rows; i++) {
-        discussionTable.add({
-          'day': day,
-          'row': i,
-          'time': null,
-          'gp': '',
-          'room': '',
-          'projectTitle': '',
-          'type': null,
-          'supervisor': '',
-          'examiner1': '',
-          'examiner2': '',
-          'supervisor2': '',
-        });
-      }
-    }
-
-    setState(() {
-      isTableCreated = true;
-    });
   }
 
-  void generateRandomTable() {
-    final random = Random();
-    int rows = int.tryParse(rowsController.text) ?? 0;
+  Future<void> editTextField(
+      int index, String fieldKey, String currentValue) async {
+    final controller = TextEditingController(text: currentValue);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit $fieldKey'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: 'Enter new value'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                discussionTable[index][fieldKey] = controller.text;
+              });
+              Navigator.pop(context);
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Future<void> generateRandomTable() async {
     if (startDateTime != null && endDateTime != null) {
-      days = [];
-      DateTime currentDate = startDateTime!;
-      while (currentDate.isBefore(endDateTime!.add(Duration(days: 1)))) {
-        days.add(DateFormat('EEEE').format(currentDate));
-        currentDate = currentDate.add(Duration(days: 1));
-      }
-    }
+      final token = await getToken();
+      final url = '${dotenv.env['API_BASE_URL']}/GP/v1/table';
 
-    discussionTable = [];
-    for (var day in days) {
-      for (int i = 1; i <= rows; i++) {
-        discussionTable.add({
-          'day': day,
-          'row': i,
-          'time':
-              TimeOfDay(hour: random.nextInt(12), minute: random.nextInt(60)),
-          'gp': 'GP ${random.nextInt(100)}',
-          'room': 'Room ${random.nextInt(20)}',
-          'projectTitle': 'Project ${random.nextInt(50)}',
-          'type': random.nextBool() ? 'Software' : 'Hardware',
-          'supervisor': 'Dr. ${[
-            'Smith',
-            'Johnson',
-            'Williams',
-            'Jones'
-          ][random.nextInt(4)]}',
-          'examiner1': 'Dr. ${[
-            'Brown',
-            'Davis',
-            'Miller',
-            'Wilson'
-          ][random.nextInt(4)]}',
-          'examiner2': 'Dr. ${[
-            'Moore',
-            'Taylor',
-            'Anderson',
-            'Thomas'
-          ][random.nextInt(4)]}',
-          'supervisor2': 'Dr. ${[
-            'Jackson',
-            'White',
-            'Harris',
-            'Martin'
-          ][random.nextInt(4)]}',
-        });
-      }
-    }
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'StartDate': startDateTime!.toIso8601String(),
+          'EndDate': endDateTime!.toIso8601String(),
+        }),
+      );
 
-    setState(() {
-      isTableCreated = true;
-    });
+      if (response.statusCode == 201) {
+        await fetchTableFromApi();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate table')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select start and end date and time')),
+      );
+    }
   }
 
   Future<void> selectStartDateTime() async {
@@ -173,70 +207,43 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     }
   }
 
-  void selectTime(int index) async {
-    TimeOfDay? selectedTime = await showTimePicker(
+  void _showBottomSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (selectedTime != null) {
-      setState(() {
-        discussionTable[index]['time'] = selectedTime;
-      });
-    }
-  }
-
-  void postForDoctors() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Table posted successfully for doctors!')),
-    );
-  }
-
-  void postForStudents() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Table posted successfully for students!')),
-    );
-  }
-
-  // Function to generate and download the PDF
-  Future<void> downloadTableAsPdf() async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            children: [
-              pw.Text('Discussion Table', style: pw.TextStyle(fontSize: 24)),
-              pw.SizedBox(height: 16),
-              pw.Table.fromTextArray(
-                headers: tableHeaders,
-                data: discussionTable.map((row) {
-                  return [
-                    row['time'] != null
-                        ? (row['time'] as TimeOfDay)
-                            .format(context as BuildContext)
-                        : '',
-                    row['gp'],
-                    row['room'],
-                    row['projectTitle'],
-                    row['type'],
-                    row['supervisor'],
-                    row['examiner1'],
-                    row['examiner2'],
-                    row['supervisor2'],
-                  ];
-                }).toList(),
-              ),
-            ],
-          );
-        },
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
       ),
-    );
-
-    // Use the Printing package to save or share the PDF
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.people, color: primaryColor),
+              title: Text('Post for Students'),
+              onTap: () {
+                // Handle post for students
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person, color: primaryColor),
+              title: Text('Post for Doctors'),
+              onTap: () {
+                // Handle post for doctors
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.download, color: primaryColor),
+              title: Text('Download Table'),
+              onTap: () {
+                // Handle download table
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -248,6 +255,17 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
         title: Text('Create Discussion Table',
             style: TextStyle(color: Colors.white)),
         iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.room),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RoomsPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -257,61 +275,45 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: rowsController,
-                    decoration: InputDecoration(
-                      labelText: 'Number of Rows',
-                      border: OutlineInputBorder(),
+                  Card(
+                    elevation: 4.0,
+                    margin: EdgeInsets.only(bottom: 16.0),
+                    child: ListTile(
+                      title: Text('Start Date and Time'),
+                      subtitle: Text(startDateTime != null
+                          ? DateFormat('yyyy-MM-dd HH:mm')
+                              .format(startDateTime!)
+                          : 'Not Selected'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: selectStartDateTime,
+                      ),
                     ),
-                    keyboardType: TextInputType.number,
+                  ),
+                  Card(
+                    elevation: 4.0,
+                    margin: EdgeInsets.only(bottom: 16.0),
+                    child: ListTile(
+                      title: Text('End Date and Time'),
+                      subtitle: Text(endDateTime != null
+                          ? DateFormat('yyyy-MM-dd HH:mm').format(endDateTime!)
+                          : 'Not Selected'),
+                      trailing: IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: selectEndDateTime,
+                      ),
+                    ),
                   ),
                   SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: selectStartDateTime,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor),
-                          child: Text(startDateTime == null
-                              ? 'Select Start Date & Time'
-                              : 'Start: ${DateFormat('yyyy-MM-dd HH:mm').format(startDateTime!)}'),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: selectEndDateTime,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor),
-                          child: Text(endDateTime == null
-                              ? 'Select End Date & Time'
-                              : 'End: ${DateFormat('yyyy-MM-dd HH:mm').format(endDateTime!)}'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: createTable,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor),
-                          child: Text('Create Empty Table'),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: generateRandomTable,
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor),
-                          child: Text('Generate Randomly'),
-                        ),
-                      ),
-                    ],
+                  Card(
+                    elevation: 4.0,
+                    child: ElevatedButton.icon(
+                      onPressed: generateRandomTable,
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor),
+                      icon: Icon(Icons.shuffle),
+                      label: Text('Generate Randomly'),
+                    ),
                   ),
                 ],
               ),
@@ -319,148 +321,89 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
           if (isTableCreated)
             Expanded(
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: days.map((day) {
-                    List<Map<String, dynamic>> rowsForDay = discussionTable
-                        .where((row) => row['day'] == day)
-                        .toList();
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Column(
+                    children: discussionTable
+                        .fold<Map<String, List<Map<String, dynamic>>>>(
+                            {},
+                            (map, row) =>
+                                map..putIfAbsent(row['day'], () => []).add(row))
+                        .entries
+                        .map((entry) {
+                          final day = entry.key;
+                          final rows = entry.value;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          child: Text(day,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryColor)),
-                        ),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columns: tableHeaders
-                                .map((header) => DataColumn(
-                                      label: Text(header,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                    ))
-                                .toList(),
-                            rows: rowsForDay.asMap().entries.map((entry) {
-                              int index = entry.key;
-                              var row = entry.value;
+                          Map<String, int> timeCounts = {};
+                          rows.forEach((row) {
+                            String timeKey = row['time']!.format(context);
+                            if (timeCounts.containsKey(timeKey)) {
+                              timeCounts[timeKey] = timeCounts[timeKey]! + 1;
+                            } else {
+                              timeCounts[timeKey] = 1;
+                            }
+                          });
 
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    GestureDetector(
-                                      onTap: () => selectTime(index),
-                                      child: Text(
-                                        row['time'] == null
-                                            ? 'Select Time'
-                                            : row['time']!.format(context),
-                                        style: TextStyle(color: Colors.blue),
-                                      ),
-                                    ),
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  day,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  DataCell(TextFormField(
-                                    initialValue: row['gp'],
-                                    onChanged: (value) => row['gp'] = value,
-                                  )),
-                                  DataCell(TextFormField(
-                                    initialValue: row['room'],
-                                    onChanged: (value) => row['room'] = value,
-                                  )),
-                                  DataCell(TextFormField(
-                                    initialValue: row['projectTitle'],
-                                    onChanged: (value) =>
-                                        row['projectTitle'] = value,
-                                  )),
-                                  DataCell(
-                                    DropdownButton<String>(
-                                      value: row['type'],
-                                      hint: Text('Select Type'),
-                                      items: ['Software', 'Hardware']
-                                          .map((type) => DropdownMenuItem(
-                                                value: type,
-                                                child: Text(type),
-                                              ))
-                                          .toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          row['type'] = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  DataCell(TextFormField(
-                                    initialValue: row['supervisor'],
-                                    onChanged: (value) =>
-                                        row['supervisor'] = value,
-                                  )),
-                                  DataCell(TextFormField(
-                                    initialValue: row['examiner1'],
-                                    onChanged: (value) =>
-                                        row['examiner1'] = value,
-                                  )),
-                                  DataCell(TextFormField(
-                                    initialValue: row['examiner2'],
-                                    onChanged: (value) =>
-                                        row['examiner2'] = value,
-                                  )),
-                                  DataCell(TextFormField(
-                                    initialValue: row['supervisor2'],
-                                    onChanged: (value) =>
-                                        row['supervisor2'] = value,
-                                  )),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-          if (isTableCreated)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                color: Colors.transparent,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      onPressed: postForDoctors,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor),
-                      child: Text('Post for Doctors'),
-                    ),
-                    ElevatedButton(
-                      onPressed: postForStudents,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor),
-                      child: Text('Post for Students'),
-                    ),
-                    ElevatedButton(
-                      onPressed: downloadTableAsPdf,
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor),
-                      child: Text('Download as PDF'),
-                    ),
-                  ],
+                                ),
+                              ),
+                              DataTable(
+                                columnSpacing: 16.0,
+                                columns: tableHeaders
+                                    .map((header) => DataColumn(
+                                          label: Text(
+                                            header,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ))
+                                    .toList(),
+                                rows: rows.map((row) {
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(row['gp'].toString())),
+                                      DataCell(Text(
+                                          row['time']?.format(context) ??
+                                              'N/A')),
+                                      DataCell(Text(row['room'] ?? 'N/A')),
+                                      DataCell(
+                                          Text(row['projectTitle'] ?? 'N/A')),
+                                      DataCell(Text(row['type'] ?? 'N/A')),
+                                      DataCell(Text(row['student1'] ?? 'N/A')),
+                                      DataCell(Text(row['student2'] ?? 'N/A')),
+                                      DataCell(
+                                          Text(row['supervisor'] ?? 'N/A')),
+                                      DataCell(Text(row['examiner1'] ?? 'N/A')),
+                                      DataCell(Text(row['examiner2'] ?? 'N/A')),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          );
+                        })
+                        .toList(),
+                  ),
                 ),
               ),
             ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showBottomSheet(context),
+        backgroundColor: primaryColor,
+        child: Icon(Icons.post_add, color: Colors.white),
       ),
     );
   }

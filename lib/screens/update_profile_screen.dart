@@ -1,6 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,8 +20,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController shopNameController = TextEditingController(); // New field
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  final TextEditingController shopNameController =
+      TextEditingController(); // New field
 
   String username = 'Loading...';
   String fullName = 'Loading...';
@@ -36,8 +39,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   Future<void> fetchUserData() async {
-    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
-    final userUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/profile');
+    final roleUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
+    final userUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/profile');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -92,7 +97,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         final profileData = json.decode(profileResponse.body);
         setState(() {
           phoneNumber = profileData['Phone_number'] ?? "No phone number found";
-          shopName = profileData['Shop_name'] ?? "No shop name found"; // New field
+          shopName =
+              profileData['Shop_name'] ?? "No shop name found"; // New field
         });
       } else {
         setState(() {
@@ -109,7 +115,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   Future<void> updateProfile() async {
-    final updateUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/updateSeller');
+    final updateUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/updateSeller');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
@@ -131,12 +138,18 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
     // Build the data object with non-empty fields
     Map<String, dynamic> updates = {};
-    if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
-    if (phoneNumberController.text.isNotEmpty) updates['Phone_number'] = phoneNumberController.text;
-    if (fullNameController.text.isNotEmpty) updates['FullName'] = fullNameController.text;
-    if (emailController.text.isNotEmpty) updates['Email'] = emailController.text;
-    if (passwordController.text.isNotEmpty) updates['Password'] = passwordController.text;
-    if (shopNameController.text.isNotEmpty) updates['Shop_name'] = shopNameController.text; // New field
+    if (usernameController.text.isNotEmpty)
+      updates['Username'] = usernameController.text;
+    if (phoneNumberController.text.isNotEmpty)
+      updates['Phone_number'] = phoneNumberController.text;
+    if (fullNameController.text.isNotEmpty)
+      updates['FullName'] = fullNameController.text;
+    if (emailController.text.isNotEmpty)
+      updates['Email'] = emailController.text;
+    if (passwordController.text.isNotEmpty)
+      updates['Password'] = passwordController.text;
+    if (shopNameController.text.isNotEmpty)
+      updates['Shop_name'] = shopNameController.text; // New field
 
     try {
       final response = await http.patch(
@@ -201,7 +214,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                     height: 120,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(100),
-                      child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+                      child: Image.asset('assets/images/logo.png',
+                          fit: BoxFit.cover),
                     ),
                   ),
                 ],
@@ -313,7 +327,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(100),
-              borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFF3B4280), width: 2.0),
             ),
           ),
         ),

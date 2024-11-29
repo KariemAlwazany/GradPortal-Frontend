@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/shop_management_screen.dart';
 import 'package:flutter_project/screens/update_profile_screen.dart';
 import 'package:flutter_project/screens/view_items_screen.dart';
@@ -25,11 +26,12 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   }
 
   Future<void> fetchUserData() async {
-    final roleUrl = Uri.parse('http://192.168.100.128:3000/GP/v1/seller/role');
+    final roleUrl =
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token'); 
+      final token = prefs.getString('jwt_token');
 
       if (token == null) {
         setState(() {
@@ -50,7 +52,8 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
+          userName = data['Username'] ??
+              "No name found"; // Assuming the response contains 'Username'
           email = data['Email'] ?? "No role found";
         });
       } else {
@@ -119,7 +122,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                 width: 200,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UpdateProfileScreen()));
                   },
                   // ignore: sort_child_properties_last
                   child: const Text(
@@ -141,20 +147,39 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               const Divider(),
               const SizedBox(height: 10),
               // Menu
-              ProfileMenuWidget(title: "Settings", icon: Icons.settings, onPress: () {}),
-              ProfileMenuWidget(title: "Components Selled", icon: Icons.wallet, onPress: () {}),
+              ProfileMenuWidget(
+                  title: "Settings", icon: Icons.settings, onPress: () {}),
+              ProfileMenuWidget(
+                  title: "Components Selled",
+                  icon: Icons.wallet,
+                  onPress: () {}),
               ProfileMenuWidget(
                   title: "Add Items",
                   icon: Icons.add,
                   onPress: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AddItemScreen()));
                   }),
-              ProfileMenuWidget(title: "My Shop", icon: Icons.store, onPress: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ShopManagementScreen()));
-                }),
-              ProfileMenuWidget(title: "My Items", icon: Icons.account_tree_outlined, onPress: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ViewItemsScreen()));
-                }),
+              ProfileMenuWidget(
+                  title: "My Shop",
+                  icon: Icons.store,
+                  onPress: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ShopManagementScreen()));
+                  }),
+              ProfileMenuWidget(
+                  title: "My Items",
+                  icon: Icons.account_tree_outlined,
+                  onPress: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ViewItemsScreen()));
+                  }),
               ProfileMenuWidget(
                 title: "Logout",
                 icon: Icons.logout,
@@ -166,7 +191,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => WelcomeScreen()),
-                    (Route<dynamic> route) => false, 
+                    (Route<dynamic> route) => false,
                   );
                 },
               ),
