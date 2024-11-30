@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/rooms.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -60,6 +60,7 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
       discussionTable = data.map<Map<String, dynamic>>((item) {
         final time = DateTime.parse(item['Time']);
         return {
+          'id': item['id'], // Include ID for patching
           'gp': null, // Placeholder for GP# counter
           'time': TimeOfDay(hour: time.hour, minute: time.minute),
           'day': DateFormat('EEEE').format(time),
@@ -89,30 +90,121 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     }
   }
 
-  Future<DateTime?> selectDateTime(BuildContext context, String label) async {
-    DateTime? selectedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2101),
+  Future<void> patchField({
+    required int id,
+    required String fieldKey,
+    required String value,
+    TimeOfDay? time,
+  }) async {
+    final token = await getToken();
+    final url = '${dotenv.env['API_BASE_URL']}/GP/v1/table/$id';
+
+    // Map input keys to the expected field names in the API
+    Map<String, String> fieldKeyMap = {
+      'time': 'Time',
+      'room': 'Room',
+      'examiner1': 'Examiner_1',
+      'examiner_1': 'Examiner_1',
+      'examiner2': 'Examiner_2',
+      'examiner_2': 'Examiner_2',
+    };
+
+    // Normalize and map the fieldKey
+    fieldKey = fieldKey.trim().toLowerCase();
+    String? mappedFieldKey = fieldKeyMap[fieldKey];
+
+    // Initialize the request body
+    Map<String, dynamic> body = {};
+
+    // Debugging Input
+    print('Debugging Inputs:');
+    print('Original fieldKey: $fieldKey');
+    print('Mapped fieldKey: $mappedFieldKey');
+    print('value: $value');
+    print('time: $time');
+
+    // Add fields to the body dynamically
+    if (mappedFieldKey == 'Time' && time != null) {
+      final now = DateTime.now();
+      final DateTime fullDateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        time.hour,
+        time.minute,
+      );
+      body['Time'] = DateFormat('yyyy-MM-dd HH:mm:ss').format(fullDateTime);
+    } else if (mappedFieldKey != null && value.isNotEmpty) {
+      body[mappedFieldKey] = value;
+    }
+
+    // Debugging the constructed body
+    print('Constructed body: $body');
+
+    if (body.isEmpty) {
+      print('No valid field to update.');
+      return;
+    }
+
+    // Make the PATCH request
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
     );
 
-    if (selectedDate != null) {
-      TimeOfDay? selectedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
+    // Handle response
+    if (response.statusCode != 200) {
+      print('Failed response: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update $fieldKey')),
       );
-      if (selectedTime != null) {
-        return DateTime(
-          selectedDate.year,
-          selectedDate.month,
-          selectedDate.day,
-          selectedTime.hour,
-          selectedTime.minute,
-        );
-      }
+    } else {
+      print('Update successful for $mappedFieldKey.');
     }
-    return null;
+  }
+
+  Future<void> editField({
+    required int index,
+    required String fieldKey,
+    required String currentValue,
+    required String title,
+  }) async {
+    final controller = TextEditingController(text: currentValue);
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit $title'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: 'Enter new $title'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newValue = controller.text;
+              setState(() {
+                discussionTable[index][fieldKey] = newValue;
+              });
+              await patchField(
+                id: discussionTable[index]['id'],
+                fieldKey: fieldKey,
+                value: newValue,
+              );
+              Navigator.pop(context);
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> editTime(int index) async {
@@ -125,37 +217,13 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
       setState(() {
         discussionTable[index]['time'] = selectedTime;
       });
+      await patchField(
+        id: discussionTable[index]['id'],
+        fieldKey: 'Time',
+        value: '',
+        time: selectedTime,
+      );
     }
-  }
-
-  Future<void> editTextField(
-      int index, String fieldKey, String currentValue) async {
-    final controller = TextEditingController(text: currentValue);
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit $fieldKey'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: 'Enter new value'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                discussionTable[index][fieldKey] = controller.text;
-              });
-              Navigator.pop(context);
-            },
-            child: Text('Save'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> generateRandomTable() async {
@@ -189,6 +257,32 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     }
   }
 
+  Future<DateTime?> selectDateTime(BuildContext context, String label) async {
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (selectedDate != null) {
+      TimeOfDay? selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (selectedTime != null) {
+        return DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+      }
+    }
+    return null;
+  }
+
   Future<void> selectStartDateTime() async {
     DateTime? selectedDateTime = await selectDateTime(context, 'Start');
     if (selectedDateTime != null) {
@@ -207,6 +301,50 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     }
   }
 
+  String formatTimeWithRange(TimeOfDay time) {
+    final DateTime now = DateTime.now();
+    final DateTime startTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      time.hour,
+      time.minute,
+    );
+    final DateTime endTime = startTime.add(Duration(minutes: 20));
+
+    final String formattedStartTime =
+        DateFormat.jm().format(startTime); // e.g., 8:00 AM
+    final String formattedEndTime =
+        DateFormat.jm().format(endTime); // e.g., 8:20 AM
+
+    return '$formattedStartTime - $formattedEndTime';
+  }
+
+  Future<void> _postToApi(String endpoint) async {
+    final token = await getToken();
+    final url = '${dotenv.env['API_BASE_URL']}$endpoint';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Successfully posted to $endpoint')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Failed to post to $endpoint: ${response.body}')),
+      );
+      print('Error response: ${response.body}');
+    }
+  }
+
   void _showBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -220,24 +358,24 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
             ListTile(
               leading: Icon(Icons.people, color: primaryColor),
               title: Text('Post for Students'),
-              onTap: () {
-                // Handle post for students
+              onTap: () async {
+                await _postToApi('/GP/v1/table/students');
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.person, color: primaryColor),
               title: Text('Post for Doctors'),
-              onTap: () {
-                // Handle post for doctors
+              onTap: () async {
+                await _postToApi('/GP/v1/table/doctors');
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.download, color: primaryColor),
               title: Text('Download Table'),
-              onTap: () {
-                // Handle download table
+              onTap: () async {
+                await downloadTableAsPdf(discussionTable, tableHeaders);
                 Navigator.pop(context);
               },
             ),
@@ -335,16 +473,6 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                           final day = entry.key;
                           final rows = entry.value;
 
-                          Map<String, int> timeCounts = {};
-                          rows.forEach((row) {
-                            String timeKey = row['time']!.format(context);
-                            if (timeCounts.containsKey(timeKey)) {
-                              timeCounts[timeKey] = timeCounts[timeKey]! + 1;
-                            } else {
-                              timeCounts[timeKey] = 1;
-                            }
-                          });
-
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -370,13 +498,30 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                                         ))
                                     .toList(),
                                 rows: rows.map((row) {
+                                  final int index =
+                                      discussionTable.indexOf(row);
                                   return DataRow(
                                     cells: [
                                       DataCell(Text(row['gp'].toString())),
-                                      DataCell(Text(
-                                          row['time']?.format(context) ??
-                                              'N/A')),
-                                      DataCell(Text(row['room'] ?? 'N/A')),
+                                      DataCell(
+                                        GestureDetector(
+                                          onTap: () => editTime(index),
+                                          child: Text(
+                                            formatTimeWithRange(row['time']!),
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        GestureDetector(
+                                          onTap: () => editField(
+                                            index: index,
+                                            fieldKey: 'room',
+                                            currentValue: row['room'] ?? '',
+                                            title: 'Room',
+                                          ),
+                                          child: Text(row['room'] ?? 'N/A'),
+                                        ),
+                                      ),
                                       DataCell(
                                           Text(row['projectTitle'] ?? 'N/A')),
                                       DataCell(Text(row['type'] ?? 'N/A')),
@@ -384,8 +529,32 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                                       DataCell(Text(row['student2'] ?? 'N/A')),
                                       DataCell(
                                           Text(row['supervisor'] ?? 'N/A')),
-                                      DataCell(Text(row['examiner1'] ?? 'N/A')),
-                                      DataCell(Text(row['examiner2'] ?? 'N/A')),
+                                      DataCell(
+                                        GestureDetector(
+                                          onTap: () => editField(
+                                            index: index,
+                                            fieldKey: 'examiner1',
+                                            currentValue:
+                                                row['examiner1'] ?? '',
+                                            title: 'Examiner 1',
+                                          ),
+                                          child:
+                                              Text(row['examiner1'] ?? 'N/A'),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        GestureDetector(
+                                          onTap: () => editField(
+                                            index: index,
+                                            fieldKey: 'examiner2',
+                                            currentValue:
+                                                row['examiner2'] ?? '',
+                                            title: 'Examiner 2',
+                                          ),
+                                          child:
+                                              Text(row['examiner2'] ?? 'N/A'),
+                                        ),
+                                      ),
                                     ],
                                   );
                                 }).toList(),
@@ -407,4 +576,64 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
       ),
     );
   }
+}
+
+Future<void> downloadTableAsPdf(List<Map<String, dynamic>> discussionTable,
+    List<String> tableHeaders) async {
+  final pdf = pw.Document();
+
+  // Create a table for each day's discussion entries
+  final groupedData =
+      discussionTable.fold<Map<String, List<Map<String, dynamic>>>>(
+    {},
+    (map, row) {
+      final day = row['day'] ?? 'Unknown Day';
+      if (!map.containsKey(day)) map[day] = [];
+      map[day]!.add(row);
+      return map;
+    },
+  );
+
+  // Add content to the PDF
+  groupedData.forEach((day, rows) {
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(day,
+                  style: pw.TextStyle(
+                      fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
+              pw.Table.fromTextArray(
+                headers: tableHeaders,
+                data: rows.map((row) {
+                  return [
+                    row['gp'].toString(),
+                    row['time'] ?? '',
+                    row['room'] ?? '',
+                    row['projectTitle'] ?? '',
+                    row['type'] ?? '',
+                    row['student1'] ?? '',
+                    row['student2'] ?? '',
+                    row['supervisor'] ?? '',
+                    row['examiner1'] ?? '',
+                    row['examiner2'] ?? '',
+                  ];
+                }).toList(),
+              ),
+              pw.SizedBox(height: 16),
+            ],
+          );
+        },
+      ),
+    );
+  });
+
+  // Save and trigger download
+  await Printing.layoutPdf(
+    onLayout: (PdfPageFormat format) async => pdf.save(),
+  );
 }
