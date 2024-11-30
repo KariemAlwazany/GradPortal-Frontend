@@ -24,7 +24,7 @@ class CartScreen extends StatelessWidget{
               ),
               child: Column(
                 children: [
-                  CartItemSamples(),
+                  //CartItemSamples(),
                   Container(
                     decoration: 
                     BoxDecoration(

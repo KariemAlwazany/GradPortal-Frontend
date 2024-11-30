@@ -39,7 +39,7 @@ class _SideMenuState extends State<SideMenu> {
 
   Future<void> fetchUserData() async {
     final roleUrl =
-        Uri.parse('${dotenv.env['API_BASE_URL']}GP/v1/seller/role');
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();

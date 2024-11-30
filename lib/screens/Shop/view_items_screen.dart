@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';  // For base64 decoding if needed
+import 'package:flutter/services.dart'; // For base64 decoding if needed
 import 'dart:typed_data';
 
 class ViewItemsScreen extends StatefulWidget {
@@ -24,9 +24,7 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
   }
 
   Future<void> fetchItems() async {
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch base URL from .env
-    final itemsUrl = Uri.parse('${baseUrl}GP/v1/seller/items/getSelleritems');
-
+    final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
@@ -82,6 +80,7 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFEDECF2),
       appBar: AppBar(
         title: const Text(
           'Components Shop',
@@ -116,13 +115,13 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
                         ),
                       ),
                       onChanged: (value) {
-                        // Add search functionality
+                        // Add search functionality here if needed
                       },
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Categories Section (Example Categories)
+                  // Categories Section
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
@@ -169,10 +168,12 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
-
-                        // Check if item is a map and if its fields are of the expected types
                         if (item is Map<String, dynamic>) {
-                          return ItemCard(item: item);
+                          return ItemCard(
+                            item: item,
+                            parentContext: context,
+                            fetchItemsCallback: fetchItems,
+                          );
                         } else {
                           return const SizedBox(); // Return empty widget if item is not a map
                         }
@@ -206,33 +207,39 @@ class CategoryChip extends StatelessWidget {
 
 class ItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
+  final BuildContext parentContext;
+  final Function fetchItemsCallback;
 
-  const ItemCard({super.key, required this.item});
+  const ItemCard({super.key, required this.item, required this.parentContext, required this.fetchItemsCallback});
 
   @override
   Widget build(BuildContext context) {
     String itemName = item['item_name'] ?? 'No name';
     String description = item['Description'] ?? 'No description';
-    String price = item['Price'] != null ? "\$${item['Price']}" : 'No price';
+    String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
+    String category = item['Category'] ?? 'Motors'; // Assuming 'Motors' as default
+    String type = item['Type'] ?? '';
+    bool available = item['Available'] ?? false;
+    int quantity = item['Quantity'] ?? 0;
+    int itemId = item['Item_ID'] ?? 0;
+
+    if (itemId == 0) {
+      return const SizedBox();
+    }
 
     // Handle Picture field if it's a Base64 string
     Uint8List? pictureBytes;
-
-    if (item['Picture'] != null) {
-      // Check if Picture is a Base64-encoded string
-      if (item['Picture'] is String) {
-        try {
-          pictureBytes = base64Decode(item['Picture']); // Decode base64 string to bytes
-        } catch (e) {
-          print("Error decoding base64: $e");
-        }
+    if (item['Picture'] != null && item['Picture'] is String) {
+      try {
+        pictureBytes = base64Decode(item['Picture']);
+      } catch (e) {
+        print("Error decoding base64: $e");
       }
     }
 
-    // If pictureBytes is not null and not empty, use Image.memory to display the image from bytes
     Widget imageWidget = pictureBytes != null && pictureBytes.isNotEmpty
-        ? Image.memory(pictureBytes)  // Use Image.memory for byte data
-        : const Center(child: Text('No image available'));  // More informative fallback
+        ? Image.memory(pictureBytes)
+        : const Center(child: Text('No image available'));
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -240,15 +247,12 @@ class ItemCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Item Image
           Expanded(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: imageWidget,  // Display the image widget
+              child: imageWidget,
             ),
           ),
-
-          // Item Details
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -256,26 +260,198 @@ class ItemCard extends StatelessWidget {
               children: [
                 Text(
                   itemName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   description,
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF3B4280)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   price,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
                 ),
               ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: IconButton(
+              icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
+              onPressed: () {
+                _showEditDialog(parentContext, item);
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _showEditDialog(BuildContext context, Map<String, dynamic> item) {
+    String itemName = item['item_name'] ?? '';
+    String description = item['Description'] ?? '';
+    String price = item['Price']?.toString() ?? '';
+    String category = item['Category'] ?? 'Motors';
+    String type = item['Type'] ?? '';
+    bool available = item['Available'] ?? false;
+    int quantity = item['Quantity'] ?? 0;
+    int itemId = item['Item_ID'] ?? 0;
+
+    if (itemId == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid item ID.')));
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Item'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: TextEditingController(text: itemName),
+                  decoration: const InputDecoration(labelText: 'Item Name'),
+                  onChanged: (value) {
+                    itemName = value;
+                  },
+                ),
+                TextField(
+                  controller: TextEditingController(text: description),
+                  decoration: const InputDecoration(labelText: 'Description'),
+                  onChanged: (value) {
+                    description = value;
+                  },
+                ),
+                TextField(
+                  controller: TextEditingController(text: price),
+                  decoration: const InputDecoration(labelText: 'Price'),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    price = value;
+                  },
+                ),
+                DropdownButtonFormField<String>(
+                  value: category,
+                  decoration: const InputDecoration(labelText: 'Category'),
+                  items: const [
+                    DropdownMenuItem(value: 'Motors', child: Text('Motors')),
+                    DropdownMenuItem(value: 'Drivers', child: Text('Drivers')),
+                    DropdownMenuItem(value: 'Microcontrollers', child: Text('Microcontrollers')),
+                    DropdownMenuItem(value: 'Sensors', child: Text('Sensors')),
+                    DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
+                    DropdownMenuItem(value: 'Arms', child: Text('Arms')),
+                    DropdownMenuItem(value: 'Robotics', child: Text('Robotics')),
+                    DropdownMenuItem(value: 'Others', child: Text('Others')),
+                  ],
+                  onChanged: (value) {
+                    category = value!;
+                  },
+                ),
+                TextField(
+                  controller: TextEditingController(text: type),
+                  decoration: const InputDecoration(labelText: 'Type'),
+                  onChanged: (value) {
+                    type = value;
+                  },
+                ),
+                TextField(
+                  controller: TextEditingController(text: quantity.toString()),
+                  decoration: const InputDecoration(labelText: 'Quantity'),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    quantity = int.tryParse(value) ?? 0;
+                  },
+                ),
+                // Dropdown for Availability in the Dialog
+                DropdownButtonFormField<String>(
+                  value: available ? 'Yes' : 'No',
+                  decoration: const InputDecoration(labelText: 'Available'),
+                  items: const [
+                    DropdownMenuItem(value: 'Yes', child: Text('Yes')),
+                    DropdownMenuItem(value: 'No', child: Text('No')),
+                  ],
+                  onChanged: (value) {
+                    available = value == 'Yes';
+                  },
+                ),
+                // You can add more fields for picture upload if necessary
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _updateItem(context, itemId, itemName, description, price, category, type, available, quantity);
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateItem(BuildContext context, int itemId, String itemName, String description, String price, String category, String type, bool available, int quantity) async {
+    final updateUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/updateItem/$itemId');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not logged in')));
+      return;
+    }
+
+    final Map<String, dynamic> updatedItem = {
+      'item_name': itemName,
+      'Description': description,
+      'Price': double.tryParse(price) ?? 0.0,
+      'Category': category,
+      'Type': type,
+      'Available': available,
+      'Quantity': quantity,
+    };
+
+    try {
+      final response = await http.patch(
+        updateUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(updatedItem),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Item updated successfully')),
+        );
+        fetchItemsCallback();  // Refresh the items list
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorData['message'] ?? 'Failed to update item')),
+        );
+      }
+    } catch (error) {
+      print('Error updating item: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error updating item')),
+      );
+    }
   }
 }
