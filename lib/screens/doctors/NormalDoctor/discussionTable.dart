@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Colors.white;
@@ -15,7 +18,8 @@ class DiscussionTablePage extends StatefulWidget {
 
 class _DiscussionTablePageState extends State<DiscussionTablePage> {
   bool isDiscussionTable = true; // Tracks which tab is active
-  List<Map<String, dynamic>> tableData = []; // Holds fetched table data
+  List<Map<String, dynamic>> discussionTableData = []; // Discussion Table data
+  List<Map<String, dynamic>> myTableData = []; // My Table data
   bool isLoading = true; // Loading state
 
   @override
@@ -49,8 +53,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body)['data']['table'];
       setState(() {
-        // Reset the IDs locally to start from 1
-        tableData =
+        final tableData =
             List<Map<String, dynamic>>.from(data).asMap().entries.map((entry) {
           final index = entry.key + 1;
           final row = entry.value;
@@ -70,6 +73,12 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             'examiner2': row['Examiner_2'],
           };
         }).toList();
+
+        if (isDoctorTable) {
+          myTableData = tableData;
+        } else {
+          discussionTableData = tableData;
+        }
         isLoading = false;
       });
     } else {
@@ -82,9 +91,116 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
     }
   }
 
+  void _showDownloadOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.download, color: primaryColor),
+              title: Text('Download Discussion Table'),
+              onTap: () async {
+                await downloadTableAsPdf(
+                    discussionTableData, 'Discussion Table');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.download, color: primaryColor),
+              title: Text('Download My Table'),
+              onTap: () async {
+                await downloadTableAsPdf(myTableData, 'My Table');
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> downloadTableAsPdf(
+      List<Map<String, dynamic>> tableData, String tableTitle) async {
+    final pdf = pw.Document();
+
+    // Group the data by 'day'
+    final groupedData = tableData.fold<Map<String, List<Map<String, dynamic>>>>(
+      {},
+      (map, row) {
+        final day = row['day'] ?? 'Unknown Day';
+        map.putIfAbsent(day, () => []).add(row);
+        return map;
+      },
+    );
+
+    // Add content to the PDF
+    pdf.addPage(
+      pw.MultiPage(
+        build: (context) => groupedData.entries.map((entry) {
+          final day = entry.key;
+          final rows = entry.value;
+
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('$tableTitle - $day',
+                  style: pw.TextStyle(
+                      fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
+              pw.Table.fromTextArray(
+                headers: [
+                  'ID',
+                  'Time',
+                  'Room',
+                  'Project Title',
+                  'Type',
+                  'Student 1',
+                  'Student 2',
+                  'Supervisor',
+                  'Examiner 1',
+                  'Examiner 2'
+                ],
+                data: rows.map((row) {
+                  return [
+                    row['id'].toString(),
+                    row['time'] ?? '',
+                    row['room'] ?? '',
+                    row['projectTitle'] ?? '',
+                    row['type'] ?? '',
+                    row['student1'] ?? '',
+                    row['student2'] ?? '',
+                    row['supervisor'] ?? '',
+                    row['examiner1'] ?? '',
+                    row['examiner2'] ?? '',
+                  ];
+                }).toList(),
+              ),
+              pw.SizedBox(height: 16),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+
+    // Save and trigger download
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showDownloadOptions(context),
+        backgroundColor: primaryColor,
+        child: Icon(Icons.download, color: Colors.white),
+      ),
       appBar: AppBar(
         backgroundColor: primaryColor,
         iconTheme: IconThemeData(color: Colors.white), // White back arrow
@@ -187,7 +303,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
   Widget buildGroupedTable() {
     // Group the data by 'day'
     final groupedData = <String, List<Map<String, dynamic>>>{};
-    for (var row in tableData) {
+    for (var row in (isDiscussionTable ? discussionTableData : myTableData)) {
       final day = row['day'] ?? 'Unknown Day';
       if (!groupedData.containsKey(day)) {
         groupedData[day] = [];
