@@ -64,7 +64,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
-                  initialStep: 1,
+                  initialStep: 2,
                 )),
       );
     } else if (status == 'declineDoctor' || status == 'approvedpartner') {
@@ -72,7 +72,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
-                  initialStep: 2,
+                  initialStep: 3,
                 )),
       );
     } else if (status == 'waiting') {
@@ -80,7 +80,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
-                  initialStep: 3,
+                  initialStep: 4,
                 )),
       );
     } else if (status == 'completed' || status == 'waitapprove') {
