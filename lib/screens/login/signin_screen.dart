@@ -236,7 +236,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MainPage(),
+                                      builder: (context) => ShopHomePage(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {

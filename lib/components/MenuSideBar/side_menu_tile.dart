@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/models/rive_asset.dart';
-
 import 'package:rive/rive.dart';
 
 class SideMenuTile extends StatelessWidget {
@@ -10,12 +9,12 @@ class SideMenuTile extends StatelessWidget {
     required this.press,
     required this.riveonInit,
     required this.isActive,
-    this.activeTileColor = const Color.fromRGBO(89,99, 194, 1), // Default active color
+    this.activeTileColor = const Color.fromRGBO(89, 99, 194, 1), // Default active color
   });
 
   final RiveAsset menu;
   final VoidCallback press;
-  final ValueChanged<Artboard> riveonInit;
+  final ValueChanged<Artboard> riveonInit; // This callback is required for Rive animations
   final bool isActive;
   final Color activeTileColor;
 
@@ -51,7 +50,7 @@ class SideMenuTile extends StatelessWidget {
                 child: RiveAnimation.asset(
                   menu.src,
                   artboard: menu.artboard,
-                  onInit: riveonInit,
+                  onInit: riveonInit, // Pass the riveonInit to the RiveAnimation.asset
                 ),
               ),
               title:

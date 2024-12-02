@@ -3,7 +3,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 
 class ItemAppBar extends StatelessWidget{
   @override
@@ -15,12 +14,7 @@ class ItemAppBar extends StatelessWidget{
         children: [
           InkWell(
             onTap: (){
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>  ShopHomePage(),
-                  ),
-                );            
+              Navigator.pop(context);
               },
             child: Icon(
               Icons.arrow_back,
