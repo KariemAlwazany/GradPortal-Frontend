@@ -26,7 +26,7 @@ Future<Map<String, dynamic>> login(String email, String password) async {
   try {
     // Send data to API (replace 'your_api_url' with the actual endpoint)
     final url =
-        '${dotenv.env['API_BASE_URL']}GP/v1/users/login'; // Update this to your API URL
+        '${dotenv.env['API_BASE_URL']}/GP/v1/users/login'; // Update this to your API URL
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,

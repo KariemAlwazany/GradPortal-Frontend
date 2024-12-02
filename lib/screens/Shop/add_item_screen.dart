@@ -53,7 +53,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
     try {
       final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
       final response = await http.get(
-        Uri.parse('${baseUrl}GP/v1/seller/profile'),
+        Uri.parse('${baseUrl}/GP/v1/seller/profile'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -100,7 +100,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${baseUrl}GP/v1/seller/items/additem'),
+        Uri.parse('${baseUrl}/GP/v1/seller/items/additem'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -254,15 +254,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'Motors', child: Text('Motors')),
-                    DropdownMenuItem(value: 'Tubes', child: Text('Tubes')),
                     DropdownMenuItem(value: 'Drivers', child: Text('Drivers')),
-                    DropdownMenuItem(value: 'Wires', child: Text('Wires')),
+                    DropdownMenuItem(value: 'Robotics', child: Text('Robotics')),
                     DropdownMenuItem(value: 'Microcontrollers', child: Text('Microcontrollers')),
-                    DropdownMenuItem(value: 'Leds', child: Text('Leds')),
-                    DropdownMenuItem(value: 'LCDs', child: Text('LCDs')),
                     DropdownMenuItem(value: 'Sensors', child: Text('Sensors')),
                     DropdownMenuItem(value: 'Arms', child: Text('Arms')),
                     DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
+                    DropdownMenuItem(value: 'Others', child: Text('Others')),
+
                   ],
                   onChanged: (value) {
                     setState(() {

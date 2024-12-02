@@ -40,7 +40,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       try {
         // Send the PATCH request to update the password
         final response = await http.patch(
-          Uri.parse('${dotenv.env['API_BASE_URL']}GP/v1/users/changePassword'),
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/changePassword'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

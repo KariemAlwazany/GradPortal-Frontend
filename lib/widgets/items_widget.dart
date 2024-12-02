@@ -1,184 +1,236 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Shop/item_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart'; // For base64 decoding if needed
+import 'dart:typed_data';
+
 
 class ItemsWidget extends StatefulWidget {
-  final VoidCallback onCartIconPressed;
-  final VoidCallback onCartIconRemoved;
-
-  const ItemsWidget({super.key, required this.onCartIconPressed, required this.onCartIconRemoved});
+  const ItemsWidget({super.key});
 
   @override
-  _ItemsWidgetState createState() => _ItemsWidgetState();
+  State<ItemsWidget> createState() => _ItemsWidgetState();
 }
 
 class _ItemsWidgetState extends State<ItemsWidget> {
-  List<bool> isInCart = List<bool>.filled(7, false); // Track cart status
-  List<bool> isFavorite = List<bool>.filled(7, false); // Track favorite status
+  List<dynamic> items = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchItems();
+  }
+Future<void> fetchItems() async {
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getAllItems');
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  try {
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []); // Convert 'items' to a list
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          items = [];
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found')),
+        );
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load items')),
+      );
+    }
+  } catch (e) {
+    print("Error fetching items: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error fetching items')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      childAspectRatio: 0.68,
-      physics: NeverScrollableScrollPhysics(), // Disables scrolling in GridView
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      children: [
-        for (int i = 1; i < 8; i++)
-          Container(
-            padding: EdgeInsets.only(left: 15, right: 15, top: 10),
-            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF3B4280),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "-50%",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    // Favorite and Cart Icons
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            isFavorite[i - 1]
-                                ? Icons.favorite // Filled favorite icon
-                                : Icons.favorite_border, // Outlined favorite icon
-                            color: Colors.red,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isFavorite[i - 1] = !isFavorite[i - 1];
-                            });
-
-                            // Show a snackbar message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(isFavorite[i - 1]
-                                    ? 'Added to favorites'
-                                    : 'Removed from favorites'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            isInCart[i - 1]
-                                ? Icons.shopping_cart // Filled cart icon if in cart
-                                : Icons.shopping_cart_outlined, // Outlined cart icon otherwise
-                            color: Color(0xFF3B4280),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isInCart[i - 1] = !isInCart[i - 1];
-                            });
-
-                            // If added to cart, increment the cart count
-                            if (isInCart[i - 1]) {
-                              widget.onCartIconPressed();
-                            } else {
-                              // If removed from cart, decrement the cart count
-                              widget.onCartIconRemoved();
-                            }
-
-                            // Show a snackbar message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(isInCart[i - 1]
-                                    ? 'Added to cart'
-                                    : 'Removed from cart'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ItemScreen(),
-                        ),
-                      );                    },
-                    child: Container(
-                      margin: EdgeInsets.all(10),
-                      child: Image.asset(
-                        "assets/images/$i.png",
-                        height: 70,
-                        width: 70,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                // Product Title
-                Container(
-                  padding: EdgeInsets.only(bottom: 8),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Product Title",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF3B4280),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                // Product Description
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Product Description",
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF3B4280),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10), // Adding space between text and price
-                // Price and Cart Icon
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "\$55",
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDECF2),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  // Items Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      'Your Items',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF3B4280),
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        if (item is Map<String, dynamic>) {
+                          return ItemCard(
+                            item: item,
+                            parentContext: context,
+                            fetchItemsCallback: fetchItems,
+                          );
+                        } else {
+                          return const SizedBox(); // Return empty widget if item is not a map
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class ItemCard extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final BuildContext parentContext;
+  final Function fetchItemsCallback;
+
+  const ItemCard({super.key, required this.item, required this.parentContext, required this.fetchItemsCallback});
+
+  @override
+  Widget build(BuildContext context) {
+    String itemName = item['item_name'] ?? 'No name';
+    String description = item['Description'] ?? 'No description';
+    String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
+    String category = item['Category'] ?? 'Motors'; // Assuming 'Motors' as default
+    String type = item['Type'] ?? '';
+    bool available = item['Available'] ?? false;
+    int quantity = item['Quantity'] ?? 0;
+    int itemId = item['Item_ID'] ?? 0;
+
+    if (itemId == 0) {
+      return const SizedBox();
+    }
+
+    // Handle Picture field if it's a Base64 string
+    Uint8List? pictureBytes;
+    if (item['Picture'] != null && item['Picture'] is String) {
+      try {
+        pictureBytes = base64Decode(item['Picture']);
+      } catch (e) {
+        print("Error decoding base64: $e");
+      }
+    }
+
+    Widget imageWidget = pictureBytes != null && pictureBytes.isNotEmpty
+        ? Image.memory(pictureBytes)
+        : const Center(child: Text('No image available'));
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: imageWidget,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  itemName,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  description,
+                  style: const TextStyle(fontSize: 14, color: Color(0xFF3B4280)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  price,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
                 ),
               ],
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

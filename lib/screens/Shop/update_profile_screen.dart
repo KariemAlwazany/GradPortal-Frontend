@@ -39,8 +39,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
 Future<void> fetchUserData() async {
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final roleUrl = Uri.parse('${baseUrl}GP/v1/seller/role');
-  final userUrl = Uri.parse('${baseUrl}GP/v1/seller/profile');
+  final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role');
+  final userUrl = Uri.parse('${baseUrl}/GP/v1/seller/profile');
 
   try {
     final prefs = await SharedPreferences.getInstance();
@@ -112,7 +112,7 @@ Future<void> fetchUserData() async {
 }
 Future<void> updateProfile() async {
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final updateUrl = Uri.parse('${baseUrl}GP/v1/seller/updateSeller');
+  final updateUrl = Uri.parse('${baseUrl}/GP/v1/seller/updateSeller');
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('jwt_token');
 

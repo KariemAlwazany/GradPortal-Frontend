@@ -28,7 +28,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
 Future<void> fetchUserData() async {
   // Fetch the base URL from the .env file
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final roleUrl = Uri.parse('${baseUrl}GP/v1/seller/role'); // Use the dynamic base URL
+  final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role'); // Use the dynamic base URL
 
   try {
     final prefs = await SharedPreferences.getInstance();
