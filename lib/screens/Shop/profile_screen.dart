@@ -127,6 +127,9 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               const SizedBox(height: 10),
               // Menu: Show these options based on the user role
               if (userRole == "Seller") ...[
+                  ProfileMenuWidget(title: "Edit Profile", icon: Icons.edit, onPress: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
+                }),
                 ProfileMenuWidget(title: "Components Selled", icon: Icons.wallet, onPress: () {}),
                 ProfileMenuWidget(
                     title: "Add Items",
@@ -134,9 +137,6 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                     onPress: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemScreen()));
                     }),
-                ProfileMenuWidget(title: "My Shop", icon: Icons.store, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ShopManagementScreen()));
-                }),
                 ProfileMenuWidget(title: "My Items", icon: Icons.account_tree_outlined, onPress: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ViewItemsScreen()));
                 }),

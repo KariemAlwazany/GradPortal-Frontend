@@ -17,6 +17,7 @@ class ViewItemsScreen extends StatefulWidget {
 class _ViewItemsScreenState extends State<ViewItemsScreen> {
   List<dynamic> items = [];
   bool isLoading = true;
+  String searchQuery = '';  // Declare searchQuery variable
 
   @override
   void initState() {
@@ -26,62 +27,121 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
 
 
 
-Future<void> fetchAllItems() async {
-  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
-  
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('jwt_token');
+  // Fetch items based on the current search query
+  Future<void> fetchItemsBySearch(String query) async {
+    final searchUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/searchItemsForSeller')
+        .replace(queryParameters: {'item_name': query});  // Send the search query as a query parameter
 
-  if (token == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User not logged in')),
-    );
-    return;
-  }
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
 
-  try {
-    final response = await http.get(
-      itemsUrl,
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print('Response data: $data');  // Log the entire response
+    try {
+      final response = await http.get(
+        searchUrl,
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
-        setState(() {
-          items = List.from(data['items'] ?? []);
-          print('Loaded items: $items');  // Log loaded items
-          isLoading = false;
-        });
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Search response data: $data');  // Log the entire response
+
+        if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+          setState(() {
+            items = List.from(data['items'] ?? []);
+            print('Loaded search results: $items');  // Log loaded items
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            items = [];
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No items found for this search')),
+          );
+        }
       } else {
         setState(() {
-          items = [];
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No items found')),
+          const SnackBar(content: Text('Error searching for items')),
         );
       }
-    } else {
+    } catch (e) {
+      print("Error searching for items: $e");
       setState(() {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No items found in this category')),
+        const SnackBar(content: Text('Error searching for items')),
       );
     }
-  } catch (e) {
-    print("Error fetching items: $e");
-    setState(() {
-      isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Error fetching items')),
-    );
   }
-}
+
+  Future<void> fetchAllItems() async {
+    final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
+  
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+  
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+  
+    try {
+      final response = await http.get(
+        itemsUrl,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+  
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Response data: $data');  // Log the entire response
+  
+        if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+          setState(() {
+            items = List.from(data['items'] ?? []);
+            print('Loaded items: $items');  // Log loaded items
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            items = [];
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No items found')),
+          );
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found in this category')),
+        );
+      }
+    } catch (e) {
+      print("Error fetching items: $e");
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching items')),
+      );
+    }
+  }
 
 Future<void> fetchItemsByCategory(String category) async {
   final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSellerItemsByCategory')
@@ -145,70 +205,66 @@ Future<void> fetchItemsByCategory(String category) async {
 
 
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFEDECF2),
-    appBar: AppBar(
-      title: const Text(
-        'Components Shop',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-      backgroundColor: const Color(0xFF3B4280),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.shopping_cart),
-          onPressed: () {
-            // Handle cart functionality
-          },
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEDECF2),
+      appBar: AppBar(
+        title: const Text(
+          'My Items',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-      ],
-    ),
-    body: isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search here...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+        backgroundColor: const Color(0xFF3B4280),
+
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search here...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;  // Update the search query
+                        });
+                        fetchItemsBySearch(value);  // Call search API when the query changes
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Categories Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onChanged: (value) {
-                      // Add search functionality here if needed
-                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Categories Section
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    'Categories',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
                         CategoryChip(
-                        label: 'All',
-                        onCategorySelected: (category) {
-                              fetchAllItems();
+                          label: 'All',
+                          onCategorySelected: (category) {
+                            fetchAllItems();
                         },
                       ),
                       CategoryChip(
@@ -257,51 +313,48 @@ Widget build(BuildContext context) {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+               const SizedBox(height: 16),
 
-                // Items Section
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    'Your Items',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  // Items Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      'Your Items',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 0.7,
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        if (item is Map<String, dynamic>) {
+                          return ItemCard(
+                            item: item,
+                            parentContext: context,
+                            fetchItemsCallback: fetchAllItems,
+                          );
+                        } else {
+                          return const SizedBox(); // Return empty widget if item is not a map
+                        }
+                      },
                     ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      print('Item at index $index: $item');  // Log the item at the current index
-
-                      if (item is Map<String, dynamic>) {
-                        return ItemCard(
-                          item: item,
-                          parentContext: context,
-                          fetchItemsCallback: fetchAllItems,
-                        );
-                      } else {
-                        return const SizedBox(); // Return empty widget if item is not a map
-                      }
-
-                    },
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-  );
-}
+    );
+  }
 }
 
 class CategoryChip extends StatelessWidget {
