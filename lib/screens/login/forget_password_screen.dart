@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math'; // For generating random OTPs
 import 'verification_code.dart'; // Import the OTPPage
 import 'signin_screen.dart'; // Import your SignInScreen
@@ -99,14 +100,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             left: 16,
             child: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SignInScreen(),
-                  ),
-                );
-              },
+              onPressed: () => {_logout},
             ),
           ),
           Center(
@@ -212,4 +206,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

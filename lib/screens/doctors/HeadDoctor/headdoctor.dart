@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Admin/doctorrequests.dart';
+import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/createtable.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/managerequests.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/postdeadlines.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/remove_partner.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/time_management.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/transfer.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/viewcurrentprojects.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/Requests.dart';
@@ -364,6 +368,30 @@ class HeadDoctorManageTab extends StatelessWidget {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               children: [
+                _buildOptionCard(
+                  context,
+                  icon: Icons.person,
+                  title: 'Doctor Requests',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DoctorRequestsPage()),
+                    );
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.person_add,
+                  title: 'Student Requests',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => StudentRequestsPage()),
+                    );
+                  },
+                ),
                 _buildOptionCard(context,
                     icon: Icons.folder_open,
                     title: 'View Current Projects', onTap: () {
@@ -400,6 +428,31 @@ class HeadDoctorManageTab extends StatelessWidget {
                         builder: (context) => ManageStudentRequestsPage()),
                   );
                 }),
+                _buildOptionCard(
+                  context,
+                  icon: Icons
+                      .person_remove, // Suitable icon for removing a partner
+                  title: 'Remove Partner', // Suitable title
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            RemovePartnerPage(), // Navigate to the Remove Partner page
+                      ),
+                    );
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.date_range,
+                  title: 'Manage Deadlines', // New Card
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DeadlineManagementPage()),
+                  ),
+                ),
               ],
             ),
           ),

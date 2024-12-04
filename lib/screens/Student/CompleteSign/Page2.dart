@@ -189,7 +189,7 @@ class _SecondPageState extends State<SecondPage> {
           context,
           MaterialPageRoute(
             builder: (context) => ProjectStepper(
-              initialStep: 2,
+              initialStep: 3,
               partnerUsername: partnerRequesting,
             ),
           ),
@@ -297,7 +297,7 @@ class _SecondPageState extends State<SecondPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => ProjectStepper(
-                  initialStep: 2,
+                  initialStep: 3,
                   partnerUsername: selectedPartner,
                 ),
               ),
@@ -347,7 +347,7 @@ class _SecondPageState extends State<SecondPage> {
                       label: const Text(
                         'Logout',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -525,7 +525,9 @@ class _SecondPageState extends State<SecondPage> {
   }
 }
 
-void _logout(BuildContext context) {
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
   Navigator.pushReplacement(
     context,
     MaterialPageRoute(builder: (context) => SignInScreen()),

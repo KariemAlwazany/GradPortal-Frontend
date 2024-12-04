@@ -158,7 +158,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           print(responseData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${responseData['message']}')),
-            
           );
         }
       } catch (e) {

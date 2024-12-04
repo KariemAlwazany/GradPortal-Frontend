@@ -124,7 +124,7 @@ class _FourthPageState extends State<FourthPage> {
       context,
       MaterialPageRoute(
           builder: (context) => ProjectStepper(
-                initialStep: 2,
+                initialStep: 3,
               )), // Replace with FifthPage
     );
   }
@@ -225,7 +225,9 @@ class _FourthPageState extends State<FourthPage> {
   }
 
   // Logout functionality
-  void _logout(BuildContext context) {
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -105,13 +106,8 @@ class DoctorProfilePage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            SignInScreen()), // Directly passing the widget
-                  );
+                onPressed: () async {
+                  await _logout(context); // Call the function with the context
                 },
                 icon: Icon(Icons.logout, color: Colors.white),
                 label: Text(
@@ -176,4 +172,13 @@ class DoctorProfilePage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

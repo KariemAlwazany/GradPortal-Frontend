@@ -170,10 +170,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }
   }
 
-  // Logout function to clear token and navigate to SignInPage
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token'); // Clear JWT token
+    await prefs.remove('jwt_token');
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => SignInScreen()),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/partner_request.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:http/http.dart' as http;
@@ -73,6 +74,20 @@ class _MatchingPageState extends State<MatchingPage> {
         ),
         backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+        IconButton(
+  icon: const Icon(Icons.group_add, color: Colors.white),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PartnerRequestsPage(),
+      ),
+    );
+  },
+),
+
+        ],
       ),
       body: isWaitingForApproval
           ? _buildWaitingScreen()
@@ -450,7 +465,7 @@ class _MatchingPageState extends State<MatchingPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SignInScreen()),
-    ); // Replace '/signin' with your sign-in route.
+    );
   }
 
   Future<void> _onSubmit() async {

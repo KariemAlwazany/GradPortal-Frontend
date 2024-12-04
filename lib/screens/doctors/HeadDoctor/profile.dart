@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -115,11 +116,8 @@ class HeadDoctorProfilePage extends StatelessWidget {
                   ),
                   elevation: 3,
                 ),
-                onPressed: () {
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => SignInScreen()));
-
-                  // Handle Log Out action
+                onPressed: () async {
+                  await _logout(context); // Call the function with the context
                 },
               ),
             ),
@@ -158,4 +156,13 @@ class HeadDoctorProfilePage extends StatelessWidget {
       ],
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

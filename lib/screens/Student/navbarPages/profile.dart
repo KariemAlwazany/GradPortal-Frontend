@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/request_remove_partner.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Color(0xFFF5F5F5); // Light background color
@@ -8,9 +10,33 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: primaryColor,
+        title: Text(
+          'Profile',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person_remove, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => RemovePartnerRequestPage()),
+              );
+            },
+            tooltip: 'Remove Partner',
+          ),
+        ],
+      ),
       backgroundColor: backgroundColor,
       body: Column(
         children: [
+          SizedBox(
+            height: 10,
+          ),
           // Top Section with Profile Picture and Name
           Container(
             decoration: BoxDecoration(
@@ -54,7 +80,6 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
-
           SizedBox(height: 30),
 
           // Profile Information
@@ -85,17 +110,11 @@ class ProfilePage extends StatelessWidget {
                     value: '3rd Year',
                   ),
                   Spacer(),
-                  // Logout Button
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  SignInScreen()), // Directly passing the widget
-                        );
+                      onPressed: () async {
+                        await _logout(context);
                       },
                       icon: Icon(Icons.logout, color: Colors.white),
                       label: Text(
@@ -169,4 +188,13 @@ class ProfileInfoItem extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

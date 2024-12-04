@@ -345,7 +345,9 @@ class _FifthPageState extends State<FifthPage> {
     );
   }
 
-  void _logout(BuildContext context) {
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SignInScreen()),
