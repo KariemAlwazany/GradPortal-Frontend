@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 import 'package:flutter_project/screens/Student/discussionTable.dart';
 import 'package:flutter_project/screens/Student/files.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting.dart';
@@ -37,6 +38,7 @@ class _StudentPageState extends State<StudentPage> {
       DeadlinePage(),
       MessagesPage(),
       ProfilePage(),
+      ShopHomePage()
     ]);
   }
 
@@ -337,7 +339,7 @@ class HomeContent extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => MeetingsOptionsPage()),
+                      builder: (context) => ShopHomePage()),
                 ),
                 child: _buildCategoryItem(
                   'Store',

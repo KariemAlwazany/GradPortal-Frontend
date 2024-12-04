@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Shop/item_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,186 +21,308 @@ class _ViewItemsScreenState extends State<ViewItemsScreen> {
   @override
   void initState() {
     super.initState();
-    fetchItems();
+    fetchAllItems();
   }
 
-  Future<void> fetchItems() async {
-    final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
 
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return;
-    }
 
-    try {
-      final response = await http.get(
-        itemsUrl,
-        headers: {'Authorization': 'Bearer $token'},
-      );
+Future<void> fetchAllItems() async {
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
+  
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
 
-        if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
-          setState(() {
-            items = List.from(data['items'] ?? []); // Convert 'items' to a list
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            items = [];
-            isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No items found')),
-          );
-        }
+  try {
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print('Response data: $data');  // Log the entire response
+
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []);
+          print('Loaded items: $items');  // Log loaded items
+          isLoading = false;
+        });
       } else {
         setState(() {
+          items = [];
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load items')),
+          const SnackBar(content: Text('No items found')),
         );
       }
-    } catch (e) {
-      print("Error fetching items: $e");
+    } else {
       setState(() {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching items')),
+        const SnackBar(content: Text('No items found in this category')),
       );
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFEDECF2),
-      appBar: AppBar(
-        title: const Text(
-          'Components Shop',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFF3B4280),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              // Handle cart functionality
-            },
-          ),
-        ],
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Search Bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search here...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        // Add search functionality here if needed
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Categories Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      'Categories',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: const [
-                        CategoryChip(label: 'Components'),
-                        CategoryChip(label: 'Accessories'),
-                        CategoryChip(label: 'Best Selling'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Items Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      'Your Items',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        if (item is Map<String, dynamic>) {
-                          return ItemCard(
-                            item: item,
-                            parentContext: context,
-                            fetchItemsCallback: fetchItems,
-                          );
-                        } else {
-                          return const SizedBox(); // Return empty widget if item is not a map
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  } catch (e) {
+    print("Error fetching items: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error fetching items')),
     );
   }
 }
 
+Future<void> fetchItemsByCategory(String category) async {
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSellerItemsByCategory')
+      .replace(queryParameters: {'Category': category});  // Send category as a query parameter
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  try {
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print('Response data by category: $data');  // Log the entire response
+
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []);
+          print('Loaded items by category: $items');  // Log loaded items
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          items = [];
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found for this category')),
+        );
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No items found for this category')),
+      );
+    }
+  } catch (e) {
+    print("Error fetching items by category: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error fetching items by category')),
+    );
+  }
+}
+
+
+
+
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFEDECF2),
+    appBar: AppBar(
+      title: const Text(
+        'Components Shop',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: const Color(0xFF3B4280),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.shopping_cart),
+          onPressed: () {
+            // Handle cart functionality
+          },
+        ),
+      ],
+    ),
+    body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search here...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      // Add search functionality here if needed
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Categories Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                        CategoryChip(
+                        label: 'All',
+                        onCategorySelected: (category) {
+                              fetchAllItems();
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Motors',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category);
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Drivers',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category);
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Microcontrollers',
+                        onCategorySelected: (category) {
+                          fetchItemsByCategory(category);
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Sensors',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category);
+                        },
+                      ),
+                      CategoryChip(
+                        label: '3D Printing',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category);
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Robotics',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category); 
+
+                        },
+                      ),
+                      CategoryChip(
+                        label: 'Others',
+                        onCategorySelected: (category) {
+                              fetchItemsByCategory(category);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Items Section
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    'Your Items',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.7,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      print('Item at index $index: $item');  // Log the item at the current index
+
+                      if (item is Map<String, dynamic>) {
+                        return ItemCard(
+                          item: item,
+                          parentContext: context,
+                          fetchItemsCallback: fetchAllItems,
+                        );
+                      } else {
+                        return const SizedBox(); // Return empty widget if item is not a map
+                      }
+
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+  );
+}
+}
+
 class CategoryChip extends StatelessWidget {
   final String label;
+  final Function(String) onCategorySelected; // Callback for when a category is selected
 
-  const CategoryChip({super.key, required this.label});
+  const CategoryChip({super.key, required this.label, required this.onCategorySelected});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
-      child: Chip(
-        label: Text(label),
-        backgroundColor: const Color(0xFF3B4280),
-        labelStyle: const TextStyle(color: Colors.white),
+      child: GestureDetector(
+        onTap: () {
+          onCategorySelected(label); // Pass the selected category
+        },
+        child: Chip(
+          label: Text(label),
+          backgroundColor: const Color(0xFF3B4280),
+          labelStyle: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -217,11 +340,13 @@ class ItemCard extends StatelessWidget {
     String itemName = item['item_name'] ?? 'No name';
     String description = item['Description'] ?? 'No description';
     String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
-    String category = item['Category'] ?? 'Motors'; // Assuming 'Motors' as default
+    String category = item['Category'] ?? 'Motors'; 
     String type = item['Type'] ?? '';
     bool available = item['Available'] ?? false;
     int quantity = item['Quantity'] ?? 0;
     int itemId = item['Item_ID'] ?? 0;
+
+    print('Item: $item');  // Log the item data
 
     if (itemId == 0) {
       return const SizedBox();
@@ -241,56 +366,69 @@ class ItemCard extends StatelessWidget {
         ? Image.memory(pictureBytes)
         : const Center(child: Text('No image available'));
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 3,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: imageWidget,
-            ),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the item detail screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ItemScreen(item: item), // Pass item details
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  itemName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF3B4280)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  price,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
-                ),
-              ],
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 3,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: imageWidget,
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
-              onPressed: () {
-                _showEditDialog(parentContext, item);
-              },
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    itemName,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    description,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF3B4280)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    price,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Align(
+              alignment: Alignment.bottomRight,
+              child: IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
+                onPressed: () {
+                  _showEditDialog(parentContext, item);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> item) {
     String itemName = item['item_name'] ?? '';
@@ -298,7 +436,7 @@ class ItemCard extends StatelessWidget {
     String price = item['Price']?.toString() ?? '';
     String category = item['Category'] ?? 'Motors';
     String type = item['Type'] ?? '';
-    bool available = item['Available'] ?? false;
+    bool available = item['Available'] ?? true;
     int quantity = item['Quantity'] ?? 0;
     int itemId = item['Item_ID'] ?? 0;
 

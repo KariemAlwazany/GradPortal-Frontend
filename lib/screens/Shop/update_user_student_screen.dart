@@ -7,28 +7,26 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class UpdateProfileScreen extends StatefulWidget {
-  const UpdateProfileScreen({super.key});
+class UpdateUserSellerProfileScreen extends StatefulWidget {
+  const UpdateUserSellerProfileScreen({super.key});
 
   @override
-  _UpdateProfileScreenState createState() => _UpdateProfileScreenState();
+  _UpdateUserSellerProfileScreenState createState() =>
+      _UpdateUserSellerProfileScreenState();
 }
 
-class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
+class _UpdateUserSellerProfileScreenState
+    extends State<UpdateUserSellerProfileScreen> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController shopNameController = TextEditingController(); // New field
 
   String username = 'Loading...';
   String fullName = 'Loading...';
   String email = 'Loading...';
   String phoneNumber = 'Loading...';
   String role = 'Loading...';
-  String shopName = 'Loading...'; // New field
 
   @override
   void initState() {
@@ -36,83 +34,63 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     fetchUserData();
   }
 
+  Future<void> fetchUserData() async {
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role');
 
-Future<void> fetchUserData() async {
-  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role');
-  final userUrl = Uri.parse('${baseUrl}/GP/v1/seller/profile');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
 
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+      if (token == null) {
+        setState(() {
+          username = "Not logged in";
+          email = "Not logged in";
+          role = "Not logged in";
+          phoneNumber = "Not logged in";
+          fullName = "Not logged in";
+        });
+        return;
+      }
 
-    if (token == null) {
+      // Fetch Role Data
+      final roleResponse = await http.get(
+        roleUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (roleResponse.statusCode == 200) {
+        final data = json.decode(roleResponse.body);
+        setState(() {
+          username = data['Username'] ?? "No username found";
+          email = data['Email'] ?? "No email found";
+          role = data['Role'] ?? "No role found";
+          fullName = data['FullName'] ?? "No name found";
+          phoneNumber = data['phone_number'] ?? "No phone number found";
+        });
+      } else {
+        setState(() {
+          username = "Error loading username";
+          email = "Error loading email";
+          role = "Error loading role";
+          fullName = "Error loading name";
+          phoneNumber =  "Error loading phone number";
+
+        });
+      }
+    } catch (e) {
       setState(() {
-        username = "Not logged in";
-        email = "Not logged in";
-        role = "Not logged in";
-        phoneNumber = "Not logged in";
-        fullName = "Not logged in";
-        shopName = "Not logged in"; // New field
-      });
-      return;
-    }
-
-    // Fetch Role Data
-    final roleResponse = await http.get(
-      roleUrl,
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (roleResponse.statusCode == 200) {
-      final data = json.decode(roleResponse.body);
-      setState(() {
-        username = data['Username'] ?? "No username found";
-        email = data['Email'] ?? "No email found";
-        role = data['Role'] ?? "No role found";
-        fullName = data['FullName'] ?? "No name found";
-      });
-    } else {
-      setState(() {
-        username = "Error loading username";
-        email = "Error loading email";
-        role = "Error loading role";
-        fullName = "Error loading name";
-      });
-    }
-
-    // Fetch Profile Data
-    final profileResponse = await http.get(
-      userUrl,
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (profileResponse.statusCode == 200) {
-      final profileData = json.decode(profileResponse.body);
-      setState(() {
-        phoneNumber = profileData['Phone_number'] ?? "No phone number found";
-        shopName = profileData['Shop_name'] ?? "No shop name found"; // New field
-      });
-    } else {
-      setState(() {
-        phoneNumber = "Error loading phone number";
-        shopName = "Error loading shop name"; // New field
+        phoneNumber = "No phone number found";
       });
     }
-  } catch (e) {
-    setState(() {
-      phoneNumber = "Error loading data";
-      shopName = "Error loading data"; // New field
-    });
   }
-}
+
+
 Future<void> updateProfile() async {
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final updateUrl = Uri.parse('${baseUrl}/GP/v1/seller/updateSeller');
+  final updateUrl = Uri.parse('${baseUrl}/GP/v1/users/updatePhoneNumber');
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('jwt_token');
 
@@ -123,23 +101,17 @@ Future<void> updateProfile() async {
     return;
   }
 
-  // Check password and confirm password match
-  if (passwordController.text.isNotEmpty &&
-      passwordController.text != confirmPasswordController.text) {
+  String newPhoneNumber = phoneNumberController.text.trim();
+  if (newPhoneNumber.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Passwords do not match')),
+      const SnackBar(content: Text('Phone number cannot be empty')),
     );
     return;
   }
 
-  // Build the data object with non-empty fields
-  Map<String, dynamic> updates = {};
-  if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
-  if (phoneNumberController.text.isNotEmpty) updates['Phone_number'] = phoneNumberController.text;
-  if (fullNameController.text.isNotEmpty) updates['FullName'] = fullNameController.text;
-  if (emailController.text.isNotEmpty) updates['Email'] = emailController.text;
-  if (passwordController.text.isNotEmpty) updates['Password'] = passwordController.text;
-  if (shopNameController.text.isNotEmpty) updates['Shop_name'] = shopNameController.text; // New field
+  print('Sending Phone Number: $newPhoneNumber'); // Debugging: print the phone number
+
+  Map<String, dynamic> updates = {'phone_number': newPhoneNumber};
 
   try {
     final response = await http.patch(
@@ -151,6 +123,9 @@ Future<void> updateProfile() async {
       body: json.encode(updates),
     );
 
+    print('Response Status: ${response.statusCode}'); // Debugging: log status code
+    print('Response Body: ${response.body}'); // Debugging: print response body
+
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully')),
@@ -158,6 +133,7 @@ Future<void> updateProfile() async {
       fetchUserData(); // Refresh data after successful update
     } else {
       final errorData = json.decode(response.body);
+      print('Error: ${errorData['message']}'); // Debugging: print the error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${errorData['message']}')),
       );
@@ -166,12 +142,16 @@ Future<void> updateProfile() async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Network error')),
     );
-    print(e);
+    print('Error: $e'); // Log the error
   }
 }
 
+
+
   @override
   Widget build(BuildContext context) {
+    bool isEditable = role != "Student" && role != "User"; // Only allow editing if the role is not "Student" or "User"
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -224,47 +204,31 @@ Future<void> updateProfile() async {
                   children: [
                     _buildTextField(
                       controller: fullNameController,
-                      label: 'Full Name',
+                      label: fullName,
                       hint: fullName,
                       icon: LineAwesomeIcons.user,
+                      isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: usernameController,
-                      label: 'Username',
+                      label: username,
                       hint: username,
                       icon: LineAwesomeIcons.user,
+                      isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: emailController,
-                      label: 'Email',
+                      label: email,
                       hint: email,
                       icon: LineAwesomeIcons.envelope_1,
+                      isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: phoneNumberController,
-                      label: 'Phone Number',
+                      label: phoneNumber,
                       hint: phoneNumber,
                       icon: LineAwesomeIcons.phone,
-                    ),
-                    _buildTextField(
-                      controller: shopNameController, // New field
-                      label: 'Shop Name', // New field
-                      hint: shopName, // New field
-                      icon: LineAwesomeIcons.store, // New field
-                    ),
-                    _buildTextField(
-                      controller: passwordController,
-                      label: 'Password',
-                      hint: 'Enter new password',
-                      icon: LineAwesomeIcons.fingerprint,
-                      isPassword: true,
-                    ),
-                    _buildTextField(
-                      controller: confirmPasswordController,
-                      label: 'Confirm Password',
-                      hint: 'Re-enter new password',
-                      icon: LineAwesomeIcons.fingerprint,
-                      isPassword: true,
+                      isEnabled: true, // Always editable for all users
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
@@ -300,6 +264,7 @@ Future<void> updateProfile() async {
     required String hint,
     required IconData icon,
     bool isPassword = false,
+    bool isEnabled = true,
   }) {
     return Column(
       children: [
@@ -307,6 +272,7 @@ Future<void> updateProfile() async {
         TextFormField(
           controller: controller,
           obscureText: isPassword,
+          enabled: isEnabled,
           decoration: InputDecoration(
             labelText: label,
             hintText: hint,
