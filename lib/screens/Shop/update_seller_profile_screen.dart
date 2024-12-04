@@ -239,35 +239,35 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                   children: [
                     _buildTextField(
                       controller: fullNameController,
-                      label: 'Full Name',
+                      label: fullName,
                       hint: fullName,
                       icon: LineAwesomeIcons.user,
                       isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: usernameController,
-                      label: 'Username',
+                      label: username,
                       hint: username,
                       icon: LineAwesomeIcons.user,
                       isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: emailController,
-                      label: 'Email',
+                      label: email,
                       hint: email,
                       icon: LineAwesomeIcons.envelope_1,
                       isEnabled: isEditable,
                     ),
                     _buildTextField(
                       controller: phoneNumberController,
-                      label: 'Phone Number',
+                      label: phoneNumber,
                       hint: phoneNumber,
                       icon: LineAwesomeIcons.phone,
                       isEnabled: true, // Always editable for all users
                     ),
                     _buildTextField(
                       controller: shopNameController, // New field
-                      label: 'Shop Name', // New field
+                      label: shopName, // New field
                       hint: shopName, // New field
                       icon: LineAwesomeIcons.store, // New field
                       isEnabled: isEditable,

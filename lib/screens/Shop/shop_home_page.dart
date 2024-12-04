@@ -28,6 +28,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
   bool isLoading = false; // Loading state for items
   String selectedCategory = ''; // Store selected category
   bool hasPhoneNumber = false; // Track whether user has phone number or not
+  TextEditingController _searchController = TextEditingController(); // Search controller
 
   // Function to open the camera
   Future<void> _openCamera() async {
@@ -57,64 +58,127 @@ class _ShopHomePageState extends State<ShopHomePage> {
     });
   }
 
-  // Fetching items from the API
-  Future<void> fetchItems() async {
-    final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getAllItems');
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+// Update your searchItems and fetchItems functions to work the same way
 
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return;
-    }
+Future<void> searchItems(String query) async {
+  if (query.isEmpty) {
+    fetchItems(); // Fetch all items if search query is empty
+    return;
+  }
 
-    try {
-      setState(() {
-        isLoading = true; // Start loading
-      });
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/searchItems')
+      .replace(queryParameters: {'item_name': query});
 
-      final response = await http.get(
-        itemsUrl,
-        headers: {'Authorization': 'Bearer $token'},
-      );
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
 
-        if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
-          setState(() {
-            items = List.from(data['items'] ?? []); // Update items list
-            isLoading = false; // Stop loading when data is received
-          });
-        } else {
-          setState(() {
-            items = [];
-            isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No items found')),
-          );
-        }
+  try {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data); // Add this line to print the raw response to check its structure
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []); // Update items list
+          isLoading = false; // Stop loading when data is received
+        });
       } else {
         setState(() {
+          items = [];
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load items')),
+          const SnackBar(content: Text('No items found')),
         );
       }
-    } catch (e) {
-      print("Error fetching items: $e");
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  } catch (e) {
+    print("Error searching items: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error searching items')),
+    );
+  }
+}
+
+Future<void> fetchItems() async {
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getAllItems');
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  try {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data); // Add this line to print the raw response to check its structure
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []); // Update items list
+          isLoading = false; // Stop loading when data is received
+        });
+        
+      } else {
+        setState(() {
+          items = [];
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found')),
+        );
+      }
+    } else {
       setState(() {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching items')),
+        const SnackBar(content: Text('Failed to load items')),
       );
     }
+  } catch (e) {
+    print("Error fetching items: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error fetching items')),
+    );
   }
+}
 
   // Function to fetch items by category
   Future<void> fetchItemsByCategory(String category) async {
@@ -311,12 +375,14 @@ Future<void> updateProfile(String newPhoneNumber) async {
     fetchItems(); // Fetch all items when the page loads
     checkPhoneNumber(); // Check if user has phone number
   }
+
+
 @override
 Widget build(BuildContext context) {
   return Scaffold(
     key: _scaffoldKey,
     drawer: SideMenu(),
-    body: ListView( // Use ListView instead of SingleChildScrollView
+    body: ListView(
       children: [
         // App Bar and other widgets remain the same
         Container(
@@ -380,102 +446,90 @@ Widget build(BuildContext context) {
             ],
           ),
         ),
-
+        // Search Widget
         Container(
-          padding: EdgeInsets.only(top: 15),
+          margin: EdgeInsets.symmetric(horizontal: 0),
+          padding: EdgeInsets.symmetric(horizontal: 15),
+          height: 50,
           decoration: BoxDecoration(
-            color: Color(0xFFEDECF2),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(35),
-              topRight: Radius.circular(35),
-            ),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
           ),
-          child: Column(
+          child: Row(
             children: [
-              // Search Widget
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 0),
-                padding: EdgeInsets.symmetric(horizontal: 15),
+                margin: EdgeInsets.only(left: 5),
                 height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(left: 5),
-                      height: 50,
-                      width: 298,
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Search here...",
-                        ),
-                      ),
-                    ),
-                    Spacer(),
-                    IconButton(
-                      icon: Icon(
-                        Icons.camera_alt,
-                        size: 27,
-                        color: Color(0xFF3B4280),
-                      ),
-                      onPressed: _openCamera,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Categories
-              Container(
-                alignment: Alignment.centerLeft,
-                margin: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-                child: Text(
-                  "Categories",
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF3B4280),
+                width: 298,
+                child: TextFormField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: "Search here...",
                   ),
+                  onChanged: (query) {
+                    searchItems(query); // Call search function on text change
+                  },
                 ),
               ),
-
-              CategoriesWidget(
-                onCategorySelected: (category) {
-                  fetchItemsByCategory(category);
-                },
+              Spacer(),
+              IconButton(
+                icon: Icon(
+                  Icons.camera_alt,
+                  size: 27,
+                  color: Color(0xFF3B4280),
+                ),
+                onPressed: _openCamera,
               ),
-
-              // Items Section
-              const SizedBox(height: 8),
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(), // Disable independent scrolling
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        if (item is Map<String, dynamic>) {
-                          return ItemCard(
-                            item: item,
-                            parentContext: context,
-                          );
-                        } else {
-                          return const SizedBox();
-                        }
-                      },
-                    ),
             ],
           ),
         ),
+        // Categories Widget remains the same
+        Container(
+          alignment: Alignment.centerLeft,
+          margin: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+          child: Text(
+            "Categories",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3B4280),
+            ),
+          ),
+        ),
+        CategoriesWidget(
+          onCategorySelected: (category) {
+            fetchItemsByCategory(category);
+          },
+        ),
+        // Items Section
+        const SizedBox(height: 8),
+        isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : items.isEmpty
+                ? Center(child: Text('No items found'))
+                : GridView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(), // Disable independent scrolling
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.7,
+                  ),
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];  // Make sure this is a Map<String, dynamic>
+                    if (item is Map<String, dynamic>) {
+                      return ItemCard(
+                        item: item,  // Pass the map to the ItemCard
+                      );
+                    } else {
+                      return const SizedBox(); // Handle invalid data gracefully
+                    }
+                  },
+                )
+
       ],
     ),
   );
@@ -484,24 +538,22 @@ Widget build(BuildContext context) {
 
 class ItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
-  final BuildContext parentContext;
 
   const ItemCard({
     Key? key,
     required this.item,
-    required this.parentContext,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Extracting data from the item map
+    // Safely access values from the map
     String itemName = item['item_name'] ?? 'No name';
     String description = item['Description'] ?? 'No description';
     String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
-    String category = item['Category'] ?? 'Motors'; // Assuming 'Motors' as default
+    String category = item['Category'] ?? 'Motors'; // Default 'Motors' if not available
     bool available = item['Available'] ?? false;
     int quantity = item['Quantity'] ?? 0;
-    String base64Image = item['Picture'] ?? ''; // Base64 image string
+    String base64Image = item['Picture'] ?? ''; // Base64 string or empty
 
     // Handle Base64 image decoding
     Uint8List? imageBytes;
@@ -513,7 +565,6 @@ class ItemCard extends StatelessWidget {
       }
     }
 
-    // Default fallback for missing or invalid image
     Widget imageWidget = imageBytes != null && imageBytes.isNotEmpty
         ? Image.memory(imageBytes)
         : const Center(child: Text('No image available'));
@@ -524,7 +575,7 @@ class ItemCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ItemScreen(item: item), // Pass the item data
+            builder: (context) => ItemScreen(item: item),
           ),
         );
       },
@@ -547,21 +598,16 @@ class ItemCard extends StatelessWidget {
                 children: [
                   Text(
                     itemName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
-                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    description,
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF3B4280)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    price,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
-                  ),
+                  const SizedBox(height: 5),
+                  Text(description, style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 5),
+                  Text(price, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

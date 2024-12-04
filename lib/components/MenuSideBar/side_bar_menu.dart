@@ -4,7 +4,7 @@ import 'package:flutter_project/components/MenuSideBar/info_card.dart';
 import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
-import 'package:flutter_project/screens/Shop/seller_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/profile_screen.dart';
 import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
