@@ -445,8 +445,8 @@ class HeadDoctorManageTab extends StatelessWidget {
                 ),
                 _buildOptionCard(
                   context,
-                  icon: Icons.date_range,
-                  title: 'Manage Deadlines', // New Card
+                  icon: Icons.settings,
+                  title: 'Manage', // New Card
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(

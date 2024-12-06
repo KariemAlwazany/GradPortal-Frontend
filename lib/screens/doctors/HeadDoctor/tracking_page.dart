@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Color(0xFFF5F5F5);
@@ -20,37 +24,7 @@ class _StudentStatusPageState extends State<StudentStatusPage>
     'Final'
   ];
 
-  final List<Map<String, dynamic>> students = [
-    {
-      'name': 'John Doe',
-      'id': '12345',
-      'email': 'john.doe@example.com',
-      'phone': '+1234567890',
-      'department': 'Computer Science',
-      'statuses': {
-        'Joining': 'Completed',
-        'Find Partner': 'Pending',
-        'Find Doctor': 'Pending',
-        'Abstract Submission': 'Not Started',
-        'Final Submission': 'Not Started',
-      }
-    },
-    {
-      'name': 'Jane Smith',
-      'id': '67890',
-      'email': 'jane.smith@example.com',
-      'phone': '+0987654321',
-      'department': 'Electrical Engineering',
-      'statuses': {
-        'Joining': 'Completed',
-        'Find Partner': 'Completed',
-        'Find Doctor': 'Pending',
-        'Abstract Submission': 'Pending',
-        'Final Submission': 'Not Started',
-      }
-    },
-  ];
-
+  List<Map<String, dynamic>> students = [];
   String searchQuery = '';
   String selectedFilter = 'All';
 
@@ -58,12 +32,181 @@ class _StudentStatusPageState extends State<StudentStatusPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: tabs.length, vsync: this);
+    _fetchStudents();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchStudents() async {
+    final token = await getToken(); // Fetch the token
+    if (token == null) {
+      print('No token found');
+      return;
+    }
+
+    final baseUrl = dotenv.env['API_BASE_URL']; // Get the base URL from .env
+    if (baseUrl == null) {
+      print('API base URL not found in .env');
+      return;
+    }
+
+    final url = '$baseUrl/GP/v1/students';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+
+        setState(() {
+          students = data.map((studentData) {
+            String status = studentData['Status'];
+
+            Map<String, String> statuses = {
+              'Joining': _getJoiningStatus(status),
+              'Partner': _getPartnerStatus(status),
+              'Doctor': _getDoctorStatus(status),
+              'Abstract Submission': 'Not Started', // to be initialized later
+              'Final Submission': 'Not Started', // to be initialized later
+            };
+
+            return {
+              'name': studentData['Username'],
+              'id': studentData['Registration_number'],
+              'GP_Type':
+                  studentData['GP_Type'] ?? 'N/A', // Default to 'N/A' if null
+              'age': studentData['Age']?.toString() ??
+                  'N/A', // Default to 'N/A' if null
+              'gender':
+                  studentData['Gender'] ?? 'N/A', // Default to 'N/A' if null
+              'city': studentData['City'] ?? 'N/A', // Default to 'N/A' if null
+              'BE': studentData['BE'] ?? 'N/A', // Default to 'N/A' if null
+              'FE': studentData['FE'] ?? 'N/A', // Default to 'N/A' if null
+              'DB': studentData['DB'] ?? 'N/A', // Default to 'N/A' if null
+              'statuses': statuses,
+            };
+          }).toList();
+        });
+
+        // Fetch the final and abstract submission statuses for each student
+        for (var student in students) {
+          final studentUsername = student['name'];
+          await _fetchSubmissionStatus(studentUsername, token);
+        }
+      } else {
+        print('Failed to load students. Status Code: ${response.statusCode}');
+        throw Exception('Failed to load students');
+      }
+    } catch (error) {
+      print('Error fetching students: $error');
+    }
+  }
+
+  Future<void> _fetchSubmissionStatus(String username, String token) async {
+    final baseUrl = dotenv.env['API_BASE_URL']; // Get the base URL from .env
+    if (baseUrl == null) {
+      print('API base URL not found in .env');
+      return;
+    }
+
+    // Check Final Submission
+    final finalUrl = '$baseUrl/GP/v1/submit/final/$username';
+    try {
+      final finalResponse = await http.get(
+        Uri.parse(finalUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (finalResponse.statusCode == 200 && finalResponse.body.isNotEmpty) {
+        setState(() {
+          final student =
+              students.firstWhere((student) => student['name'] == username);
+          student['statuses']['Final Submission'] = 'Completed';
+        });
+      } else {
+        print('No final submission data or not yet completed for $username');
+      }
+    } catch (error) {
+      print('Error fetching final submission status for $username: $error');
+    }
+
+    // Check Abstract Submission
+    final abstractUrl = '$baseUrl/GP/v1/submit/abstract/$username';
+    try {
+      final abstractResponse = await http.get(
+        Uri.parse(abstractUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (abstractResponse.statusCode == 200) {
+        // Print the response body to debug
+        print('Abstract Submission Response: ${abstractResponse.body}');
+
+        // Check the response body to determine if it's completed
+        // (Make sure to replace 'Completed' with the actual value your API uses)
+        if (abstractResponse.body.contains('Completed')) {
+          setState(() {
+            final student =
+                students.firstWhere((student) => student['name'] == username);
+            student['statuses']['Abstract Submission'] = 'Completed';
+          });
+        } else {
+          setState(() {
+            final student =
+                students.firstWhere((student) => student['name'] == username);
+            student['statuses']['Abstract Submission'] = 'Not Started';
+          });
+          print('Abstract submission for $username is not completed yet.');
+        }
+      } else {
+        print(
+            'Failed to fetch abstract submission status for $username. Status code: ${abstractResponse.statusCode}');
+      }
+    } catch (error) {
+      print('Error fetching abstract submission status for $username: $error');
+    }
+  }
+
+  String _getJoiningStatus(String status) {
+    if (status == 'approved' ||
+        status == 'waitapprove' ||
+        status == 'start' ||
+        status == 'waitpartner' ||
+        status == 'declinedpartner' ||
+        status == 'waiting') return 'Completed';
+    return 'Pending';
+  }
+
+  String _getPartnerStatus(String status) {
+    if (status == 'approved' || status == 'completed') return 'Completed';
+    if (status == 'approvedpartner') return 'Completed';
+    if (status == 'waitpartner') return 'Pending';
+    if (status == 'declinedpartner') return 'Declined';
+    if (status == 'waitapprove') return 'Completed';
+
+    return 'Not Started';
+  }
+
+  String _getDoctorStatus(String status) {
+    if (status == 'approved' ||
+        status == 'completed' ||
+        status == 'waitapprove') return 'Completed';
+    if (status == 'waiting') return 'Pending';
+    if (status == 'declineDoctor') return 'Declined';
+    return 'Not Started';
   }
 
   @override
@@ -174,45 +317,28 @@ class _StudentStatusPageState extends State<StudentStatusPage>
                       return SizedBox.shrink();
                     }
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            student['name'],
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: primaryColor,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'ID: ${student['id']}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => StudentDetailsPage(
-                                    student: student,
-                                    onRemove: () {
-                                      setState(() {
-                                        students.removeAt(index);
-                                      });
-                                      Navigator.pop(context);
-                                    }),
+                    return Card(
+                      color: Colors.white,
+                      margin: EdgeInsets.symmetric(vertical: 8.0),
+                      elevation: 4.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(16.0),
+                        title: Text(student['name']),
+                        subtitle: Text('$status'),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => StudentDetailsPage(
+                                student: student,
+                                onRemove: () {},
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
@@ -265,9 +391,13 @@ class StudentDetailsPage extends StatelessWidget {
                 SizedBox(height: 8),
                 _buildInfoRow('Name', student['name']),
                 _buildInfoRow('ID', student['id']),
-                _buildInfoRow('Email', student['email']),
-                _buildInfoRow('Phone', student['phone']),
-                _buildInfoRow('Department', student['department']),
+                _buildInfoRow('Project Type', student['GP_Type']),
+                _buildInfoRow('Age', student['age']),
+                _buildInfoRow('Gender', student['gender']),
+                _buildInfoRow('City', student['city']),
+                _buildInfoRow('Backend Framework', student['BE']),
+                _buildInfoRow('Frontend Framework', student['FE']),
+                _buildInfoRow('Database', student['DB']),
                 Divider(),
                 Text(
                   'Status Information',
@@ -295,15 +425,23 @@ class StudentDetailsPage extends StatelessWidget {
                 }).toList(),
                 SizedBox(height: 16),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    _confirmRemove(context);
+                  onPressed: () async {
+                    final token = await getToken(); // Fetch the token
+
+                    if (token != null) {
+                      // Call the removeStudent function
+                      await removeStudent(student['name'], token);
+
+                      // Call the onRemove callback to remove the student from the list
+                      onRemove();
+                    } else {
+                      print('No token found!');
+                    }
                   },
                   icon: Icon(Icons.delete),
-                  label: Text('Remove Student from system'),
+                  label: Text('Remove Student'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
-                    padding:
-                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 30.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -323,53 +461,49 @@ class StudentDetailsPage extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            '$label:',
+            '$label: ',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.grey[700],
             ),
           ),
-          SizedBox(width: 8),
           Text(
             value,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[700],
+              color: Colors.black,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  void _confirmRemove(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text('Confirm Removal'),
-          content: Text('Are you sure you want to remove this student?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                onRemove(); // Perform removal
-                Navigator.pop(dialogContext); // Close the dialog
-              },
-              child: Text(
-                'Remove',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
+Future<void> removeStudent(String username, String token) async {
+  final String apiUrl =
+      '${dotenv.env['API_BASE_URL']}/GP/v1/users/username/$username'; // Dynamic API URL
+
+  try {
+    final response = await http.delete(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $token', // Send token in the header
+        'Content-Type':
+            'application/json', // Optional, as per the API requirements
       },
     );
+
+    if (response.statusCode == 204) {
+      // Student was removed successfully
+      print('Student removed successfully');
+    } else {
+      // Handle failure response
+      print('Failed to remove student: ${response.statusCode}');
+    }
+  } catch (e) {
+    // Handle error
+    print('Error occurred: $e');
   }
 }

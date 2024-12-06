@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Import DeadlinesPage from file.dart
+import 'package:intl/intl.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -12,6 +12,31 @@ class DeadlinePage extends StatelessWidget {
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
+  }
+
+  // Method to parse and format date
+  String formatDate(String rawDate) {
+    try {
+      DateTime parsedDate;
+
+      // Trim any extra spaces
+      rawDate = rawDate.trim();
+
+      // Check if the date is in ISO format (e.g., 2024-11-12T16:34:00.000)
+      if (rawDate.contains('T')) {
+        parsedDate = DateTime.parse(rawDate); // Parse ISO 8601 format
+      } else {
+        // Custom date format handling (e.g., 2024-12-21 2:14 AM)
+        DateFormat inputFormat = DateFormat('yyyy-MM-dd h:mm a');
+        parsedDate = inputFormat.parseStrict(rawDate); // Parse custom format
+      }
+
+      // Return formatted date
+      return DateFormat('yyyy-MM-dd h:mm a').format(parsedDate);
+    } catch (e) {
+      print('Error parsing date: $e');
+      return 'Invalid date'; // Return a fallback text if date parsing fails
+    }
   }
 
   Future<List<Map<String, String>>> fetchDeadlines() async {
@@ -28,12 +53,14 @@ class DeadlinePage extends StatelessWidget {
       final body = json.decode(response.body);
       if (body['status'] == 'success') {
         final deadlines = body['data']['deadLines'] as List;
-        return deadlines
-            .map((item) => {
-                  'title': item['Title'] as String,
-                  'date': item['Date'] as String,
-                })
-            .toList();
+        return deadlines.map((item) {
+          String rawDate = item['Date'] as String;
+          String formattedDate = formatDate(rawDate); // Format the date
+          return {
+            'title': item['Title'] as String,
+            'date': formattedDate, // Use the formatted date
+          };
+        }).toList();
       } else {
         throw Exception('Failed to load deadlines');
       }
