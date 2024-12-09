@@ -5,6 +5,7 @@ import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
 import 'package:flutter_project/models/rive_asset.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
 import 'package:flutter_project/screens/Shop/profile_screen.dart';
+import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
 import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
@@ -238,8 +239,10 @@ class _SideMenuState extends State<SideMenu> {
         );
         break;
       case "Shop":
-        // Navigate to Shop screen (define ShopScreen if needed)
-        break;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ShopManagementScreen()),
+        );        break;
       case "Store Shops":
         // Navigate to Store Shops screen
         break;

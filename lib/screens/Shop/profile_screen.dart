@@ -131,15 +131,6 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
                 }),
                 ProfileMenuWidget(title: "Components Selled", icon: Icons.wallet, onPress: () {}),
-                ProfileMenuWidget(
-                    title: "Add Items",
-                    icon: Icons.add,
-                    onPress: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemScreen()));
-                    }),
-                ProfileMenuWidget(title: "My Items", icon: Icons.account_tree_outlined, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ViewItemsScreen()));
-                }),
               ] else if (userRole == "Student" || userRole == "User") ...[
                 // Show only Edit Profile for Student or User
                 ProfileMenuWidget(title: "Edit Profile", icon: Icons.edit, onPress: () {
