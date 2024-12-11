@@ -375,8 +375,8 @@ Future<List<String>> fetchStudents() async {
 
 // Function to fetch doctors from the API
 Future<List<String>> fetchDoctors() async {
-  final response =
-      await http.get(Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors'));
+  final response = await http
+      .get(Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors/available'));
 
   if (response.statusCode == 200) {
     List<dynamic> doctors = json.decode(response.body);
