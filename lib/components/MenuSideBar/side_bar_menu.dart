@@ -210,7 +210,7 @@ class _SideMenuState extends State<SideMenu> {
       if (userRole == "Seller") {
         return [
           RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
-          RiveAsset('assets/RiveAssets/shop_icon.riv', artboard: "SHOP", stateMachineName: "SHOP_interactivity", title: "Shop"),
+          RiveAsset('assets/RiveAssets/shop_icon.riv', artboard: "SHOP", stateMachineName: "SHOP_interactivity", title: "Shop Management"),
           RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
         ];
       } else if (userRole == "Student") {
@@ -238,7 +238,7 @@ class _SideMenuState extends State<SideMenu> {
           MaterialPageRoute(builder: (context) => SellerProfileScreen()),
         );
         break;
-      case "Shop":
+      case "Shop Management":
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ShopManagementScreen()),
