@@ -544,34 +544,75 @@ class ItemCard extends StatelessWidget {
     required this.item,
   }) : super(key: key);
 
+  // Function to call the add-to-cart API
+  Future<void> addToCart(BuildContext context, int itemId, int quantity, int price) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/shop/cart/createOrUpdateCart'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "items": [
+            {"item_id": itemId, "quantity": quantity, "price": price}
+          ]
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Item added to cart successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add item to cart')),
+        );
+      }
+    } catch (e) {
+      print("Error adding to cart: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding item to cart')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Safely access values from the map
     String itemName = item['item_name'] ?? 'No name';
     String description = item['Description'] ?? 'No description';
-    String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
-    String category = item['Category'] ?? 'Motors'; // Default 'Motors' if not available
-    bool available = item['Available'] ?? false;
-    int quantity = item['Quantity'] ?? 0;
-    String base64Image = item['Picture'] ?? ''; // Base64 string or empty
 
-    // Handle Base64 image decoding
+    // Ensure price is parsed correctly as an integer
+    int price = item['Price'] is int ? item['Price'] : int.tryParse(item['Price'].toString()) ?? 0;
+    int itemId = item['Item_ID'] ?? 0;
+    String base64Image = item['Picture'] ?? '';
+
     Uint8List? imageBytes;
     if (base64Image.isNotEmpty) {
       try {
-        imageBytes = base64Decode(base64Image); // Decode Base64 image
+        imageBytes = base64Decode(base64Image);
       } catch (e) {
         print("Error decoding Base64 image: $e");
       }
     }
 
     Widget imageWidget = imageBytes != null && imageBytes.isNotEmpty
-        ? Image.memory(imageBytes)
-        : const Center(child: Text('No image available'));
+        ? Image.memory(imageBytes, width: double.infinity, height: 160, fit: BoxFit.cover)
+        : Center(child: Text('No image available', style: TextStyle(color: Colors.grey)));
 
     return GestureDetector(
       onTap: () {
-        // Navigate to ItemScreen and pass the item data
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -585,11 +626,9 @@ class ItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: imageWidget,
-              ),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: imageWidget,
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -598,16 +637,44 @@ class ItemCard extends StatelessWidget {
                 children: [
                   Text(
                     itemName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF3B4280)),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 5),
-                  Text(description, style: TextStyle(fontSize: 12)),
+                  Text(
+                    description,
+                    style: TextStyle(fontSize: 12, color: Colors.black87),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 5),
-                  Text(price, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                         "${price.toString()} NIS",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.favorite_border, color: Colors.red, size: 20),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$itemName added to Favorites!')),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.shopping_cart_outlined, color: Color(0xFF3B4280), size: 20),
+                            onPressed: () {
+                              addToCart(context, itemId, 1, price); // Trigger API
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

@@ -30,6 +30,8 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
   int totalProducts = 0;
   int outOfStockCount = 0;
   int limitedStockCount = 0;
+  int pendingOrdersCount = 0;
+  int completedOrdersCount = 0;
 
   Future<void> fetchAllItems(Function onSuccess) async {
     final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getSelleritems');
@@ -395,20 +397,57 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
     }
   }
 
+
+
+  Future<void> _fetchData(Uri url, Function(int) onSuccessCount, Function onSuccess) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User not logged in')));
+      return;
+    }
+
+    try {
+      final response = await http.get(url, headers: {'Authorization': 'Bearer $token'});
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        onSuccessCount(data['Count'] ?? 0);
+        onSuccess();
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    }
+  }
+
+
+  Future<void> fetchPendingOrdersCount(Function onSuccess) async {
+    final url = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/orders/countPendingOrders');
+    await _fetchData(url, (count) => pendingOrdersCount = count, onSuccess);
+  }
+
+  Future<void> fetchCompletedOrdersCount(Function onSuccess) async {
+    final url = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/orders/countCompletedOrders');
+    await _fetchData(url, (count) => completedOrdersCount = count, onSuccess);
+  }
+
+
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
   }
 
-  @override
+   @override
   void initState() {
     super.initState();
     _fetchProfileData();
     countItems(() {
-      fetchAllItems(() {
-        fetchLimitedStock(() {
-          fetchOutOfStock(() {
-            setState(() {});
+      fetchLimitedStock(() {
+        fetchOutOfStock(() {
+          fetchPendingOrdersCount(() {
+            fetchCompletedOrdersCount(() {
+              setState(() {});
+            });
           });
         });
       });
@@ -417,8 +456,6 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orders = []; 
-    final orderRequests = []; 
 
     return Scaffold(
       appBar: AppBar(
@@ -500,7 +537,7 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
                     return _buildCategoryContainer(
                       title: 'Orders', 
                       icon: Icons.shopping_cart, 
-                      quantity: orders.length,
+                      quantity: completedOrdersCount,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -512,7 +549,7 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
                     return _buildCategoryContainer(
                       title: 'Orders Request', 
                       icon: Icons.pending, 
-                      quantity: orderRequests.length,
+                      quantity: pendingOrdersCount,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -538,7 +575,7 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
             ),
 
             const SizedBox(height: 20),
-            _buildStatisticsSection(totalProducts, orders.length, orderRequests.length),
+            _buildStatisticsSection(totalProducts, completedOrdersCount, pendingOrdersCount),
             const SizedBox(height: 20),
 
             // Create Sale Button
@@ -745,13 +782,13 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
   }
 
   // Statistics Section Widget
-  Widget _buildStatisticsSection(int totalProducts, int totalOrders, int totalRequests) {
+  Widget _buildStatisticsSection(int totalProducts, int totalOrders, int pendingOrdersCount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildStatisticCard('Total Products', totalProducts),
         _buildStatisticCard('Total Orders', totalOrders),
-        _buildStatisticCard('Total Requests', totalRequests),
+        _buildStatisticCard('Order Request', pendingOrdersCount),
       ],
     );
   }

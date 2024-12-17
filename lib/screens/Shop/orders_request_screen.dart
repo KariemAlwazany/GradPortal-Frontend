@@ -1,15 +1,217 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-class OrdersRequestScreen extends StatelessWidget{
+class OrdersRequestScreen extends StatefulWidget {
+  @override
+  _OrdersRequestScreenState createState() => _OrdersRequestScreenState();
+}
+
+class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
+  List<dynamic> orders = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOrders(); // Fetch orders when the screen loads
+  }
+
+  // Function to fetch seller orders
+  Future<void> fetchOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/getOrdersForSeller');
+
+    try {
+      final response = await http.get(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          orders = data['orders'] ?? [];
+          isLoading = false;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to fetch orders')),
+        );
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching orders: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching orders')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Function to handle order approval
+  Future<void> approveOrder(int orderId) async {
+    await updateOrderStatus(orderId, 'approved');
+  }
+
+  // Function to handle order decline
+  Future<void> declineOrder(int orderId) async {
+    await updateOrderStatus(orderId, 'declined');
+  }
+
+  // Function to update order status
+  Future<void> updateOrderStatus(int orderId, String status) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/updateOrderStatus');
+
+    try {
+      final response = await http.patch(
+        apiUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'order_id': orderId,
+          'status': status,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Order $status successfully')),
+        );
+        fetchOrders(); // Refresh orders
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${errorData['message']}')),
+        );
+      }
+    } catch (e) {
+      print('Error updating order status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update order status')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sales Screen'),
+        title: const Text('Orders Requests'),
+        backgroundColor: const Color(0xFF3B4280),
       ),
-      body: Center(
-        child: Text('Welcome to Sales Screen'),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : orders.isEmpty
+              ? const Center(child: Text('No orders found'))
+              : ListView.builder(
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    final order = orders[index];
+                    final orderId = order['order_id'] ?? 'N/A';
+                    final totalPrice = order['total_price'] ?? 'N/A';
+                    final paymentMethod = order['payment_method'] ?? 'N/A';
+                    final items = order['OrderItems'] ?? [];
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 15),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Order ID: $orderId',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text('Total Price: $totalPrice NIS'),
+                            Text('Payment Method: $paymentMethod'),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Items:',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            if (items.isEmpty)
+                              const Text('No items found for this order')
+                            else
+                              ...items.map<Widget>((item) {
+                                final itemDetails = item['Item'] ?? {};
+                                final itemName =
+                                    itemDetails['item_name'] ?? 'Unknown';
+                                final quantity = item['quantity'] ?? 0;
+                                final price = item['price'] ?? 0;
+
+                                return Text(
+                                  '$itemName (Qty: $quantity, Price: $price NIS)',
+                                  style: const TextStyle(fontSize: 14),
+                                );
+                              }).toList(),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => approveOrder(orderId),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                  ),
+                                  child: const Text('Approve'),
+                                ),
+                                const SizedBox(width: 10),
+                                ElevatedButton(
+                                  onPressed: () => declineOrder(orderId),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Decline'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
