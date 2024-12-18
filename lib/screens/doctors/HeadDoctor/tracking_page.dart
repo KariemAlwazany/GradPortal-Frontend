@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/partnerlist.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Color(0xFFF5F5F5);
@@ -10,6 +13,12 @@ const Color backgroundColor = Color(0xFFF5F5F5);
 class StudentStatusPage extends StatefulWidget {
   @override
   _StudentStatusPageState createState() => _StudentStatusPageState();
+}
+
+Future<String?> getToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs
+      .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
 }
 
 class _StudentStatusPageState extends State<StudentStatusPage>
@@ -42,20 +51,19 @@ class _StudentStatusPageState extends State<StudentStatusPage>
   }
 
   Future<void> _fetchStudents() async {
-    final token = await getToken(); // Fetch the token
+    final token = await getToken();
     if (token == null) {
       print('No token found');
       return;
     }
 
-    final baseUrl = dotenv.env['API_BASE_URL']; // Get the base URL from .env
+    final baseUrl = dotenv.env['API_BASE_URL'];
     if (baseUrl == null) {
       print('API base URL not found in .env');
       return;
     }
 
     final url = '$baseUrl/GP/v1/students';
-
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -75,23 +83,20 @@ class _StudentStatusPageState extends State<StudentStatusPage>
               'Joining': _getJoiningStatus(status),
               'Partner': _getPartnerStatus(status),
               'Doctor': _getDoctorStatus(status),
-              'Abstract Submission': 'Not Started', // to be initialized later
-              'Final Submission': 'Not Started', // to be initialized later
+              'Abstract Submission': 'Not Started',
+              'Final Submission': 'Not Started',
             };
 
             return {
               'name': studentData['Username'],
               'id': studentData['Registration_number'],
-              'GP_Type':
-                  studentData['GP_Type'] ?? 'N/A', // Default to 'N/A' if null
-              'age': studentData['Age']?.toString() ??
-                  'N/A', // Default to 'N/A' if null
-              'gender':
-                  studentData['Gender'] ?? 'N/A', // Default to 'N/A' if null
-              'city': studentData['City'] ?? 'N/A', // Default to 'N/A' if null
-              'BE': studentData['BE'] ?? 'N/A', // Default to 'N/A' if null
-              'FE': studentData['FE'] ?? 'N/A', // Default to 'N/A' if null
-              'DB': studentData['DB'] ?? 'N/A', // Default to 'N/A' if null
+              'GP_Type': studentData['GP_Type'] ?? 'N/A',
+              'age': studentData['Age']?.toString() ?? 'N/A',
+              'gender': studentData['Gender'] ?? 'N/A',
+              'city': studentData['City'] ?? 'N/A',
+              'BE': studentData['BE'] ?? 'N/A',
+              'FE': studentData['FE'] ?? 'N/A',
+              'DB': studentData['DB'] ?? 'N/A',
               'statuses': statuses,
             };
           }).toList();
@@ -102,9 +107,13 @@ class _StudentStatusPageState extends State<StudentStatusPage>
           final studentUsername = student['name'];
           await _fetchSubmissionStatus(studentUsername, token);
         }
+
+// Trigger final UI rebuild
+        setState(() {
+          students = List.from(students);
+        });
       } else {
         print('Failed to load students. Status Code: ${response.statusCode}');
-        throw Exception('Failed to load students');
       }
     } catch (error) {
       print('Error fetching students: $error');
@@ -112,30 +121,38 @@ class _StudentStatusPageState extends State<StudentStatusPage>
   }
 
   Future<void> _fetchSubmissionStatus(String username, String token) async {
-    final baseUrl = dotenv.env['API_BASE_URL']; // Get the base URL from .env
+    final baseUrl = dotenv.env['API_BASE_URL'];
     if (baseUrl == null) {
       print('API base URL not found in .env');
       return;
     }
+
+    final studentIndex =
+        students.indexWhere((student) => student['name'] == username);
+
+    if (studentIndex == -1) return; // Student not found
+
+    Map<String, dynamic> updatedStudent = Map.from(students[studentIndex]);
 
     // Check Final Submission
     final finalUrl = '$baseUrl/GP/v1/submit/final/$username';
     try {
       final finalResponse = await http.get(
         Uri.parse(finalUrl),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
-      if (finalResponse.statusCode == 200 && finalResponse.body.isNotEmpty) {
-        setState(() {
-          final student =
-              students.firstWhere((student) => student['name'] == username);
-          student['statuses']['Final Submission'] = 'Completed';
-        });
+      if (finalResponse.statusCode == 200) {
+        final jsonResponse = json.decode(finalResponse.body);
+        final submissionData = jsonResponse['data']['findSubmit'];
+        if (submissionData != null) {
+          updatedStudent['statuses']['Final Submission'] = 'Completed';
+        } else {
+          updatedStudent['statuses']['Final Submission'] = 'Not Started';
+        }
       } else {
-        print('No final submission data or not yet completed for $username');
+        print(
+            'Failed to fetch final submission status for $username: ${finalResponse.statusCode}');
       }
     } catch (error) {
       print('Error fetching final submission status for $username: $error');
@@ -146,38 +163,29 @@ class _StudentStatusPageState extends State<StudentStatusPage>
     try {
       final abstractResponse = await http.get(
         Uri.parse(abstractUrl),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+        headers: {'Authorization': 'Bearer $token'},
       );
 
       if (abstractResponse.statusCode == 200) {
-        // Print the response body to debug
-        print('Abstract Submission Response: ${abstractResponse.body}');
-
-        // Check the response body to determine if it's completed
-        // (Make sure to replace 'Completed' with the actual value your API uses)
-        if (abstractResponse.body.contains('Completed')) {
-          setState(() {
-            final student =
-                students.firstWhere((student) => student['name'] == username);
-            student['statuses']['Abstract Submission'] = 'Completed';
-          });
+        final jsonResponse = json.decode(abstractResponse.body);
+        final submissionData = jsonResponse['data']['findSubmit'];
+        if (submissionData != null) {
+          updatedStudent['statuses']['Abstract Submission'] = 'Completed';
         } else {
-          setState(() {
-            final student =
-                students.firstWhere((student) => student['name'] == username);
-            student['statuses']['Abstract Submission'] = 'Not Started';
-          });
-          print('Abstract submission for $username is not completed yet.');
+          updatedStudent['statuses']['Abstract Submission'] = 'Not Started';
         }
       } else {
         print(
-            'Failed to fetch abstract submission status for $username. Status code: ${abstractResponse.statusCode}');
+            'Failed to fetch abstract submission status for $username: ${abstractResponse.statusCode}');
       }
     } catch (error) {
       print('Error fetching abstract submission status for $username: $error');
     }
+
+    // Replace the old student entry with the updated one
+    setState(() {
+      students[studentIndex] = updatedStudent;
+    });
   }
 
   String _getJoiningStatus(String status) {
@@ -304,7 +312,7 @@ class _StudentStatusPageState extends State<StudentStatusPage>
                     final student = students[index];
                     final studentName =
                         student['name'].toString().toLowerCase();
-                    final status = student['statuses'][tab];
+                    final status = student['statuses'][tab] ?? 'Not Started';
 
                     // Apply Search Filter
                     if (searchQuery.isNotEmpty &&
@@ -425,6 +433,26 @@ class StudentDetailsPage extends StatelessWidget {
                 }).toList(),
                 SizedBox(height: 16),
                 ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PartnerRequestsPage(studentId: student['name']),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.group),
+                  label: Text('Show Requests List'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
                   onPressed: () async {
                     final token = await getToken(); // Fetch the token
 
@@ -447,6 +475,7 @@ class StudentDetailsPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                SizedBox(height: 16),
               ],
             ),
           ),

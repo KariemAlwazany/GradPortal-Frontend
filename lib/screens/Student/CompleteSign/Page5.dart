@@ -79,14 +79,16 @@ class _FifthPageState extends State<FifthPage> {
   }
 
   // Function to check if the student's status has changed to "approved"
+  bool _hasFetchedData = false; // Add a flag to track data fetching
+
+// Function to check if the student's status has changed to "approved"
   Future<void> _checkApprovalStatus() async {
     try {
       final response = await http.get(
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
         headers: {
-          'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+          'Authorization': 'Bearer $_token',
         },
       );
 
@@ -97,10 +99,11 @@ class _FifthPageState extends State<FifthPage> {
         if (newStatus == 'approved') {
           _approvalTimer?.cancel(); // Stop polling
           _navigateToNextPage(); // Navigate to next page
-        } else if (newStatus == 'completed') {
+        } else if (newStatus == 'completed' && !_hasFetchedData) {
           _isDisabled = false;
           _isSubmitted = false;
-          _fetchWaitingListDetails();
+          await _fetchWaitingListDetails(); // Fetch data only once
+          _hasFetchedData = true; // Mark data as fetched
         }
       } else {
         print('Failed to check approval status');
@@ -164,8 +167,7 @@ class _FifthPageState extends State<FifthPage> {
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/getCurrent'),
         headers: {
-          'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+          'Authorization': 'Bearer $_token',
         },
       );
 
@@ -227,6 +229,63 @@ class _FifthPageState extends State<FifthPage> {
     }
   }
 
+  Future<void> _fetchSuggestedTitle() async {
+    final description = _descriptionController.text;
+
+    if (description.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter a description first.")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://localhost:8000/generate-title'), // Replace with your API URL
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'description': description}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final suggestedTitle = data['suggested_title'];
+
+        setState(() {
+          _titleController.text = suggestedTitle; // Update the title field
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Suggested title updated.")),
+        );
+      } else {
+        print('Failed to fetch suggested title: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: Unable to fetch title.")),
+        );
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: Could not connect to the server.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _resetFetchedDataFlag() {
+    setState(() {
+      _hasFetchedData = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -275,6 +334,12 @@ class _FifthPageState extends State<FifthPage> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.autorenew,
+                            color: primaryColor), // Generate button as icon
+                        onPressed:
+                            _fetchSuggestedTitle, // Call the function to fetch the title
                       ),
                     ),
                   ),

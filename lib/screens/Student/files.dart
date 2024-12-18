@@ -296,6 +296,8 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
     });
   }
 
+  final TextEditingController linkController = TextEditingController();
+
   Future<void> _submitFile() async {
     final token = await getToken();
     final currentDate = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
@@ -305,7 +307,10 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
       'Title': widget.deadline['Title'],
       'Doctor': widget.deadline['Doctor'],
       'Date': currentDate,
-      'FileSubmitted': uploadedFileName,
+      if (widget.deadline['Title'] == 'Final Submission')
+        'FileSubmitted': linkController.text
+      else
+        'FileSubmitted': uploadedFileName,
     };
 
     final url = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/submit/student');
@@ -320,7 +325,7 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('File Submitted Successfully')),
+        SnackBar(content: Text('Submission Successful')),
       );
       setState(() {
         submissionDate = currentDate;
@@ -328,7 +333,7 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('File submission failed')),
+        SnackBar(content: Text('Submission Failed')),
       );
     }
   }
@@ -424,6 +429,33 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
                           widget.deadline['Description'] ?? 'No Description',
                           style: TextStyle(fontSize: 16, color: Colors.black54),
                         ),
+                        SizedBox(height: 16.0),
+                        if (widget.deadline['Title'] == 'Final Submission') ...[
+                          Text(
+                            'Submission Link:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 8.0),
+                          TextField(
+                            controller: linkController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter submission link',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                showSubmitButton = value.trim().isNotEmpty;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 16.0),
+                        ],
                       ],
                     ),
                   ),
@@ -439,65 +471,67 @@ class _DeadlineDetailsPageState extends State<DeadlineDetailsPage> {
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ),
-              // File Upload and Trash Button
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: Icon(Icons.upload_file, color: Colors.white),
-                      label: Text('Upload File'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                            vertical: 12.0, horizontal: 20.0),
-                      ),
-                      onPressed: _selectFile,
-                    ),
-                    if (isFileSaved)
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: _removeFile,
-                        tooltip: 'Remove File',
-                      ),
-                  ],
-                ),
-              ),
-              if (uploadedFileName != null && !isFileSaved)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
+              if (widget.deadline['Title'] != 'Final Submission') ...[
+                // File Upload and Trash Button
+                Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.check, color: Colors.green),
-                        onPressed: _saveFile,
-                        tooltip: 'Save File',
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.upload_file, color: Colors.white),
+                        label: Text('Upload File'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 12.0, horizontal: 20.0),
+                        ),
+                        onPressed: _selectFile,
                       ),
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blueAccent),
-                        onPressed: _editFile,
-                        tooltip: 'Edit File',
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.red),
-                        onPressed: _removeFile,
-                        tooltip: 'Cancel Upload',
-                      ),
+                      if (isFileSaved)
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: _removeFile,
+                          tooltip: 'Remove File',
+                        ),
                     ],
                   ),
                 ),
-              if (isFileSaved)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Text(
-                    'File Saved: $uploadedFileName',
-                    style: TextStyle(fontSize: 16, color: Colors.green),
+                if (uploadedFileName != null && !isFileSaved)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.check, color: Colors.green),
+                          onPressed: _saveFile,
+                          tooltip: 'Save File',
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blueAccent),
+                          onPressed: _editFile,
+                          tooltip: 'Edit File',
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.red),
+                          onPressed: _removeFile,
+                          tooltip: 'Cancel Upload',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                if (isFileSaved)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Text(
+                      'File Saved: $uploadedFileName',
+                      style: TextStyle(fontSize: 16, color: Colors.green),
+                    ),
+                  ),
+              ],
               if (widget.deadline['File'] != null)
                 Center(
                   child: Padding(

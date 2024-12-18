@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -62,7 +65,8 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             'id': index, // Local ID starting from 1
             'time':
                 '${DateFormat.jm().format(time)}-${DateFormat.jm().format(time.add(Duration(minutes: 20)))}',
-            'day': DateFormat.EEEE().format(time),
+            'day': DateFormat.EEEE().format(time), // Extract day
+            'date': DateFormat('dd/MM/yyyy').format(time), // New date format
             'room': row['Room'],
             'projectTitle': row['GP_Title'],
             'type': row['GP_Type'],
@@ -71,6 +75,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             'supervisor': row['Supervisor_1'],
             'examiner1': row['Examiner_1'],
             'examiner2': row['Examiner_2'],
+            'Submission': row['Submission'],
           };
         }).toList();
 
@@ -103,7 +108,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
           children: [
             ListTile(
               leading: Icon(Icons.download, color: primaryColor),
-              title: Text('Download Discussion Table'),
+              title: Text('Download Discussion Table as PDF'),
               onTap: () async {
                 await downloadTableAsPdf(
                     discussionTableData, 'Discussion Table');
@@ -112,9 +117,26 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             ),
             ListTile(
               leading: Icon(Icons.download, color: primaryColor),
-              title: Text('Download My Table'),
+              title: Text('Download My Table as PDF'),
               onTap: () async {
                 await downloadTableAsPdf(myTableData, 'My Table');
+                Navigator.pop(context);
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.file_download, color: primaryColor),
+              title: Text('Download Discussion Table as CSV'),
+              onTap: () async {
+                await exportTableAsCsv(discussionTableData, 'Discussion Table');
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.file_download, color: primaryColor),
+              title: Text('Download My Table as CSV'),
+              onTap: () async {
+                await exportTableAsCsv(myTableData, 'My Table');
                 Navigator.pop(context);
               },
             ),
@@ -122,6 +144,67 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
         ),
       ),
     );
+  }
+
+  Future<void> exportTableAsCsv(
+      List<Map<String, dynamic>> tableData, String fileName) async {
+    try {
+      // Define the headers
+      final headers = [
+        'GP#',
+        'Time',
+        'Room',
+        'Project\'s Title',
+        'Type',
+        'Student 1',
+        'Student 2',
+        'Supervisor',
+        'Examiner 1',
+        'Examiner 2',
+        'Submission'
+      ];
+
+      // Map the data to rows
+      final rows = tableData.map((row) {
+        return [
+          row['id'].toString(),
+          row['time'] ?? '',
+          row['room'] ?? '',
+          row['projectTitle'] ?? '',
+          row['type'] ?? '',
+          row['student1'] ?? '',
+          row['student2'] ?? '',
+          row['supervisor'] ?? '',
+          row['examiner1'] ?? '',
+          row['examiner2'] ?? '',
+          row['Submission'] ?? '',
+        ];
+      }).toList();
+
+      // Combine headers and rows
+      final csvData = [headers, ...rows];
+
+      // Convert to CSV format
+      final csv = const ListToCsvConverter().convert(csvData);
+
+      // Get the directory to save the file
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/$fileName.csv';
+
+      // Save the file
+      final file = File(filePath);
+      await file.writeAsString(csv);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('CSV file saved at $filePath')),
+      );
+    } catch (e) {
+      print('Error exporting CSV: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export CSV')),
+      );
+    }
   }
 
   Future<void> downloadTableAsPdf(
@@ -164,6 +247,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
                   'Supervisor',
                   'Examiner 1',
                   'Examiner 2'
+                      'Submission'
                 ],
                 data: rows.map((row) {
                   return [
@@ -177,6 +261,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
                     row['supervisor'] ?? '',
                     row['examiner1'] ?? '',
                     row['examiner2'] ?? '',
+                    row['Submission'] ?? '',
                   ];
                 }).toList(),
               ),
@@ -305,17 +390,19 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
     final groupedData = <String, List<Map<String, dynamic>>>{};
     for (var row in (isDiscussionTable ? discussionTableData : myTableData)) {
       final day = row['day'] ?? 'Unknown Day';
-      if (!groupedData.containsKey(day)) {
-        groupedData[day] = [];
+      final date = row['date'] ?? 'Unknown Date';
+      final dayWithDate = '$day, $date'; // Combine day and date
+      if (!groupedData.containsKey(dayWithDate)) {
+        groupedData[dayWithDate] = [];
       }
-      groupedData[day]?.add(row);
+      groupedData[dayWithDate]?.add(row);
     }
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: groupedData.entries.map((entry) {
-          final day = entry.key;
+          final dayWithDate = entry.key;
           final rows = entry.value;
 
           return Padding(
@@ -323,58 +410,98 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Day Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
+                // Day and Date Header
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12.0),
+                  color: primaryColor.withOpacity(0.1),
                   child: Text(
-                    day,
+                    dayWithDate,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: primaryColor,
                     ),
                   ),
                 ),
+
                 // Table for the Day
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     columnSpacing: 16.0,
+                    headingRowColor: MaterialStateProperty.resolveWith(
+                      (states) => primaryColor.withOpacity(0.2),
+                    ),
                     columns: [
                       DataColumn(
                           label: Text('GP#',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Time',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Room',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Project\'s Title',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Type',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Student 1',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Student 2',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Supervisor',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Examiner 1',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Examiner 2',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
+                      DataColumn(
+                          label: Text('Submission',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                     ],
-                    rows: rows.map((row) {
+                    rows: rows.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final row = entry.value;
+
                       return DataRow(
+                        color: MaterialStateProperty.resolveWith<Color?>(
+                          (Set<MaterialState> states) {
+                            return index % 2 == 0
+                                ? Colors.grey[100]
+                                : Colors.white;
+                          },
+                        ),
                         cells: [
                           DataCell(Text(row['id'].toString())), // Local ID
                           DataCell(Text(row['time'] ?? '')), // Time range
@@ -386,6 +513,7 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
                           DataCell(Text(row['supervisor'] ?? '')),
                           DataCell(Text(row['examiner1'] ?? '')),
                           DataCell(Text(row['examiner2'] ?? '')),
+                          DataCell(Text(row['Submission'] ?? '')),
                         ],
                       );
                     }).toList(),

@@ -42,66 +42,96 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
         ? '${dotenv.env['API_BASE_URL']}/GP/v1/table/student'
         : '${dotenv.env['API_BASE_URL']}/GP/v1/table';
 
-    final response = await http.get(
-      Uri.parse(endpoint),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse(endpoint),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body)['data'];
-      if (isStudentTable) {
-        final table = data['table'];
-        setState(() {
-          tableData = [
-            {
-              'id': 1, // Start from 1 for student table
-              'time': formatTimeWithRange(DateTime.parse(table['Time'])),
-              'day': DateFormat.EEEE().format(DateTime.parse(table['Time'])),
-              'room': table['Room'],
-              'projectTitle': table['GP_Title'],
-              'type': table['GP_Type'],
-              'student1': table['Student_1'],
-              'student2': table['Student_2'],
-              'supervisor': table['Supervisor_1'],
-              'examiner1': table['Examiner_1'],
-              'examiner2': table['Examiner_2'],
-            }
-          ];
-          isLoading = false;
-        });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['data'];
+
+        if (isStudentTable) {
+          // Handle single student table data
+          final table = data['table'];
+          setState(() {
+            tableData = [
+              {
+                'id': 1,
+                'time': table['Time'] != null
+                    ? formatTimeWithRange(DateTime.parse(table['Time']))
+                    : 'Unknown Time',
+                'day': table['Time'] != null
+                    ? DateFormat.EEEE().format(DateTime.parse(table['Time']))
+                    : 'Unknown Day',
+                'date': table['Time'] != null
+                    ? DateFormat('dd/MM/yyyy')
+                        .format(DateTime.parse(table['Time']))
+                    : 'Unknown Date',
+                'room': table['Room'] ?? 'Unknown Room',
+                'projectTitle': table['GP_Title'] ?? 'Unknown Title',
+                'type': table['GP_Type'] ?? 'Unknown Type',
+                'student1': table['Student_1'] ?? 'Unknown Student',
+                'student2': table['Student_2'] ?? 'Unknown Student',
+                'supervisor': table['Supervisor_1'] ?? 'Unknown Supervisor',
+                'examiner1': table['Examiner_1'] ?? 'Unknown Examiner',
+                'examiner2': table['Examiner_2'] ?? 'Unknown Examiner',
+              }
+            ];
+            isLoading = false;
+          });
+        } else {
+          // Handle discussion table list data
+          final tableList = List<Map<String, dynamic>>.from(data['table']);
+          setState(() {
+            tableData = tableList.asMap().entries.map((entry) {
+              final index = entry.key;
+              final row = entry.value;
+              final time =
+                  row['Time'] != null ? DateTime.parse(row['Time']) : null;
+              return {
+                'id': index + 1,
+                'time':
+                    time != null ? formatTimeWithRange(time) : 'Unknown Time',
+                'day': time != null
+                    ? DateFormat.EEEE().format(time)
+                    : 'Unknown Day',
+                'date': time != null
+                    ? DateFormat('dd/MM/yyyy').format(time)
+                    : 'Unknown Date',
+                'room': row['Room'] ?? 'Unknown Room',
+                'projectTitle': row['GP_Title'] ?? 'Unknown Title',
+                'type': row['GP_Type'] ?? 'Unknown Type',
+                'student1': row['Student_1'] ?? 'Unknown Student',
+                'student2': row['Student_2'] ?? 'Unknown Student',
+                'supervisor': row['Supervisor_1'] ?? 'Unknown Supervisor',
+                'examiner1': row['Examiner_1'] ?? 'Unknown Examiner',
+                'examiner2': row['Examiner_2'] ?? 'Unknown Examiner',
+              };
+            }).toList();
+            isLoading = false;
+          });
+        }
       } else {
-        final tableList = List<Map<String, dynamic>>.from(data['table']);
+        // Handle non-200 responses
         setState(() {
-          tableData = tableList.asMap().entries.map((entry) {
-            final index = entry.key;
-            final row = entry.value;
-            final time = DateTime.parse(row['Time']);
-            return {
-              'id': index + 1, // Generate IDs starting from 1
-              'time': formatTimeWithRange(
-                  time), // Format time with 20-min intervals
-              'day': DateFormat.EEEE().format(time),
-              'room': row['Room'],
-              'projectTitle': row['GP_Title'],
-              'type': row['GP_Type'],
-              'student1': row['Student_1'],
-              'student2': row['Student_2'],
-              'supervisor': row['Supervisor_1'],
-              'examiner1': row['Examiner_1'],
-              'examiner2': row['Examiner_2'],
-            };
-          }).toList();
           isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Failed to fetch table data. Status: ${response.statusCode}')),
+        );
       }
-    } else {
+    } catch (e) {
+      // Handle any exceptions during the fetch
       setState(() {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch table data')),
+        SnackBar(content: Text('An error occurred: $e')),
       );
     }
   }
@@ -306,13 +336,16 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
 
   Widget buildScrollableTable() {
     // Group the data by 'day'
+// Group data by day and date
     final groupedData = <String, List<Map<String, dynamic>>>{};
     for (var row in tableData) {
       final day = row['day'] ?? 'Unknown Day';
-      if (!groupedData.containsKey(day)) {
-        groupedData[day] = [];
+      final date = row['date'] ?? 'Unknown Date';
+      final dayWithDate = '$day, $date'; // Combine day and date
+      if (!groupedData.containsKey(dayWithDate)) {
+        groupedData[dayWithDate] = [];
       }
-      groupedData[day]?.add(row);
+      groupedData[dayWithDate]?.add(row);
     }
 
     return SingleChildScrollView(
@@ -345,45 +378,75 @@ class _DiscussionTablePageState extends State<DiscussionTablePage> {
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     columnSpacing: 16.0,
+                    headingRowColor: MaterialStateProperty.resolveWith(
+                        (states) => primaryColor.withOpacity(0.2)),
                     columns: [
                       DataColumn(
                           label: Text('GP#',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Time',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Room',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Project\'s Title',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Type',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Student 1',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Student 2',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Supervisor',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Examiner 1',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                       DataColumn(
                           label: Text('Examiner 2',
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor))),
                     ],
-                    rows: rows.map((row) {
+                    rows: rows.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final row = entry.value;
+
                       return DataRow(
+                        color: MaterialStateProperty.resolveWith<Color?>(
+                          (Set<MaterialState> states) {
+                            return index % 2 == 0
+                                ? Colors.grey[100]
+                                : Colors.white;
+                          },
+                        ),
                         cells: [
-                          DataCell(
-                              Text(row['id'].toString())), // Use generated ID
-                          DataCell(Text(
-                              row['time'] ?? '')), // Display formatted time
+                          DataCell(Text(row['id'].toString())), // ID
+                          DataCell(Text(row['time'] ?? '')), // Time
                           DataCell(Text(row['room'] ?? '')),
                           DataCell(Text(row['projectTitle'] ?? '')),
                           DataCell(Text(row['type'] ?? '')),

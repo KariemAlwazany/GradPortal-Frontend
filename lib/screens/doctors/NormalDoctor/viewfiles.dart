@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:path_provider/path_provider.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -238,12 +240,35 @@ class _ViewFilesPageState extends State<ViewFilesPage> {
           Text(fileName, style: TextStyle(fontSize: 16)),
           IconButton(
             icon: Icon(Icons.download, color: primaryColor),
-            onPressed: () {
-              print('Downloading $url');
+            onPressed: () async {
+              await _downloadFile(fileName, url);
             },
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _downloadFile(String fileName, String url) async {
+    try {
+      // Get the directory for storing the file
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/$fileName';
+
+      // Use Dio to download the file
+      final dio = Dio();
+      await dio.download(url, filePath);
+
+      // Notify user about the successful download
+      print('File downloaded to $filePath');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('File downloaded: $fileName')),
+      );
+    } catch (e) {
+      print('Error downloading file: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to download $fileName')),
+      );
+    }
   }
 }

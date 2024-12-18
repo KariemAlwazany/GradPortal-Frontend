@@ -63,7 +63,8 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
           'id': item['id'], // Include ID for patching
           'gp': null, // Placeholder for GP# counter
           'time': TimeOfDay(hour: time.hour, minute: time.minute),
-          'day': DateFormat('EEEE').format(time),
+          'day': DateFormat('EEEE').format(time), // Extract day
+          'date': DateFormat('yyyy-MM-dd').format(time), // Extract date
           'room': item['Room'],
           'projectTitle': item['GP_Title'],
           'type': item['GP_Type'],
@@ -240,6 +241,13 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
         body: jsonEncode({
           'StartDate': startDateTime!.toIso8601String(),
           'EndDate': endDateTime!.toIso8601String(),
+          'SessionDuration': int.tryParse(sessionDurationController.text) ?? 0,
+          'BreakBetweenSessions':
+              int.tryParse(breakBetweenSessionsController.text) ?? 0,
+          'BreakInterval': int.tryParse(breakIntervalController.text) ?? 0,
+          'BreakDuration': int.tryParse(breakDurationController.text) ?? 0,
+          'DiscussionsPerSession':
+              int.tryParse(discussionsPerSessionController.text) ?? 0,
         }),
       );
 
@@ -310,7 +318,10 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
       time.hour,
       time.minute,
     );
-    final DateTime endTime = startTime.add(Duration(minutes: 20));
+    final int durationInMinutes =
+        int.tryParse(sessionDurationController.text) ?? 0;
+    final DateTime endTime =
+        startTime.add(Duration(minutes: durationInMinutes));
 
     final String formattedStartTime =
         DateFormat.jm().format(startTime); // e.g., 8:00 AM
@@ -385,6 +396,15 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     );
   }
 
+  final TextEditingController sessionDurationController =
+      TextEditingController();
+  final TextEditingController breakBetweenSessionsController =
+      TextEditingController();
+  final TextEditingController breakIntervalController = TextEditingController();
+  final TextEditingController breakDurationController = TextEditingController();
+  final TextEditingController discussionsPerSessionController =
+      TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -414,32 +434,113 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Card(
+                    color: Colors.white,
                     elevation: 4.0,
                     margin: EdgeInsets.only(bottom: 16.0),
                     child: ListTile(
-                      title: Text('Start Date and Time'),
-                      subtitle: Text(startDateTime != null
-                          ? DateFormat('yyyy-MM-dd HH:mm')
-                              .format(startDateTime!)
-                          : 'Not Selected'),
+                      title: Text(
+                        'Start Date and Time',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        startDateTime != null
+                            ? DateFormat('yyyy-MM-dd HH:mm')
+                                .format(startDateTime!)
+                            : 'Not Selected',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       trailing: IconButton(
-                        icon: Icon(Icons.calendar_today),
+                        icon: Icon(Icons.calendar_today, color: primaryColor),
                         onPressed: selectStartDateTime,
                       ),
                     ),
                   ),
                   Card(
+                    color: Colors.white,
                     elevation: 4.0,
                     margin: EdgeInsets.only(bottom: 16.0),
                     child: ListTile(
-                      title: Text('End Date and Time'),
-                      subtitle: Text(endDateTime != null
-                          ? DateFormat('yyyy-MM-dd HH:mm').format(endDateTime!)
-                          : 'Not Selected'),
+                      title: Text(
+                        'End Date and Time',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        endDateTime != null
+                            ? DateFormat('yyyy-MM-dd HH:mm')
+                                .format(endDateTime!)
+                            : 'Not Selected',
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       trailing: IconButton(
-                        icon: Icon(Icons.calendar_today),
+                        icon: Icon(Icons.calendar_today, color: primaryColor),
                         onPressed: selectEndDateTime,
                       ),
+                    ),
+                  ),
+                  EnhancedCard(
+                    controller: sessionDurationController,
+                    labelText: 'Session Duration (minutes)',
+                    icon: Icons.timer,
+                    onIconPressed: () => showEditDialog(
+                      context,
+                      'Session Duration (minutes)',
+                      sessionDurationController,
+                    ),
+                  ),
+                  EnhancedCard(
+                    controller: breakBetweenSessionsController,
+                    labelText: 'Break Between Sessions (minutes)',
+                    icon: Icons.pause,
+                    onIconPressed: () => showEditDialog(
+                      context,
+                      'Break Between Sessions (minutes)',
+                      breakBetweenSessionsController,
+                    ),
+                  ),
+                  EnhancedCard(
+                    controller: breakIntervalController,
+                    labelText: 'Break Interval (minutes)',
+                    icon: Icons.event,
+                    onIconPressed: () => showEditDialog(
+                      context,
+                      'Break Interval (number of sessions)',
+                      breakIntervalController,
+                    ),
+                  ),
+                  EnhancedCard(
+                    controller: breakDurationController,
+                    labelText: 'Break Duration (minutes)',
+                    icon: Icons.breakfast_dining,
+                    onIconPressed: () => showEditDialog(
+                      context,
+                      'Break Duration (minutes)',
+                      breakDurationController,
+                    ),
+                  ),
+                  EnhancedCard(
+                    controller: discussionsPerSessionController,
+                    labelText: 'Discussions Per Session (number of sessions)',
+                    icon: Icons.group,
+                    onIconPressed: () => showEditDialog(
+                      context,
+                      'Discussions Per Session',
+                      discussionsPerSessionController,
                     ),
                   ),
                   SizedBox(height: 16),
@@ -472,35 +573,64 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                         .map((entry) {
                           final day = entry.key;
                           final rows = entry.value;
+                          final date = rows.isNotEmpty
+                              ? rows.first['date']
+                              : 'Unknown Date';
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
+                              // Day and Date Header Styling
+                              Container(
+                                margin: EdgeInsets.symmetric(vertical: 8.0),
+                                padding: EdgeInsets.all(12.0),
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withOpacity(0.1),
+                                  border: Border(
+                                    left: BorderSide(
+                                        color: primaryColor, width: 4.0),
+                                  ),
+                                ),
                                 child: Text(
-                                  day,
+                                  '$day, $date',
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
+                              // Styled Table
                               DataTable(
                                 columnSpacing: 16.0,
+                                headingRowColor: MaterialStateColor.resolveWith(
+                                  (states) => primaryColor.withOpacity(0.2),
+                                ),
                                 columns: tableHeaders
                                     .map((header) => DataColumn(
                                           label: Text(
                                             header,
                                             style: TextStyle(
-                                                fontWeight: FontWeight.bold),
+                                              fontWeight: FontWeight.bold,
+                                              color: primaryColor,
+                                            ),
                                           ),
                                         ))
                                     .toList(),
-                                rows: rows.map((row) {
-                                  final int index =
-                                      discussionTable.indexOf(row);
+                                rows: rows.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final row = entry.value;
+
                                   return DataRow(
+                                    color: MaterialStateProperty.resolveWith<
+                                        Color?>(
+                                      (Set<MaterialState> states) {
+                                        // Alternate row colors
+                                        return index % 2 == 0
+                                            ? Colors.grey[100]
+                                            : Colors.white;
+                                      },
+                                    ),
                                     cells: [
                                       DataCell(Text(row['gp'].toString())),
                                       DataCell(
@@ -559,6 +689,7 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
                                   );
                                 }).toList(),
                               ),
+                              SizedBox(height: 16), // Space between tables
                             ],
                           );
                         })
@@ -635,5 +766,96 @@ Future<void> downloadTableAsPdf(List<Map<String, dynamic>> discussionTable,
   // Save and trigger download
   await Printing.layoutPdf(
     onLayout: (PdfPageFormat format) async => pdf.save(),
+  );
+}
+
+class EnhancedCard extends StatelessWidget {
+  final TextEditingController controller;
+  final String labelText;
+  final IconData icon;
+  final VoidCallback onIconPressed; // Callback for icon press
+
+  EnhancedCard({
+    required this.controller,
+    required this.labelText,
+    required this.icon,
+    required this.onIconPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white, // Light background
+          borderRadius: BorderRadius.circular(12.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6.0,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(fontSize: 16.0),
+                  decoration: InputDecoration(
+                    labelText: labelText,
+                    labelStyle: TextStyle(
+                      fontSize: 14.0,
+                      color: primaryColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: InputBorder.none, // No borders
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(icon, color: primaryColor),
+                onPressed: onIconPressed, // Trigger pop-up dialog
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void showEditDialog(
+    BuildContext context, String labelText, TextEditingController controller) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Edit $labelText'),
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          hintText: 'Enter $labelText',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            // Handle the updated value here
+            Navigator.pop(context);
+          },
+          child: Text('Save'),
+        ),
+      ],
+    ),
   );
 }

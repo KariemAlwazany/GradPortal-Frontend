@@ -69,6 +69,8 @@ dependencies:
   url_launcher: ^6.1.0
   path_provider: ^2.0.11
   collection: ^1.17.0
+  dio: ^5.0.0
+  csv: ^5.0.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0

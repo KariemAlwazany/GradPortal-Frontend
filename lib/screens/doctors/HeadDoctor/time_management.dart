@@ -116,7 +116,7 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manage Deadlines'),
+        title: Text('Management'),
         backgroundColor: primaryColor,
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
@@ -140,7 +140,7 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
       backgroundColor: backgroundColor,
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: deadlines.length + 1, // Add 1 for the new card
+        itemCount: deadlines.length + 2, // Add 2 for the new cards
         itemBuilder: (context, index) {
           if (index == deadlines.length) {
             return Padding(
@@ -149,7 +149,15 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
                 onEdit: _showEditStudentNumberDialog,
               ),
             );
+          } else if (index == deadlines.length + 1) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: ResetApplicationCard(
+                onReset: _resetApplication,
+              ),
+            );
           }
+
           final deadline = deadlines[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
@@ -315,6 +323,70 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
     }
   }
 
+  Future<void> _resetApplication() async {
+    bool? confirmReset = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirm Reset'),
+          content: Text(
+            'Are you sure you want to reset the application? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false); // User cancels
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true); // User confirms
+              },
+              child: Text(
+                'Confirm',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    // If the user confirmed, proceed with the reset
+    if (confirmReset == true) {
+      String? token = await getToken();
+      if (token != null) {
+        final response = await http.post(
+          Uri.parse(
+              '${dotenv.env['API_BASE_URL']}/GP/v1/doctors/head-doctor/resetApp'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Application reset successfully'),
+          ));
+
+          // Re-fetch data to update the UI
+          _fetchData();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text('Failed to reset application. Please try again later.'),
+          ));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Authentication error. Please log in again.'),
+        ));
+      }
+    }
+  }
+
   Future<void> _updateStudentNumber(int studentNumber) async {
     String? token = await getToken();
     if (token != null) {
@@ -474,6 +546,63 @@ class DeadlineCardForStudents extends StatelessWidget {
                   icon: Icon(Icons.edit, color: primaryColor),
                   tooltip: 'Edit Student Number',
                   onPressed: onEdit,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ResetApplicationCard extends StatelessWidget {
+  final VoidCallback onReset;
+
+  ResetApplicationCard({required this.onReset});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.refresh, size: 50, color: Colors.red),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Reset Application',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Reset all deadlines, visibility, and assignments to default settings.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.settings_backup_restore, color: Colors.red),
+                  tooltip: 'Reset Application',
+                  onPressed: onReset,
                 ),
               ],
             ),
