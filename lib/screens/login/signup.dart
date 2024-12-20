@@ -213,7 +213,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: lightColorScheme.primary,
+                          color: primaryColor,
                         ),
                       ),
                       const SizedBox(
@@ -697,30 +697,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                       // i agree to the processing
                       Row(
-                        children: [
-                          Checkbox(
-                            value: agreePersonalData,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                agreePersonalData = value!;
-                              });
-                            },
-                            activeColor: lightColorScheme.primary,
-                          ),
-                          const Text(
-                            'I agree to the processing of ',
-                            style: TextStyle(
-                              color: Colors.black45,
-                            ),
-                          ),
-                          Text(
-                            'Personal data',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: lightColorScheme.primary,
-                            ),
-                          ),
-                        ],
+                        children: [],
                       ),
                       const SizedBox(
                         height: 25.0,
@@ -754,12 +731,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               vertical: 0,
                               horizontal: 10,
                             ),
-                            child: Text(
-                              'Sign up with',
-                              style: TextStyle(
-                                color: Colors.black45,
-                              ),
-                            ),
                           ),
                           Expanded(
                             child: Divider(
@@ -775,12 +746,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // sign up social media logo
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Logo(Logos.facebook_f),
-                          Logo(Logos.twitter),
-                          Logo(Logos.google),
-                          Logo(Logos.apple),
-                        ],
                       ),
                       const SizedBox(height: 25.0),
                       // already have an account
@@ -806,7 +771,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               'Sign in',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                               ),
                             ),
                           ),

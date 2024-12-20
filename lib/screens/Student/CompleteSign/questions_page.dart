@@ -83,7 +83,12 @@ class _QuestionsPageState extends State<QuestionsPage> {
       return;
     }
 
-    final String url = '${dotenv.env['API_BASE_URL']}/GP/v1/students';
+    final String url1 =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/students'; // First endpoint
+    final String url2 =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/informationEntered'; // Second endpoint
+
+    // Common body for both requests
     final Map<String, dynamic> body = {
       'GP_Type': widget.projectType,
       'FE': frontend,
@@ -95,8 +100,9 @@ class _QuestionsPageState extends State<QuestionsPage> {
     };
 
     try {
-      final response = await http.patch(
-        Uri.parse(url),
+      // First PATCH request
+      final response1 = await http.patch(
+        Uri.parse(url1),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -104,17 +110,30 @@ class _QuestionsPageState extends State<QuestionsPage> {
         body: json.encode(body),
       );
 
-      if (response.statusCode == 200) {
-        print('Patch request successful');
-        widget.onNext(); // Move to the next step
-      } else {
-        print('Failed to send patch request: ${response.statusCode}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update data. Please try again.')),
-        );
+      if (response1.statusCode != 200) {
+        throw Exception(
+            'Failed to send PATCH request to $url1: ${response1.statusCode}');
       }
+
+      // Second PATCH request
+      final response2 = await http.patch(
+        Uri.parse(url2),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      if (response2.statusCode != 200) {
+        throw Exception(
+            'Failed to send PATCH request to $url2: ${response2.statusCode}');
+      }
+
+      print('Both PATCH requests were successful');
+      widget.onNext(); // Move to the next step
     } catch (e) {
-      print('Error sending patch request: $e');
+      print('Error sending PATCH requests: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred. Please try again.')),
       );
@@ -359,11 +378,15 @@ class _QuestionsPageState extends State<QuestionsPage> {
   }
 
   bool _areAllFieldsFilled() {
-    return backend != null &&
-        frontend != null &&
-        database != null &&
-        age != null &&
-        gender != null &&
-        (widget.projectType == "Hardware" ? location != null : true);
+    if (widget.projectType == "Hardware") {
+      return age != null && gender != null && location != null;
+    } else if (widget.projectType == "Software") {
+      return backend != null &&
+          frontend != null &&
+          database != null &&
+          age != null &&
+          gender != null;
+    }
+    return false;
   }
 }

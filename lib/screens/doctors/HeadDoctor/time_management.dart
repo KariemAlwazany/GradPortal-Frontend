@@ -70,8 +70,8 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
             {
               'title': 'Joining Application',
               'icon': Icons.app_registration,
-              'deadline': data['JoinApplication'],
-              'visible': data['JoinApplicationStatus'] == 'Show',
+              'deadline': data['JoiningApplication'],
+              'visible': data['JoiningApplicationStatus'] == 'Show',
             },
             {
               'title': 'Find Partners',
@@ -234,8 +234,8 @@ class _DeadlineManagementPageState extends State<DeadlineManagementPage> {
     String? token = await getToken();
     if (token != null) {
       final deadlineType = deadlines[index]['title'].replaceAll(' ', '');
-      String key = deadlineType == "JoinApplication"
-          ? "JoinApplication"
+      String key = deadlineType == "JoiningApplication"
+          ? "JoiningApplication"
           : deadlineType == "FinalSubmission"
               ? "FinalSubmission"
               : deadlineType;

@@ -59,6 +59,14 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
                   initialStep: 0,
                 )),
       );
+    } else if (status == 'projectSelected') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProjectStepper(
+                  initialStep: 1,
+                )),
+      );
     } else if (status == 'waitpartner' || status == 'declinedpartner') {
       Navigator.pushReplacement(
         context,

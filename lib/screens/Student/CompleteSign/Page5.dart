@@ -186,45 +186,66 @@ class _FifthPageState extends State<FifthPage> {
     }
   }
 
-  // Submit the project details (PATCH request)
   Future<void> _submitProject() async {
+    // Validate that title and description are not empty
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Please fill in both the title and description.")),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
-      _isSubmitted = true; // Disable fields immediately after submit is pressed
-      _isDisabled = true; // Disable the fields directly
+      _isSubmitted = true; // Indicate submission
+      _isDisabled = true; // Disable the fields immediately
     });
 
     final Map<String, String> body = {
       'ProjectTitle': _titleController.text,
       'ProjectDescription': _descriptionController.text,
-      'ProjectStatus': 'waiting'
+      'ProjectStatus': 'waiting', // Example status
     };
 
     try {
+      print('Sending PATCH request...');
+      print('Body: ${json.encode(body)}');
+
       final response = await http.patch(
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/current'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+              'Bearer $_token', // Token added to Authorization header
         },
-        body: json.encode(body),
+        body: json.encode(body), // Encode the body as JSON
       );
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         print('Project updated successfully');
-        setState(() {
-          _isLoading = false; // Stop loading after successful submission
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Project submitted successfully.")),
+        );
       } else {
-        print('Failed to update the project: ${response.statusCode}');
+        print('Failed to update project. Status code: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to submit project. Please try again.")),
+        );
       }
     } catch (e) {
       print('Error submitting project: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: Could not connect to the server.")),
+      );
     } finally {
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Stop loading spinner
       });
     }
   }

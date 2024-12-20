@@ -75,9 +75,7 @@ class _ThirdPageState extends State<ThirdPage> {
         'Partner_1_Name'; // Replace this with the actual partner1 value
     String? partner2 =
         widget.selectedPartner; // This will be null if "No" was selected
-    String partnerStatus = partner2 != null
-        ? 'waiting'
-        : 'no_partner'; // Set partner status based on partner2
+    String partnerStatus = 'waiting'; // Set partner status based on partner2
 
     try {
       await addToWaitingList(

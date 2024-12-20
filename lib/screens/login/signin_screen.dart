@@ -22,6 +22,8 @@ import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+const Color primaryColor = Color(0xFF3B4280);
+
 Future<Map<String, dynamic>> login(String email, String password) async {
   // Prepare the login data
   Map<String, dynamic> loginData = {
@@ -108,7 +110,7 @@ class SignInScreenState extends State<SignInScreen> {
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: lightColorScheme.primary,
+                          color: primaryColor,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -125,9 +127,7 @@ class SignInScreenState extends State<SignInScreen> {
                         decoration: InputDecoration(
                           label: const Text('Email'),
                           hintText: 'Enter Email',
-                          hintStyle: const TextStyle(
-                            color: Colors.black26,
-                          ),
+                          hintStyle: const TextStyle(color: primaryColor),
                           border: OutlineInputBorder(
                             borderSide: const BorderSide(color: Colors.black12),
                             borderRadius: BorderRadius.circular(10.0),
@@ -184,7 +184,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     rememberMe = value!;
                                   });
                                 },
-                                activeColor: lightColorScheme.primary,
+                                activeColor: primaryColor,
                               ),
                               const Text(
                                 'Remember me',
@@ -198,7 +198,7 @@ class SignInScreenState extends State<SignInScreen> {
                             child: Text(
                               'Forget Password?',
                               style: TextStyle(
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -310,12 +310,6 @@ class SignInScreenState extends State<SignInScreen> {
                               vertical: 0,
                               horizontal: 10,
                             ),
-                            child: Text(
-                              'Sign up with',
-                              style: TextStyle(
-                                color: Colors.black45,
-                              ),
-                            ),
                           ),
                           Expanded(
                             child: Divider(
@@ -328,27 +322,6 @@ class SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Logo(Logos.facebook_f),
-                          Logo(Logos.twitter),
-                          Logo(Logos.apple),
-                          GestureDetector(
-                            onTap: () async {
-                              bool res = false;
-                              // await _authMethods.signInWithGoogle(context);
-                              if (res) {
-                                // Navigator.pushReplacement(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) =>
-                                //        // HomeScreen(), // Ensure Widget193 is correctly wrapped
-                                //   ),
-                                // );
-                              }
-                            }, // Call sign-in method
-                            child: Logo(Logos.google),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 18),
                       Row(
@@ -372,7 +345,7 @@ class SignInScreenState extends State<SignInScreen> {
                             child: Text(
                               'Sign up now',
                               style: TextStyle(
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
