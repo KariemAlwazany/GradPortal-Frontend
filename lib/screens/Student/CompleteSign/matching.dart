@@ -65,6 +65,12 @@ class _MatchingPageState extends State<MatchingPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _fetchStudentGPType(); // Fetch the GP_Type when the page loads
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -108,17 +114,19 @@ class _MatchingPageState extends State<MatchingPage> {
                     const SizedBox(height: 20),
 
                     // Step 1: Project Type Selection
-                    _buildDropdown(
-                      label: 'Project Type',
-                      value: projectType,
-                      items: ['Software', 'Hardware'],
-                      onChanged: (value) {
-                        setState(() {
-                          projectType = value;
-                          _resetAllFields(); // Reset all fields when GP type changes
-                        });
-                      },
-                    ),
+                    if (projectType != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Text(
+                          'Current Project Type: $projectType',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
 
                     const SizedBox(height: 20),
 
@@ -200,8 +208,8 @@ class _MatchingPageState extends State<MatchingPage> {
                         items: [
                           'Node.js',
                           'Laravel',
-                          '.NET',
                           'Spring Boot',
+                          'ASP.NET',
                           'Other'
                         ],
                         onChanged: (value) {
@@ -214,7 +222,13 @@ class _MatchingPageState extends State<MatchingPage> {
                       _buildDropdown(
                         label: 'Preferred Frontend Framework',
                         value: frontend,
-                        items: ['Flutter', 'React', 'HTML/CSS', 'Other'],
+                        items: [
+                          'Flutter',
+                          'React',
+                          'Angular',
+                          'HTML/CSS',
+                          'Other'
+                        ],
                         onChanged: (value) {
                           setState(() {
                             frontend = value;
@@ -225,7 +239,13 @@ class _MatchingPageState extends State<MatchingPage> {
                       _buildDropdown(
                         label: 'Preferred Database',
                         value: database,
-                        items: ['MySQL', 'Oracle', 'MongoDB', 'Other'],
+                        items: [
+                          'MySQL',
+                          'Oracle',
+                          'MongoDB',
+                          'Django',
+                          'Other'
+                        ],
                         onChanged: (value) {
                           setState(() {
                             database = value;
@@ -322,41 +342,124 @@ class _MatchingPageState extends State<MatchingPage> {
                       ),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: matchedStudents.length,
                         itemBuilder: (context, index) {
                           final student = matchedStudents[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            child: ListTile(
-                              title: Text(student['Username'] ?? 'Unknown'),
-                              subtitle: Text(
-                                  'Age: ${student['Age'] ?? 'N/A'}, Gender: ${student['Gender'] ?? 'N/A'}'),
-                              trailing: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    selectedPartner = student['Username'];
-                                    isWaitingForApproval = true;
-                                  });
-                                  _sendPartnerRequest(student['Username']);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryColor,
+                          return GestureDetector(
+                            onTap: () async {
+                              // Show student info when the card is tapped
+                              final studentInfo =
+                                  await _fetchStudentInfo(student['Username']);
+                              if (studentInfo != null) {
+                                _showStudentInfoPopup(context, studentInfo);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Failed to load student information.')),
+                                );
+                              }
+                            },
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(vertical: 10),
+                              child: ListTile(
+                                title: Text(student['Username'] ?? 'Unknown'),
+                                subtitle: Text(
+                                  'Age: ${student['Age'] ?? 'N/A'}, Gender: ${student['Gender'] ?? 'N/A'}',
                                 ),
-                                child: const Text(
-                                  'Select',
-                                  style: TextStyle(color: Colors.white),
+                                trailing: ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      selectedPartner = student['Username'];
+                                      isWaitingForApproval = true;
+                                    });
+                                    _sendPartnerRequest(student['Username']);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryColor,
+                                  ),
+                                  child: const Text(
+                                    'Choose',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
                               ),
                             ),
                           );
                         },
-                      ),
+                      )
                     ]
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  Future<Map<String, dynamic>?> _fetchStudentInfo(String username) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/specific/$username'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to fetch student information');
+      }
+    } catch (e) {
+      print('Error fetching student info: $e');
+      return null;
+    }
+  }
+
+  void _showStudentInfoPopup(
+      BuildContext context, Map<String, dynamic> studentInfo) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Student Information'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Username: ${studentInfo['Username'] ?? 'N/A'}'),
+              Text(
+                  'Registration Number: ${studentInfo['Registration_number'] ?? 'N/A'}'),
+              Text('Status: ${studentInfo['Status'] ?? 'N/A'}'),
+              Text('GP Type: ${studentInfo['GP_Type'] ?? 'N/A'}'),
+              Text('Age: ${studentInfo['Age'] ?? 'N/A'}'),
+              Text('Gender: ${studentInfo['Gender'] ?? 'N/A'}'),
+              if (studentInfo['GP_Type'] == 'Software') ...[
+                Text('Backend: ${studentInfo['BE'] ?? 'N/A'}'),
+                Text('Frontend: ${studentInfo['FE'] ?? 'N/A'}'),
+                Text('Database: ${studentInfo['DB'] ?? 'N/A'}'),
+              ],
+              if (studentInfo['GP_Type'] == 'Hardware') ...[
+                Text('City: ${studentInfo['City'] ?? 'N/A'}'),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -458,7 +561,7 @@ class _MatchingPageState extends State<MatchingPage> {
             onPressed: _declineRequest, // Call the _declineRequest function
             icon: const Icon(Icons.cancel, color: Colors.white),
             label: const Text(
-              'Undo Request',
+              'Cancle Request',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -493,7 +596,7 @@ class _MatchingPageState extends State<MatchingPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students/available'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (response.statusCode == 200) {
@@ -515,7 +618,10 @@ class _MatchingPageState extends State<MatchingPage> {
   List<dynamic> _filterStudents(List<dynamic> students) {
     return students.where((student) {
       bool matches = true;
+
+      // Ensure the Project Type is matched first
       if (projectType == 'Software') {
+        matches &= student['GP_Type'] == 'Software';
         if (askBackend == true && backend != null) {
           matches &= student['BE'] == backend;
         }
@@ -525,20 +631,53 @@ class _MatchingPageState extends State<MatchingPage> {
         if (askDatabase == true && database != null) {
           matches &= student['DB'] == database;
         }
+      } else if (projectType == 'Hardware') {
+        matches &= student['GP_Type'] == 'Hardware';
+        if (askLocation == true && location != null) {
+          matches &= student['City'] == location;
+        }
       }
+
+      // Match on Age and Gender (common for both types)
       if (askAge == true && age != null) {
         matches &= student['Age'] == age;
       }
       if (askGender == true && gender != null) {
         matches &= student['Gender'] == gender;
       }
-      if (projectType == 'Hardware' &&
-          askLocation == true &&
-          location != null) {
-        matches &= student['City'] == location;
-      }
+
       return matches;
     }).toList();
+  }
+
+  Future<void> _fetchStudentGPType() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return;
+
+      final response = await http.get(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          projectType = data['GP_Type']; // Automatically set projectType
+        });
+      } else {
+        throw Exception('Failed to fetch GP_Type');
+      }
+    } catch (e) {
+      print('Error fetching GP_Type: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching project type.')),
+      );
+    }
   }
 
   void _resetAllFields() {

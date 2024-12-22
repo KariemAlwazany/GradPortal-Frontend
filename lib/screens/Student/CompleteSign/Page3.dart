@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/send_message.dart';
+import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -159,7 +160,9 @@ class _ThirdPageState extends State<ThirdPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 16,
+                  ),
                   if (answered) ...[
                     Text(
                       hasDoctor ? 'Choose your doctor:' : 'Choose 3 doctors:',
@@ -341,8 +344,25 @@ class _ThirdPageState extends State<ThirdPage> {
               },
             ),
           ),
+          Positioned(
+            top: 16,
+            left: 25,
+            child: IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () => _logout(context),
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

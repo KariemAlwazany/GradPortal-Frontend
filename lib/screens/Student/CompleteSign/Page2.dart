@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/matching.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/partner_request.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/send_message.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
@@ -213,7 +214,7 @@ class _SecondPageState extends State<SecondPage> {
     try {
       final token = await getToken();
       final response = await http.get(
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students'),
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students/available'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -377,7 +378,7 @@ class _SecondPageState extends State<SecondPage> {
                           },
                           icon: const Icon(Icons.cancel, color: Colors.white),
                           label: const Text(
-                            'Undo Request',
+                            'Cancle Request',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -403,7 +404,7 @@ class _SecondPageState extends State<SecondPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 160),
+                          const SizedBox(height: 100),
                           const Text(
                             'Do You Have a Partner?',
                             style: TextStyle(
@@ -456,9 +457,32 @@ class _SecondPageState extends State<SecondPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => _logout(context),
+                            icon: const Icon(Icons.logout, color: Colors.white),
+                            label: const Text(
+                              'Logout',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 20, horizontal: 70),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              elevation: 10,
+                              shadowColor: Colors.black.withOpacity(0.3),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                           if (answered) ...[
                             const Text(
-                              'Choose one from the available students:',
+                              'Choose your partner:',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -564,6 +588,21 @@ class _SecondPageState extends State<SecondPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => SendMessagePage(),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            top: 16,
+            left: 25,
+            child: IconButton(
+              icon: const Icon(Icons.group_add, color: Colors.white),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PartnerRequestsPage(),
                   ),
                 );
               },

@@ -155,7 +155,13 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 _buildDropdown(
                   label: 'Backend Framework',
                   value: backend,
-                  items: ['Node.js', 'Laravel', 'Spring Boot', 'Other'],
+                  items: [
+                    'Node.js',
+                    'Laravel',
+                    'Spring Boot',
+                    'ASP.NET',
+                    'Other'
+                  ],
                   onChanged: (value) {
                     setState(() {
                       backend = value;
@@ -165,7 +171,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 _buildDropdown(
                   label: 'Frontend Framework',
                   value: frontend,
-                  items: ['Flutter', 'React', 'HTML/CSS', 'Other'],
+                  items: ['Flutter', 'React', 'Angular', 'HTML/CSS', 'Other'],
                   onChanged: (value) {
                     setState(() {
                       frontend = value;
@@ -175,7 +181,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 _buildDropdown(
                   label: 'Preferred Database',
                   value: database,
-                  items: ['MySQL', 'Oracle', 'MongoDB', 'Other'],
+                  items: ['MySQL', 'Oracle', 'MongoDB', 'Django', 'Other'],
                   onChanged: (value) {
                     setState(() {
                       database = value;
