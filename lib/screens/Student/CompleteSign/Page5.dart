@@ -227,6 +227,9 @@ class _FifthPageState extends State<FifthPage> {
       print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
+        setState(() {
+          _showUndoButton = true; // Show the "Undo Request" button
+        });
         print('Project updated successfully');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Project submitted successfully.")),
@@ -307,6 +310,8 @@ class _FifthPageState extends State<FifthPage> {
     });
   }
 
+  bool _showUndoButton = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -344,8 +349,8 @@ class _FifthPageState extends State<FifthPage> {
                         ),
                       ),
                     ],
-                  ),
-                if (!(_isLoading || _isSubmitted)) ...[
+                  )
+                else ...[
                   TextField(
                     controller: _titleController,
                     enabled: !_isDisabled, // Disable if status is 'waitapprove'
@@ -423,12 +428,73 @@ class _FifthPageState extends State<FifthPage> {
                     shadowColor: Colors.black.withOpacity(0.3),
                   ),
                 ),
+                const SizedBox(height: 20),
+                if (_showUndoButton) // Conditionally render the "Undo Request" button
+                  ElevatedButton.icon(
+                    onPressed: _undoRequest, // Call the _undoRequest function
+                    icon: const Icon(Icons.cancel, color: Colors.white),
+                    label: const Text(
+                      'Undo Request',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Colors.orange, // Button color for Undo Request
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 10,
+                      shadowColor: Colors.black.withOpacity(0.3),
+                    ),
+                  ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _undoRequest() async {
+    try {
+      final token = await getToken(); // Retrieve the JWT token
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/waitinglist/project/undo-request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _approvalTimer?.cancel(); // Stop polling
+        setState(() {
+          _isLoading = false; // Reset to normal state
+          _isSubmitted = false; // Allow the user to resubmit
+          _isDisabled = false;
+          _showUndoButton = false;
+          // Re-enable the fields
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Request has been undone successfully.")),
+        );
+      } else {
+        print('Failed to undo the request');
+      }
+    } catch (e) {
+      print('Error while undoing request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Error: Could not connect to the server.")),
+      );
+    }
   }
 
   Future<void> _logout(BuildContext context) async {

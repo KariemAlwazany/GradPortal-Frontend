@@ -75,18 +75,17 @@ class _MatchingPageState extends State<MatchingPage> {
         backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-        IconButton(
-  icon: const Icon(Icons.group_add, color: Colors.white),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PartnerRequestsPage(),
-      ),
-    );
-  },
-),
-
+          IconButton(
+            icon: const Icon(Icons.group_add, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PartnerRequestsPage(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: isWaitingForApproval
@@ -448,6 +447,26 @@ class _MatchingPageState extends State<MatchingPage> {
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 72),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _declineRequest, // Call the _declineRequest function
+            icon: const Icon(Icons.cancel, color: Colors.white),
+            label: const Text(
+              'Undo Request',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -587,5 +606,30 @@ class _MatchingPageState extends State<MatchingPage> {
         ),
       ],
     );
+  }
+
+  Future<void> _declineRequest() async {
+    try {
+      final token = await _getToken(); // Retrieve the JWT token
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/waitinglist/partner/undo-request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _statusCheckTimer?.cancel(); // Stop polling
+        setState(() {
+          isWaitingForApproval = false; // Reset to normal page
+        });
+      } else {
+        print('Failed to decline the request');
+      }
+    } catch (e) {
+      print('Error while declining request: $e');
+    }
   }
 }

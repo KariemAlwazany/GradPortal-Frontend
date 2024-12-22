@@ -157,6 +157,27 @@ class _FourthPageState extends State<FourthPage> {
     }
   }
 
+  Future<void> _declineRequest() async {
+    try {
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/waitinglist/doctor/undo-request'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _navigateToThirdPage();
+      } else {
+        print('Failed to decline the request');
+      }
+    } catch (e) {
+      print('Error while declining request: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,6 +228,31 @@ class _FourthPageState extends State<FourthPage> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red, // Logout button styled in red
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 10,
+                    shadowColor: Colors.black.withOpacity(0.3),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _declineRequest();
+                  },
+                  icon: const Icon(Icons.cancel, color: Colors.white),
+                  label: const Text(
+                    'Undo Request',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.orange, // Decline button styled in orange
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

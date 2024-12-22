@@ -56,6 +56,10 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
                 'Username_2': request['Student2Username'] ?? 'N/A',
                 'ProjectType': request['ProjectType'] ?? 'N/A',
                 'ProjectStatus': request['ProjectStatus'] ?? 'N/A',
+                'Student1Email': request['Student1Email'] ?? 'N/A',
+                'Student2Email': request['Student2Email'] ?? 'N/A',
+                'Student1FullName': request['Student1FullName'] ?? 'N/A',
+                'Student2FullName': request['Student2FullName'] ?? 'N/A'
               };
             }).toList();
           });
@@ -147,30 +151,36 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
               itemBuilder: (context, index) {
                 final request = studentRequests[index];
                 return _buildRequestCard(
-                  listId: request['List_ID'],
-                  partner1Name: request['Partner_1']!,
-                  partner1RegistrationNumber: request['Registration_number_1']!,
-                  partner1Email: request['Username_1']!,
-                  partner2Name: request['Partner_2']!,
-                  partner2RegistrationNumber: request['Registration_number_2']!,
-                  partner2Email: request['Username_2']!,
-                  username:
-                      request['Username_1']!, // Pass the appropriate username
+                  listId: request['List_ID'] ?? 'N/A',
+                  projectType: request['ProjectType'] ?? 'N/A',
+                  partner1Name: request['Partner_1'] ?? 'N/A',
+                  partner1RegistrationNumber:
+                      request['Registration_number_1'] ?? 'N/A',
+                  partner1Email: request['Student1Email'] ?? 'N/A',
+                  partner2Name: request['Partner_2'] ?? 'N/A',
+                  partner2RegistrationNumber:
+                      request['Registration_number_2'] ?? 'N/A',
+                  partner2Email: request['Student2Email'] ?? 'N/A',
+                  username: request['Username_1'] ?? 'N/A',
+                  student1FullName: request['Student1FullName'] ?? 'N/A',
+                  student2FullName: request['Student2FullName'] ?? 'N/A',
                 );
               },
             )));
   }
 
-  Widget _buildRequestCard({
-    required String listId,
-    required String partner1Name,
-    required String partner1RegistrationNumber,
-    required String partner1Email,
-    required String partner2Name,
-    required String partner2RegistrationNumber,
-    required String partner2Email,
-    required String username, // Add Username
-  }) {
+  Widget _buildRequestCard(
+      {required String listId,
+      required String projectType,
+      required String partner1Name,
+      required String partner1RegistrationNumber,
+      required String partner1Email,
+      required String partner2Name,
+      required String partner2RegistrationNumber,
+      required String partner2Email,
+      required String username, // Add Username
+      required String student1FullName,
+      required String student2FullName}) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
@@ -183,7 +193,12 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Student: ${partner1Name.isNotEmpty ? partner1Name : 'N/A'}',
+              '${projectType.isNotEmpty ? projectType : 'N/A'}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Divider(),
+            Text(
+              'Student: ${student1FullName.isNotEmpty ? student1FullName : 'N/A'}',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
@@ -197,7 +212,7 @@ class _StudentApprovalPageState extends State<StudentApprovalPage> {
             ),
             SizedBox(height: 16),
             Text(
-              'Partner: ${partner2Name.isNotEmpty ? partner2Name : 'N/A'}',
+              'Partner: ${student2FullName.isNotEmpty ? student2FullName : 'N/A'}',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),

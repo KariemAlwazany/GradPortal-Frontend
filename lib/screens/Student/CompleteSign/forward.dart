@@ -56,7 +56,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
-                  initialStep: 0,
+                  initialStep: 2,
                 )),
       );
     } else if (status == 'projectSelected') {

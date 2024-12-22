@@ -359,7 +359,36 @@ class _SecondPageState extends State<SecondPage> {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 20, horizontal: 70),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 10,
+                            shadowColor: Colors.black.withOpacity(0.3),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _declineRequest();
+                          },
+                          icon: const Icon(Icons.cancel, color: Colors.white),
+                          label: const Text(
+                            'Undo Request',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors
+                                .orange, // Button color for Decline Request
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 18, horizontal: 20),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -543,6 +572,32 @@ class _SecondPageState extends State<SecondPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _declineRequest() async {
+    try {
+      final token = await getToken();
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/waitinglist/partner/undo-request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _statusCheckTimer?.cancel(); // Stop polling
+        setState(() {
+          isLoadingScreen = false; // Reset to normal page
+          isWaitingForApproval = false;
+        });
+      } else {
+        print('Failed to decline the request');
+      }
+    } catch (e) {
+      print('Error while declining request: $e');
+    }
   }
 }
 
