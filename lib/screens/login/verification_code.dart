@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:flutter_project/screens/Student/files.dart';
 import 'resetPassword.dart'; // Import the ResetPasswordPage
 
 class OTPPage extends StatelessWidget {
@@ -67,7 +68,7 @@ class OTPPage extends StatelessWidget {
                 OtpTextField(
                   numberOfFields:
                       6, // Set it to 6 fields if your OTP length is 6
-                  borderColor: Color(0xFF512DA8),
+                  borderColor: primaryColor, //
                   showFieldAsBox: true,
                   onSubmit: (String verificationCode) async {
                     if (verificationCode == generatedOTP) {
@@ -93,7 +94,15 @@ class OTPPage extends StatelessWidget {
                   onPressed: () {
                     // Optionally add a button to submit the OTP
                   },
-                  child: Text('Verify'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        primaryColor, // Set button color to primaryColor
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Verify'),
                 ),
               ],
             ),

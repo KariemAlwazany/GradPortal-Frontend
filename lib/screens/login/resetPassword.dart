@@ -118,7 +118,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       color: Colors.white,
                       shadows: [
                         Shadow(
-                          blurRadius: 10.0,
+                          blurRadius: 15.0,
                           color: Colors.black,
                           offset: Offset(2.0, 2.0),
                         ),
@@ -151,14 +151,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             obscureText: !_isPasswordVisible,
                             decoration: InputDecoration(
                               labelText: 'New Password',
-                              prefixIcon:
-                                  Icon(Icons.lock, color: Colors.blueAccent),
+                              labelStyle: TextStyle(color: primaryColor),
+                              prefixIcon: Icon(Icons.lock, color: primaryColor),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _isPasswordVisible
                                       ? Icons.visibility
                                       : Icons.visibility_off,
-                                  color: Colors.blueAccent,
+                                  color: primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -169,6 +169,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      primaryColor, // Change border color to primaryColor when focused
+                                  width:
+                                      2.0, // Optional: Make the border a bit thicker for emphasis
+                                ),
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                             ),
@@ -188,14 +197,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             obscureText: !_isConfirmPasswordVisible,
                             decoration: InputDecoration(
                               labelText: 'Confirm Password',
-                              prefixIcon:
-                                  Icon(Icons.lock, color: Colors.blueAccent),
+                              labelStyle: TextStyle(color: primaryColor),
+                              prefixIcon: Icon(Icons.lock, color: primaryColor),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _isConfirmPasswordVisible
                                       ? Icons.visibility
                                       : Icons.visibility_off,
-                                  color: Colors.blueAccent,
+                                  color: primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -207,6 +216,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color:
+                                      primaryColor, // Change border color to primaryColor when focused
+                                  width:
+                                      2.0, // Optional: Make the border a bit thicker for emphasis
+                                ),
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                             ),
@@ -229,7 +247,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30.0),
                               ),
-                              backgroundColor: Colors.blueAccent,
+                              backgroundColor: primaryColor,
                               elevation: 5,
                             ),
                             child: Text(

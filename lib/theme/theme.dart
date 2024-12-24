@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/files.dart';
 
 const lightColorScheme = ColorScheme(
   brightness: Brightness.light,
@@ -34,7 +35,7 @@ ThemeData lightMode = ThemeData(
   colorScheme: lightColorScheme,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
-      backgroundColor: WidgetStateProperty.all<Color>(lightColorScheme.primary),
+      backgroundColor: WidgetStateProperty.all<Color>(primaryColor),
       foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
       elevation: WidgetStateProperty.all<double>(5.0),
       padding: WidgetStateProperty.all<EdgeInsets>(
@@ -48,7 +49,6 @@ ThemeData lightMode = ThemeData(
     ),
   ),
 );
-
 
 ThemeData darkMode = ThemeData(
   useMaterial3: true,

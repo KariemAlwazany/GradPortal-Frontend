@@ -306,8 +306,8 @@ class DoctorHomePage extends StatelessWidget {
                 }),
                 _buildOptionCard(
                   context,
-                  icon: Icons.timeline,
-                  title: 'Timeline',
+                  icon: Icons.calendar_month,
+                  title: 'Calender',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(

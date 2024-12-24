@@ -142,7 +142,8 @@ class HeadDoctorHomeTab extends StatelessWidget {
                       ),
                       PopupMenuItem(
                         child: ListTile(
-                          leading: Icon(Icons.timeline, color: primaryColor),
+                          leading:
+                              Icon(Icons.calendar_month, color: primaryColor),
                           title: Text("New Event Added to Timeline"),
                           subtitle: Text("10 minutes ago"),
                           onTap: () {
@@ -232,8 +233,8 @@ class HeadDoctorHomeTab extends StatelessWidget {
                 }),
                 _buildOptionCard(
                   context,
-                  icon: Icons.timeline,
-                  title: 'Timeline',
+                  icon: Icons.calendar_month,
+                  title: 'Calendar',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(

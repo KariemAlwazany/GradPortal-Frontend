@@ -87,7 +87,7 @@ class SignInScreenState extends State<SignInScreen> {
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 6,
             child: Container(
               padding: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0),
               decoration: const BoxDecoration(
@@ -125,11 +125,23 @@ class SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Email'),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          label: const Text('Email',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Email',
                           hintStyle: const TextStyle(color: primaryColor),
                           border: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.black12),
+                            borderSide: const BorderSide(
+                              color: Colors.black12,
+                            ),
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           enabledBorder: OutlineInputBorder(
@@ -154,7 +166,17 @@ class SignInScreenState extends State<SignInScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Password'),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          label: const Text('Password',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Password',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -292,7 +314,16 @@ class SignInScreenState extends State<SignInScreen> {
                               }
                             }
                           },
-                          child: const Text('Login'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                primaryColor, // Set button color to primaryColor
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Login',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
                       const SizedBox(height: 20),

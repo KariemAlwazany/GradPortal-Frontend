@@ -279,7 +279,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Full Name'),
+                          label: const Text(
+                            'Full Name',
+                            style: TextStyle(color: primaryColor),
+                          ),
                           hintText: 'Enter Full Name',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -298,11 +301,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -332,7 +336,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Email'),
+                          label: const Text('Email',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Email',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -351,11 +356,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -383,7 +389,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Username'),
+                          label: const Text('Username',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Username',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -402,11 +409,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -437,7 +445,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Password'),
+                          label: const Text('Password',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Password',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -456,11 +465,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -478,7 +488,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // Role Dropdown
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
-                          label: const Text('Role'),
+                          label: const Text('Role',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Select Role',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -497,11 +508,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -547,7 +559,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 return null;
                               },
                               decoration: InputDecoration(
-                                label: const Text('Registration Number'),
+                                label: const Text('Registration Number',
+                                    style: TextStyle(color: primaryColor)),
                                 hintText: 'Enter Registration Number',
                                 hintStyle: const TextStyle(
                                   color: Colors.black26,
@@ -595,6 +608,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onPressed: () => pickImage('Doctor'),
                               icon: const Icon(Icons.image),
                               label: const Text('Upload Doctor Degree'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    primaryColor, // Change button color to primaryColor
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 14.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10), // Rounded corners
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 15.0),
                             _doctorImage != null
@@ -619,7 +642,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             const SizedBox(height: 25.0),
                             DropdownButtonFormField<String>(
                               decoration: InputDecoration(
-                                label: const Text('Project Type'),
+                                label: const Text('Project Type',
+                                    style: TextStyle(color: primaryColor)),
                                 hintText: 'Select Project Type',
                                 hintStyle: const TextStyle(
                                   color: Colors.black26,
@@ -640,8 +664,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: lightColorScheme
-                                        .primary, // Focus border color
+                                    color: primaryColor, // Focus border color
                                     width: 2.0,
                                   ),
                                   borderRadius: BorderRadius.circular(10),
@@ -719,9 +742,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               // Gender
                               DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
-                                  label: const Text('Gender'),
+                                  label: const Text('Gender',
+                                      style: TextStyle(color: primaryColor)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                                 items: ['Male', 'Female'].map((String gender) {
@@ -742,9 +775,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               // Backend Framework
                               DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
-                                  label: const Text('Backend Framework'),
+                                  label: const Text('Backend Framework',
+                                      style: TextStyle(color: primaryColor)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                                 items: [
@@ -770,9 +813,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               // Frontend Framework
                               DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
-                                  label: const Text('Frontend Framework'),
+                                  label: const Text('Frontend Framework',
+                                      style: TextStyle(color: primaryColor)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                                 items: [
@@ -798,9 +851,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               // Database
                               DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
-                                  label: const Text('Preferred Database'),
+                                  label: const Text('Preferred Database',
+                                      style: TextStyle(color: primaryColor)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                                 items: [
@@ -840,9 +903,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               // Gender
                               DropdownButtonFormField<String>(
                                 decoration: InputDecoration(
-                                  label: const Text('Gender'),
+                                  label: const Text('Gender',
+                                      style: TextStyle(color: primaryColor)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
                                   ),
                                 ),
                                 items: ['Male', 'Female'].map((String gender) {
@@ -865,7 +938,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onPressed: () => pickImage('Student'),
                               icon: const Icon(Icons.image),
                               label: const Text('Upload Student Card'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    primaryColor, // Change button color to primaryColor
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 14.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10), // Rounded corners
+                                ),
+                              ),
                             ),
+
                             const SizedBox(height: 15.0),
                             // Add a dropdown for Project Type
 
@@ -1006,10 +1090,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   createUser(); // Proceed with user creation
                                 }
                               : null, // Disable button if fields are not filled
-                          child: const Text('Sign up'),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                primaryColor), // Force primaryColor
+                            padding: MaterialStateProperty.all(
+                              const EdgeInsets.symmetric(vertical: 16.0),
+                            ),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            elevation: MaterialStateProperty.all(
+                                4), // Optional shadow effect
+                          ),
+                          child: const Text('Sign up',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
-
                       const SizedBox(
                         height: 30.0,
                       ),
@@ -1102,7 +1200,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             controller: controller,
             readOnly: true,
             decoration: InputDecoration(
-              label: Text(label),
+              label: Text(label, style: TextStyle(color: primaryColor)),
               hintText: 'Enter $label',
               hintStyle: const TextStyle(color: Colors.black26),
               border: OutlineInputBorder(
@@ -1114,11 +1212,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 borderSide: const BorderSide(color: Colors.black12),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(
-                  color: lightColorScheme.primary,
-                  width: 2.0,
+                  color:
+                      primaryColor, // Change border color to primaryColor when focused
+                  width:
+                      2.0, // Optional: Make the border a bit thicker for emphasis
                 ),
+                borderRadius: BorderRadius.circular(10.0),
               ),
             ),
             onTap: () async {

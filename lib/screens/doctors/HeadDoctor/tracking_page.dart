@@ -189,13 +189,7 @@ class _StudentStatusPageState extends State<StudentStatusPage>
   }
 
   String _getJoiningStatus(String status) {
-    if (status == 'approved' ||
-        status == 'waitapprove' ||
-        status == 'start' ||
-        status == 'waitpartner' ||
-        status == 'declinedpartner' ||
-        status == 'waiting') return 'Completed';
-    return 'Pending';
+    return 'Completed';
   }
 
   String _getPartnerStatus(String status) {
