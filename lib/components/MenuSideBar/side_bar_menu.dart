@@ -1,11 +1,18 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/components/MenuSideBar/info_card.dart';
 import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
+import 'package:flutter_project/components/navbar/community_navabar.dart';
 import 'package:flutter_project/models/rive_asset.dart';
+import 'package:flutter_project/screens/Community/chat_screen.dart';
+import 'package:flutter_project/screens/Community/main_screen.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
+import 'package:flutter_project/screens/Shop/favorite_items_screen.dart';
 import 'package:flutter_project/screens/Shop/profile_screen.dart';
 import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
+import 'package:flutter_project/screens/Shop/store_shops_screen.dart';
 import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
@@ -69,7 +76,7 @@ class _SideMenuState extends State<SideMenu> {
 
         if (userRole == "Seller") {
           showProjectsButton = false;
-        } else if (userRole == "Student") {
+        } else if (userRole == "Student" || userRole == "User") {
           showProjectsButton = true;
         }
       } else {
@@ -204,20 +211,21 @@ class _SideMenuState extends State<SideMenu> {
     );
   }
 
-  // Get Side Menu items based on login status and role
   List<RiveAsset> _getSideMenuItems() {
     if (isLoggedIn) {
       if (userRole == "Seller") {
         return [
           RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
           RiveAsset('assets/RiveAssets/shop_icon.riv', artboard: "SHOP", stateMachineName: "SHOP_interactivity", title: "Shop Management"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
           RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
         ];
-      } else if (userRole == "Student") {
+      } else if (userRole == "Student" || userRole == "User") {
         return [
           RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
           RiveAsset('assets/RiveAssets/store_shops_icon.riv', artboard: "STORE_SHOPS", stateMachineName: "STORE_SHOPS_interactivity", title: "Store Shops"),
           RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "FAVORITES", stateMachineName: "FAVORITES_interactivity", title: "Favorites"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
           RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
         ];
       }
@@ -229,7 +237,6 @@ class _SideMenuState extends State<SideMenu> {
     return [];
   }
 
-  // Navigate based on menu title
   void _navigateToScreen(String title) {
     switch (title) {
       case "Profile":
@@ -242,12 +249,25 @@ class _SideMenuState extends State<SideMenu> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ShopManagementScreen()),
-        );        break;
+        );        
+        break;
       case "Store Shops":
-        // Navigate to Store Shops screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => StoreShopsScreen()),
+        );              
         break;
       case "Favorites":
-        // Navigate to Favorites screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FavoriteItemsScreen()),
+        );                
+        break;
+      case "Community":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CommunityNavbar()),
+        );                
         break;
       case "Help":
         // Navigate to Help screen

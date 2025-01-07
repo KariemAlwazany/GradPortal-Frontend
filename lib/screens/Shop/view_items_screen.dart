@@ -466,21 +466,28 @@ class ItemCard extends StatelessWidget {
                 ],
               ),
             ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
-                onPressed: () {
-                  _showEditDialog(parentContext, item);
-                },
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
+                  onPressed: () {
+                    _showEditDialog(parentContext, item);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    _showDeleteConfirmationDialog(parentContext, item);
+                  },
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
-
 
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> item) {
@@ -562,14 +569,14 @@ class ItemCard extends StatelessWidget {
                 ),
                 // Dropdown for Availability in the Dialog
                 DropdownButtonFormField<String>(
-                  value: available ? 'Yes' : 'No',
+                  value: available ? 'true' : 'false',
                   decoration: const InputDecoration(labelText: 'Available'),
                   items: const [
-                    DropdownMenuItem(value: 'Yes', child: Text('Yes')),
-                    DropdownMenuItem(value: 'No', child: Text('No')),
+                    DropdownMenuItem(value: 'true', child: Text('Yes')),
+                    DropdownMenuItem(value: 'false', child: Text('No')),
                   ],
                   onChanged: (value) {
-                    available = value == 'Yes';
+                    available = value == 'true';
                   },
                 ),
                 // You can add more fields for picture upload if necessary
@@ -645,4 +652,61 @@ class ItemCard extends StatelessWidget {
       );
     }
   }
+
+
+  void _showDeleteConfirmationDialog(BuildContext context, Map<String, dynamic> itemId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Delete Item"),
+          content: const Text("Are you sure you want to delete this item?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _deleteItem(itemId);
+              },
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+Future<void> _deleteItem(Map<String, dynamic> itemId) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      print("No token found. User might not be authenticated.");
+      return;
+    }
+
+    final response = await http.delete(
+      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/deleteItem/${itemId['Item_ID']}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print("Item deleted successfully");
+      fetchItemsCallback();
+    } else {
+      print("Failed to delete item: ${response.statusCode}");
+    }
+  } catch (e) {
+    print("Error deleting item: $e");
+  }
 }
+}
+

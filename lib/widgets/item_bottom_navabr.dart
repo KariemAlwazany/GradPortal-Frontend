@@ -1,14 +1,20 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ItemBottomNavBar extends StatelessWidget {
-  final String price;  // Accept the price as a parameter
+  final Map<String, dynamic> item; // Accept the whole item
+  final int quantity; // Accept the selected quantity
 
-  // Constructor to accept price
-  ItemBottomNavBar({Key? key, required this.price}) : super(key: key);
+  ItemBottomNavBar({Key? key, required this.item, required this.quantity}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
+
     return BottomAppBar(
       height: 90,
       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -16,7 +22,7 @@ class ItemBottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            price,  // Display the passed price
+            price, // Display the item price
             style: TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.bold,
@@ -24,7 +30,7 @@ class ItemBottomNavBar extends StatelessWidget {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () => _addToCartAPI(context), // Call the API on button press
             icon: Icon(CupertinoIcons.cart_badge_plus),
             label: Text(
               "Add To Cart",
@@ -46,5 +52,54 @@ class ItemBottomNavBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _addToCartAPI(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    final cartData = {
+      'items': [
+        {
+          'item_id': item['Item_ID'],
+          'quantity': quantity,
+          'price': item['Price'],
+        }
+      ]
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/shop/cart/createOrUpdateCart'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(cartData),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Item added to cart successfully')),
+        );
+      } else {
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add to cart: ${errorData['message']}')),
+        );
+      }
+    } catch (e) {
+      print('Error adding to cart: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred while adding to cart')),
+      );
+    }
   }
 }

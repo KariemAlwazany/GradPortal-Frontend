@@ -535,7 +535,7 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
                     );
                   case 3:
                     return _buildCategoryContainer(
-                      title: 'Orders', 
+                      title: 'Orders History', 
                       icon: Icons.shopping_cart, 
                       quantity: completedOrdersCount,
                       onTap: () {

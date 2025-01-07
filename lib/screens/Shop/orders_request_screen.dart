@@ -19,7 +19,6 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
     fetchOrders(); // Fetch orders when the screen loads
   }
 
-  // Function to fetch seller orders
   Future<void> fetchOrders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -70,63 +69,115 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
       });
     }
   }
+Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
 
-  // Function to handle order approval
-  Future<void> approveOrder(int orderId) async {
-    await updateOrderStatus(orderId, 'approved');
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
   }
 
-  // Function to handle order decline
-  Future<void> declineOrder(int orderId) async {
-    await updateOrderStatus(orderId, 'declined');
-  }
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/updateOrderStatus');
 
-  // Function to update order status
-  Future<void> updateOrderStatus(int orderId, String status) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+  // Map 'accepted' to 'completed' for valid status values in the database
+  final validStatus = status == 'accepted' ? 'completed' : status;
 
-    if (token == null) {
+  print('Sending request to $apiUrl with order_id: $orderId and status: $validStatus');
+
+  try {
+    final response = await http.patch(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'order_id': orderId,
+        'status': validStatus,
+      }),
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
+        SnackBar(content: Text('Order $status successfully updated.')),
       );
-      return;
-    }
-
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-    final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/updateOrderStatus');
-
-    try {
-      final response = await http.patch(
-        apiUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'order_id': orderId,
-          'status': status,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Order $status successfully')),
-        );
-        fetchOrders(); // Refresh orders
-      } else {
-        final errorData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${errorData['message']}')),
-        );
+      if (refresh) {
+        fetchOrders(); // Refresh orders if specified
       }
-    } catch (e) {
-      print('Error updating order status: $e');
+
+      // Call the second API after the first API call succeeds
+      await sendOrderResponse(orderId, validStatus, refresh: refresh);
+    } else {
+      final errorData = json.decode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update order status')),
+        SnackBar(content: Text('Error: ${errorData['message']}')),
       );
     }
+  } catch (e) {
+    print('Error updating order status: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to update order status')),
+    );
   }
+}
+
+
+
+Future<void> sendOrderResponse(int orderId, String orderResponse, {bool refresh = false}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/respondToOrder'); // New API for responding to order
+
+  try {
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'orderId': orderId,
+        'response': orderResponse,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Order $orderResponse successfully responded.')),
+      );
+      if (refresh) {
+        fetchOrders(); // Refresh orders if specified
+      }
+    } else {
+      final errorData = json.decode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${errorData['message']}')),
+      );
+    }
+  } catch (e) {
+    print('Error responding to order: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to respond to order.')),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +189,7 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : orders.isEmpty
-              ? const Center(child: Text('No orders found'))
+              ? const Center(child: Text('No orders found', style: TextStyle(color: Colors.white)))
               : ListView.builder(
                   itemCount: orders.length,
                   itemBuilder: (context, index) {
@@ -146,11 +197,11 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
                     final orderId = order['order_id'] ?? 'N/A';
                     final totalPrice = order['total_price'] ?? 'N/A';
                     final paymentMethod = order['payment_method'] ?? 'N/A';
-                    final items = order['OrderItems'] ?? [];
+                    final items = order['items'] ?? [];
 
                     return Card(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 15),
+                      color: Color(0xFF3B4280), // Background color of the card
+                      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -161,28 +212,37 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: Colors.white,
                               ),
                             ),
-                            Text('Total Price: $totalPrice NIS'),
-                            Text('Payment Method: $paymentMethod'),
+                            Text(
+                              'Total Price: $totalPrice NIS',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            Text(
+                              'Payment Method: $paymentMethod',
+                              style: const TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(height: 10),
                             Text(
                               'Items:',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                             if (items.isEmpty)
-                              const Text('No items found for this order')
+                              const Text('No items found for this order', style: TextStyle(color: Colors.white))
                             else
                               ...items.map<Widget>((item) {
-                                final itemDetails = item['Item'] ?? {};
-                                final itemName =
-                                    itemDetails['item_name'] ?? 'Unknown';
+                                final itemDetails = item['item_details'] ?? {};
+                                final itemName = itemDetails['name'] ?? 'Unknown';
                                 final quantity = item['quantity'] ?? 0;
                                 final price = item['price'] ?? 0;
 
                                 return Text(
                                   '$itemName (Qty: $quantity, Price: $price NIS)',
-                                  style: const TextStyle(fontSize: 14),
+                                  style: const TextStyle(color: Colors.white, fontSize: 14),
                                 );
                               }).toList(),
                             const SizedBox(height: 10),
@@ -190,18 +250,14 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () => approveOrder(orderId),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                  ),
+                                  onPressed: () => updateOrderStatus(orderId, 'accepted', refresh: true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                   child: const Text('Approve'),
                                 ),
                                 const SizedBox(width: 10),
                                 ElevatedButton(
-                                  onPressed: () => declineOrder(orderId),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                  ),
+                                  onPressed: () => updateOrderStatus(orderId, 'declined', refresh: true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                   child: const Text('Decline'),
                                 ),
                               ],
