@@ -58,7 +58,6 @@ class _ShopHomePageState extends State<ShopHomePage> {
     });
   }
 
-// Update your searchItems and fetchItems functions to work the same way
 
 Future<void> searchItems(String query) async {
   if (query.isEmpty) {
@@ -536,7 +535,7 @@ Widget build(BuildContext context) {
 }
 }
 
-class ItemCard extends StatelessWidget {
+class ItemCard extends StatefulWidget {
   final Map<String, dynamic> item;
 
   const ItemCard({
@@ -544,7 +543,101 @@ class ItemCard extends StatelessWidget {
     required this.item,
   }) : super(key: key);
 
-  // Function to call the add-to-cart API
+  @override
+  _ItemCardState createState() => _ItemCardState();
+}
+
+class _ItemCardState extends State<ItemCard> {
+  bool isFavorite = false; // Track whether the item is in favorites
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfFavorite(); // Check the initial favorite state
+  }
+
+  Future<void> checkIfFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/shop/favoriteItems/checkFavoriteItem/${widget.item['Item_ID']}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          isFavorite = true; // Set to true if item is in favorites
+        });
+      }
+    } catch (e) {
+      print("Error checking favorite status: $e");
+    }
+  }
+
+  Future<void> toggleFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        final response = await http.delete(
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/shop/favoriteItems/removeFavoriteItem'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({"item_id": widget.item['Item_ID']}),
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            isFavorite = false; // Update UI to show unfilled icon
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Item removed from favorites')),
+          );
+        }
+      } else {
+        // Add to favorites
+        final response = await http.post(
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/shop/favoriteItems/addFavoriteItem'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({"item_id": widget.item['Item_ID']}),
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            isFavorite = true; // Update UI to show filled icon
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Item added to favorites')),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error toggling favorite status: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update favorite status')),
+      );
+    }
+  }
+
+
   Future<void> addToCart(BuildContext context, int itemId, int quantity, int price) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -589,14 +682,11 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Safely access values from the map
-    String itemName = item['item_name'] ?? 'No name';
-    String description = item['Description'] ?? 'No description';
-
-    // Ensure price is parsed correctly as an integer
-    int price = item['Price'] is int ? item['Price'] : int.tryParse(item['Price'].toString()) ?? 0;
-    int itemId = item['Item_ID'] ?? 0;
-    String base64Image = item['Picture'] ?? '';
+    String itemName = widget.item['item_name'] ?? 'No name';
+    String description = widget.item['Description'] ?? 'No description';
+    int price = int.tryParse(widget.item['Price'].toString()) ?? 0;
+    int itemId = int.tryParse(widget.item['Item_ID'].toString()) ?? 0;
+    String base64Image = widget.item['Picture'] ?? '';
 
     Uint8List? imageBytes;
     if (base64Image.isNotEmpty) {
@@ -616,7 +706,7 @@ class ItemCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ItemScreen(item: item),
+            builder: (context) => ItemScreen(item: widget.item),
           ),
         );
       },
@@ -644,7 +734,7 @@ class ItemCard extends StatelessWidget {
                   Text(
                     description,
                     style: TextStyle(fontSize: 12, color: Colors.black87),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 5),
@@ -652,23 +742,23 @@ class ItemCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                         "${price.toString()} NIS",
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                        "$price NIS",
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
                       ),
                       Row(
                         children: [
                           IconButton(
-                            icon: Icon(Icons.favorite_border, color: Colors.red, size: 20),
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('$itemName added to Favorites!')),
-                              );
-                            },
+                            icon: Icon(
+                              isFavorite ? Icons.favorite : Icons.favorite_border,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            onPressed: toggleFavorite, // Call toggleFavorite on press
                           ),
                           IconButton(
                             icon: Icon(Icons.shopping_cart_outlined, color: Color(0xFF3B4280), size: 20),
                             onPressed: () {
-                              addToCart(context, itemId, 1, price); // Trigger API
+                              addToCart(context, widget.item['Item_ID'], 1, price);
                             },
                           ),
                         ],
@@ -684,3 +774,5 @@ class ItemCard extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,4 +1,8 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
+import 'package:flutter_project/components/navbar/community_navabar.dart';
+import 'package:flutter_project/screens/Community/main_screen.dart';
 import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 import 'package:flutter_project/screens/Student/discussionTable.dart';
 import 'package:flutter_project/screens/Student/files.dart';
@@ -38,7 +42,7 @@ class _StudentPageState extends State<StudentPage> {
       DeadlinePage(),
       MessagesPage(),
       ProfilePage(),
-      ShopHomePage()
+      CommunityScreen(),
     ]);
   }
 
@@ -362,7 +366,7 @@ class HomeContent extends StatelessWidget {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => MeetingsOptionsPage()),
+                      builder: (context) => CommunityNavbar()),
                 ),
                 child: _buildCategoryItem(
                   'Community',

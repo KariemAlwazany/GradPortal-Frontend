@@ -120,65 +120,92 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       print('Error updating location: $e');
     }
   }
+Future<void> _orderConfirm() async {
+  if (selectedDeliveryMethod == 'Delivery' && selectedLocation == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please select a delivery location.')),
+    );
+    return;
+  }
 
-  Future<void> _orderConfirm() async {
-    if (selectedDeliveryMethod == 'Delivery' && selectedLocation == null) {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in.')),
+    );
+    return;
+  }
+
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/createOrder');
+  final emailApiUrl = Uri.parse('$baseUrl/GP/v1/orders/checkoutOrder');
+
+  final orderData = {
+    'totalPrice': widget.totalPrice,
+    'paymentMethod': selectedPaymentMethod,
+    'deliveryLocation': selectedDeliveryMethod == 'Delivery' && selectedLocation != null
+        ? {'latitude': selectedLocation!.latitude, 'longitude': selectedLocation!.longitude}
+        : null,
+    'city': selectedCity,
+  };
+
+  try {
+    // Send order creation request
+    final response = await http.post(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(orderData),
+    );
+
+    if (response.statusCode == 201) {
+      final orderResponseData = json.decode(response.body);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a delivery location.')),
+        const SnackBar(content: Text('Order placed successfully!')),
       );
-      return;
-    }
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in.')),
-      );
-      return;
-    }
-
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-    final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/createOrder');
-
-    final orderData = {
-      'totalPrice': widget.totalPrice,
-      'paymentMethod': selectedPaymentMethod,
-      'deliveryLocation': selectedDeliveryMethod == 'Delivery' && selectedLocation != null
-          ? {'latitude': selectedLocation!.latitude, 'longitude': selectedLocation!.longitude}
-          : null,
-      'city': selectedCity,
-    };
-
-    try {
-      final response = await http.post(
-        apiUrl,
+      // Send email notification
+      final emailResponse = await http.post(
+        emailApiUrl,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
-        body: json.encode(orderData),
+        body: json.encode({
+          'orderId': orderResponseData['orderId'], // Use the order ID from response
+        }),
       );
 
-      if (response.statusCode == 201) {
+      if (emailResponse.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order placed successfully!')),
+          const SnackBar(content: Text('Email sent successfully!')),
         );
-        Navigator.pop(context); // Navigate back to the previous screen
       } else {
-        final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${errorData['message']}')),
+          const SnackBar(content: Text('Failed to send email notification.')),
         );
       }
-    } catch (e) {
+
+      Navigator.pop(context); // Navigate back to the previous screen
+    } else {
+      final errorData = json.decode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to place order.')),
+        SnackBar(content: Text('Error: ${errorData['message']}')),
       );
-      print('Error placing order: $e');
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to place order.')),
+    );
+    print('Error placing order: $e');
   }
+}
+
 
   void _showMapDialog() async {
     await _getUserLocation();
