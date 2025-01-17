@@ -6,6 +6,7 @@ import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:flutter_project/screens/Shop/shop_home_page.dart';
+import 'package:flutter_project/utils/notification_service.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/login/signup.dart';
@@ -66,6 +67,23 @@ class SignInScreenState extends State<SignInScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token); // Store JWT token
   }
+
+Future<void> onUserLogin(String jwtToken) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Save the JWT token
+  await prefs.setString('jwt_token', jwtToken);
+
+  // Retrieve the stored FCM token
+  final fcmToken = prefs.getString('fcm_token');
+  if (fcmToken != null) {
+    // Send the token to the server
+    NotificationService notificationService = NotificationService();
+    await notificationService.updateTokenToServer(fcmToken);
+  } else {
+    print('No FCM token found to send to the server.');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +246,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     content: Text('Login successful!'),
                                   ),
                                 );
-
+                                onUserLogin(result['token']);
                                 String userRole =
                                     result['data']['user']['Role'];
 

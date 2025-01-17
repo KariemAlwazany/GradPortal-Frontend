@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class ChatScreen extends StatefulWidget {
   final int senderId;
@@ -17,30 +22,94 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final _firestore = FirebaseFirestore.instance;
   final _scrollController = ScrollController();
-
   String? _message;
+  final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
-  void _sendMessage() async {
-    if (_message != null && _message!.trim().isNotEmpty) {
-      await _firestore.collection('messages').add({
-        'text': _message,
-        'sender_id': widget.senderId.toString(), // Convert int to String
-        'receiver_id': widget.receiverId.toString(), // Convert int to String
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      _messageController.clear();
-      setState(() {
-        _message = null;
-      });
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0.0,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+Future<void> _sendNotification(String receiverId, String message) async {
+  print('Invoking _sendNotification with receiverId: $receiverId and message: $message');
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      print('No JWT token found');
+      return;
     }
+
+    // Validate receiverId
+    if (receiverId.isEmpty) {
+      print('Invalid receiverId: Empty string');
+      return;
+    }
+
+    int parsedReceiverId;
+    try {
+      parsedReceiverId = int.parse(receiverId); // Convert receiverId to an integer
+    } catch (e) {
+      print('Error parsing receiverId: $receiverId is not a valid number');
+      return;
+    }
+
+    // Send the notification
+    final response = await http.post(
+      Uri.parse('$baseUrl/GP/v1/notification/notifyUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "userId": parsedReceiverId,
+        "title": "New Message",
+        "body": message,
+        "additionalData": {"chat": "true"}
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Notification sent successfully');
+    } else {
+      print('Failed to send notification: ${response.body}');
+    }
+  } catch (e) {
+    print('Error sending notification: $e');
   }
+}
+
+
+
+void _sendMessage() async {
+  if (_message != null && _message!.trim().isNotEmpty) {
+    final messageToSend = _message; // Save the message before clearing it
+
+    print('Sending message: $messageToSend');
+    await _firestore.collection('messages').add({
+      'text': messageToSend,
+      'sender_id': widget.senderId.toString(),
+      'receiver_id': widget.receiverId.toString(),
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    _messageController.clear();
+    setState(() {
+      _message = null;
+    });
+
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+
+    // Use the saved message for notification
+    print('Calling _sendNotification');
+    await _sendNotification(widget.receiverId.toString(), messageToSend!);
+  }
+}
+
+
 
   Stream<QuerySnapshot> _getChatMessages() {
     return _firestore
@@ -162,7 +231,7 @@ class MessageBubble extends StatelessWidget {
           Material(
             borderRadius: BorderRadius.circular(10),
             elevation: 5.0,
-            color: Color(0xFF3B4280), // Set bubble color for both sender and receiver
+            color: Color(0xFF3B4280),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: Text(

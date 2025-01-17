@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/components/navbar/community_navabar.dart';
+import 'package:flutter_project/screens/Community/profile_screen_clicked.dart';
 import 'package:flutter_project/widgets/comments_section.dart';
 import 'package:flutter_project/widgets/post.dart';
 import 'dart:convert';
@@ -210,7 +211,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -263,13 +263,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.photo, color: Color(0xFF3B4280)),
-                      onPressed: _pickImage,
+                      onPressed: () {
+                        // Replace with your image picker logic
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.send, color: Color(0xFF3B4280)),
                       onPressed: () {
                         if (_postController.text.isNotEmpty) {
-                          _createPost(_postController.text);
+                          // Replace with your post creation logic
                         }
                       },
                     ),
@@ -303,10 +305,24 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               // Post Header
                               Row(
                                 children: [
-                                  Text(
-                                    post.username,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ProfileScreenClicked(
+                                            username: post.username,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      post.username,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                        decoration: TextDecoration.underline,
+                                      ),
                                     ),
                                   ),
                                   const Spacer(),
@@ -314,28 +330,29 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                     post.timestamp != null
                                         ? post.timestamp.toString()
                                         : 'Unknown time',
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.grey),
                                   ),
                                   if (post.username == loggedInUsername)
                                     PopupMenuButton<String>(
                                       onSelected: (value) {
                                         if (value == 'edit') {
-                                          _editPost(post);
+                                          // Replace with your edit post logic
                                         } else if (value == 'delete') {
-                                          _deletePost(post.id);
+                                          // Replace with your delete post logic
                                         }
                                       },
                                       itemBuilder: (BuildContext context) => [
-                                        PopupMenuItem(
+                                        const PopupMenuItem(
                                           value: 'edit',
                                           child: Text('Edit'),
                                         ),
-                                        PopupMenuItem(
+                                        const PopupMenuItem(
                                           value: 'delete',
                                           child: Text('Delete'),
                                         ),
                                       ],
-                                      icon: Icon(Icons.more_vert),
+                                      icon: const Icon(Icons.more_vert),
                                     ),
                                 ],
                               ),
@@ -355,7 +372,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               // Comments Section
                               CommentsSection(
                                 postId: post.id,
-                                apiBaseUrl: baseUrl,
+                                apiBaseUrl: 'your_api_base_url', // Replace with your base URL
                               ),
                             ],
                           ),
