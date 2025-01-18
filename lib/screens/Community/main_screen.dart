@@ -372,7 +372,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               // Comments Section
                               CommentsSection(
                                 postId: post.id,
-                                apiBaseUrl: 'your_api_base_url', // Replace with your base URL
+                                apiBaseUrl: baseUrl, // Replace with your base URL
                               ),
                             ],
                           ),
