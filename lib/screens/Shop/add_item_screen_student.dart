@@ -6,14 +6,14 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AddItemScreen extends StatefulWidget {
-  const AddItemScreen({super.key});
+class AddItemScreenStudents extends StatefulWidget {
+  const AddItemScreenStudents({super.key});
 
   @override
-  _AddItemScreenState createState() => _AddItemScreenState();
+  _AddItemScreenStudentsState createState() => _AddItemScreenStudentsState();
 }
 
-class _AddItemScreenState extends State<AddItemScreen> {
+class _AddItemScreenStudentsState extends State<AddItemScreenStudents> {
   final TextEditingController itemNameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -25,47 +25,61 @@ class _AddItemScreenState extends State<AddItemScreen> {
   String selectedType = 'Hardware'; // Default dropdown value
   String selectedCategory = 'Motors'; // Default category value
 
+
+
+void showStudentAddItemDialog() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(
+          "Add Item Notice",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF3B4280),
+          ),
+        ),
+        content: Text(
+          "GradHub will take a 5% profit of the component price. Do you agree?",
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Navigate back to the previous screen
+              Navigator.pop(context); // Close the dialog
+              Navigator.pop(context);
+            },
+            child: Text(
+              "Decline",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: Text(
+              "Agree",
+              style: TextStyle(
+                color: Color(0xFF3B4280),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
   Future<void> _selectImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
-    }
-  }
-
-  Future<String?> _fetchShopName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return null;
-    }
-
-    try {
-      final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
-      final response = await http.get(
-        Uri.parse('${baseUrl}/GP/v1/seller/profile'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final shopData = json.decode(response.body);
-        return shopData['Shop_name'];
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch shop details')),
-        );
-        return null;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching shop details')),
-      );
-      return null;
     }
   }
 
@@ -84,14 +98,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
       return;
     }
 
-    final shopName = await _fetchShopName();
-    if (shopName == null) return;
-
+    final shopName = "Students Shop";
     try {
       final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${baseUrl}/GP/v1/seller/items/additem'),
+        Uri.parse('${baseUrl}/GP/v1/seller/items/additemStudent'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -136,6 +148,16 @@ class _AddItemScreenState extends State<AddItemScreen> {
       );
     }
   }
+
+@override
+void initState() {
+  super.initState();
+
+  // Show the dialog after the widget is built
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    showStudentAddItemDialog();
+  });
+}
 
   @override
   Widget build(BuildContext context) {

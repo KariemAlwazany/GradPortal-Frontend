@@ -76,7 +76,8 @@ class _FavoriteItemsScreenState extends State<FavoriteItemsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Favorites'),
+        title: Text('My Favorites',
+        style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF3B4280),
       ),
       body: isLoading

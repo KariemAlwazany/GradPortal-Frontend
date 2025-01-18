@@ -6,14 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class StoreItemsScreen extends StatefulWidget {
+class StoreStudentItemsScreen extends StatefulWidget {
   final String shopName = "Students Shop";
 
   @override
-  _StoreItemsScreenState createState() => _StoreItemsScreenState();
+  _StoreStudentItemsScreenState createState() => _StoreStudentItemsScreenState();
 }
 
-class _StoreItemsScreenState extends State<StoreItemsScreen> {
+class _StoreStudentItemsScreenState extends State<StoreStudentItemsScreen> {
   List<Map<String, dynamic>> items = [];
   bool isLoading = true;
   Set<int> favoriteItems = {}; // Track favorited item IDs

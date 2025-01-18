@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Admin/students_shop_items.dart';
+import 'package:flutter_project/screens/Shop/store_selected_shop_screen.dart';
 import 'package:flutter_project/widgets/item_app_bar.dart';
 import 'package:clippy_flutter/clippy_flutter.dart';
 import 'package:flutter_project/widgets/item_bottom_navabr.dart';
@@ -266,7 +268,7 @@ class _ItemScreenState extends State<ItemScreen> {
     String description = widget.item['Description'] ?? 'No description';
     String price = widget.item['Price'] != null ? "${widget.item['Price']} NIS" : 'No price';
     String base64Image = widget.item['Picture'] ?? '';
-
+    String shop_name = widget.item['Shop_name'];
     Uint8List? imageBytes;
     if (base64Image.isNotEmpty) {
       try {
@@ -300,29 +302,57 @@ class _ItemScreenState extends State<ItemScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 103, bottom: 15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
+                  Padding(
+                    padding: EdgeInsets.only(top: 103, bottom: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
                             itemName,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 28,
                               color: Color(0xFF3B4280),
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          IconButton(
-                            icon: Icon(
-                              isFavorite ? Icons.favorite : Icons.favorite_border,
-                              color: isFavorite ? Colors.red : Colors.grey,
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.grey,
+                          ),
+                          onPressed: toggleFavorite,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => StoreItemsScreen(shopName:shop_name),
                             ),
-                            onPressed: toggleFavorite,
+                          );
+                        },
+                        child: Text(
+                          shop_name,
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3B4280),
                           ),
-                        ],
+                        ),
                       ),
                     ),
+
                     Padding(
                       padding: EdgeInsets.only(top: 5, bottom: 10),
                       child: Row(
