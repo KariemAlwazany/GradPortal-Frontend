@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/screens/Student/files.dart';
+import 'package:flutter_project/screens/Student/meeting/schedule.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/postdeadlines.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeting.dart';
@@ -15,8 +17,6 @@ const Color selectedDayColor = Color(0xFFFF3B30);
 const Color textColor = Colors.black87;
 
 class ScrollableCalendarPage extends StatefulWidget {
-  const ScrollableCalendarPage({super.key});
-
   @override
   _ScrollableCalendarPageState createState() => _ScrollableCalendarPageState();
 }
@@ -36,9 +36,9 @@ class _ScrollableCalendarPageState extends State<ScrollableCalendarPage> {
     if (token == null) return;
 
     final deadlinesUrl =
-        '${dotenv.env['API_BASE_URL']}/GP/v1/deadlines/doctor/deadlines';
+        '${dotenv.env['API_BASE_URL']}/GP/v1/deadlines/student/deadlines';
     final meetingsUrl =
-        '${dotenv.env['API_BASE_URL']}/GP/v1/meetings/myMeetings';
+        '${dotenv.env['API_BASE_URL']}/GP/v1/meetings/student/meetings';
 
     try {
       final deadlinesResponse = await http.get(
@@ -277,14 +277,13 @@ class _ScrollableCalendarPageState extends State<ScrollableCalendarPage> {
                   if (task['type'] == 'deadline') {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => PostDeadlinesPage()),
+                      MaterialPageRoute(builder: (context) => DeadlinesPage()),
                     );
                   } else {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => ViewMeetingsPage()),
+                          builder: (context) => ScheduledMeetingsPage()),
                     );
                   }
                 },

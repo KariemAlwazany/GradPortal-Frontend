@@ -78,14 +78,16 @@ class _FifthPageState extends State<FifthPage> {
   }
 
   // Function to check if the student's status has changed to "approved"
+  bool _hasFetchedData = false; // Add a flag to track data fetching
+
+// Function to check if the student's status has changed to "approved"
   Future<void> _checkApprovalStatus() async {
     try {
       final response = await http.get(
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/students/getCurrentStudent'),
         headers: {
-          'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+          'Authorization': 'Bearer $_token',
         },
       );
 
@@ -96,10 +98,11 @@ class _FifthPageState extends State<FifthPage> {
         if (newStatus == 'approved') {
           _approvalTimer?.cancel(); // Stop polling
           _navigateToNextPage(); // Navigate to next page
-        } else if (newStatus == 'completed') {
+        } else if (newStatus == 'completed' && !_hasFetchedData) {
           _isDisabled = false;
           _isSubmitted = false;
-          _fetchWaitingListDetails();
+          await _fetchWaitingListDetails(); // Fetch data only once
+          _hasFetchedData = true; // Mark data as fetched
         }
       } else {
         print('Failed to check approval status');
@@ -163,8 +166,7 @@ class _FifthPageState extends State<FifthPage> {
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/getCurrent'),
         headers: {
-          'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+          'Authorization': 'Bearer $_token',
         },
       );
 
@@ -183,48 +185,131 @@ class _FifthPageState extends State<FifthPage> {
     }
   }
 
-  // Submit the project details (PATCH request)
   Future<void> _submitProject() async {
+    // Validate that title and description are not empty
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Please fill in both the title and description.")),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
-      _isSubmitted = true; // Disable fields immediately after submit is pressed
-      _isDisabled = true; // Disable the fields directly
+      _isSubmitted = true; // Indicate submission
+      _isDisabled = true; // Disable the fields immediately
     });
 
     final Map<String, String> body = {
       'ProjectTitle': _titleController.text,
       'ProjectDescription': _descriptionController.text,
-      'ProjectStatus': 'waiting'
+      'ProjectStatus': 'waiting', // Example status
     };
 
     try {
+      print('Sending PATCH request...');
+      print('Body: ${json.encode(body)}');
+
       final response = await http.patch(
         Uri.parse(
             '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/current'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-              'Bearer $_token', // Add the token to the Authorization header
+              'Bearer $_token', // Token added to Authorization header
         },
-        body: json.encode(body),
+        body: json.encode(body), // Encode the body as JSON
       );
 
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
-        print('Project updated successfully');
         setState(() {
-          _isLoading = false; // Stop loading after successful submission
+          _showUndoButton = true; // Show the "Undo Request" button
         });
+        print('Project updated successfully');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Project submitted successfully.")),
+        );
       } else {
-        print('Failed to update the project: ${response.statusCode}');
+        print('Failed to update project. Status code: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to submit project. Please try again.")),
+        );
       }
     } catch (e) {
       print('Error submitting project: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: Could not connect to the server.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop loading spinner
+      });
+    }
+  }
+
+  Future<void> _fetchSuggestedTitle() async {
+    final description = _descriptionController.text;
+
+    if (description.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter a description first.")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(
+            'http://localhost:8000/generate-title'), // Replace with your API URL
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'description': description}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final suggestedTitle = data['suggested_title'];
+
+        setState(() {
+          _titleController.text = suggestedTitle; // Update the title field
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Suggested title updated.")),
+        );
+      } else {
+        print('Failed to fetch suggested title: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: Unable to fetch title.")),
+        );
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: Could not connect to the server.")),
+      );
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
   }
+
+  void _resetFetchedDataFlag() {
+    setState(() {
+      _hasFetchedData = false;
+    });
+  }
+
+  bool _showUndoButton = false;
 
   @override
   Widget build(BuildContext context) {
@@ -263,8 +348,8 @@ class _FifthPageState extends State<FifthPage> {
                         ),
                       ),
                     ],
-                  ),
-                if (!(_isLoading || _isSubmitted)) ...[
+                  )
+                else ...[
                   TextField(
                     controller: _titleController,
                     enabled: !_isDisabled, // Disable if status is 'waitapprove'
@@ -274,6 +359,12 @@ class _FifthPageState extends State<FifthPage> {
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.autorenew,
+                            color: primaryColor), // Generate button as icon
+                        onPressed:
+                            _fetchSuggestedTitle, // Call the function to fetch the title
                       ),
                     ),
                   ),
@@ -336,6 +427,30 @@ class _FifthPageState extends State<FifthPage> {
                     shadowColor: Colors.black.withOpacity(0.3),
                   ),
                 ),
+                const SizedBox(height: 20),
+                if (_showUndoButton) // Conditionally render the "Undo Request" button
+                  ElevatedButton.icon(
+                    onPressed: _undoRequest, // Call the _undoRequest function
+                    icon: const Icon(Icons.cancel, color: Colors.white),
+                    label: const Text(
+                      'Undo Request',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Colors.orange, // Button color for Undo Request
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 10,
+                      shadowColor: Colors.black.withOpacity(0.3),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -344,7 +459,46 @@ class _FifthPageState extends State<FifthPage> {
     );
   }
 
-  void _logout(BuildContext context) {
+  Future<void> _undoRequest() async {
+    try {
+      final token = await getToken(); // Retrieve the JWT token
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/projects/waitinglist/project/undo-request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _approvalTimer?.cancel(); // Stop polling
+        setState(() {
+          _isLoading = false; // Reset to normal state
+          _isSubmitted = false; // Allow the user to resubmit
+          _isDisabled = false;
+          _showUndoButton = false;
+          // Re-enable the fields
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Request has been undone successfully.")),
+        );
+      } else {
+        print('Failed to undo the request');
+      }
+    } catch (e) {
+      print('Error while undoing request: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Error: Could not connect to the server.")),
+      );
+    }
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => SignInScreen()),

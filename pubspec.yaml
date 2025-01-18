@@ -55,6 +55,8 @@ dependencies:
   mailer: ^6.2.0
   google_maps_flutter: ^2.2.2
   geolocator: ^13.0.2
+  dropdown_search: ^5.0.3
+
   line_awesome_flutter: ^1.0.0
   pdf: ^3.8.1
   printing: ^5.9.1
@@ -69,6 +71,14 @@ dependencies:
   cloud_firestore: ^5.0.0
   firebase_messaging: ^15.1.6
   flutter_local_notifications: ^14.1.5
+  collection: ^1.17.0
+  dio: ^5.0.0
+  csv: ^5.0.0
+ 
+
+
+
+  app_settings: ^5.1.1
 
 dev_dependencies:
   flutter_lints: ^4.0.0

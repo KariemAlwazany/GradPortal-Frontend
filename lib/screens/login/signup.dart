@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
 import 'package:flutter_project/theme/theme.dart';
@@ -18,6 +19,13 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  @override
+  void dispose() {
+    ageController.dispose();
+    cityController.dispose();
+    super.dispose();
+  }
+
   final _formSignupKey = GlobalKey<FormState>();
   bool agreePersonalData = true;
   String? selectedRole;
@@ -30,6 +38,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? password;
   File? _doctorImage;
   File? _studentImage;
+  String? projectType;
+  String? gender;
+  String? backend;
+  String? frontend;
+  String? database;
+  String? age;
+  String? location;
+  final List<String> palestineCities = [
+    'Nablus',
+    'Ramallah',
+    'Gaza',
+    'Hebron',
+    'Jericho',
+    'Jenin',
+    'Tulkarm',
+    'Qalqilya',
+    'Bethlehem',
+    'Salfit',
+    'Tubas',
+    'Rafah',
+    'Khan Younis',
+    'Deir al-Balah',
+    'Beit Hanoun',
+    'Beit Lahia',
+    'Al-Bireh',
+    'Halhul',
+    'Dura',
+    'Yatta',
+    'Tarqumiyah',
+    'Abu Dis',
+  ];
+
+  final List<String> ages =
+      List.generate(43, (index) => (18 + index).toString());
+  final TextEditingController ageController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+
   final ImagePicker _picker = ImagePicker();
 
   Future<String> encodeImageToBase64(File image) async {
@@ -128,8 +173,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Add the image to the userData if an image was selected and encoded
         if (imageBase64 != null) "Degree": imageBase64,
         if (selectedRole == "Seller") "phoneNumber": phoneNumber,
-        "shopName": shopName
-        
+        "shopName": shopName,
+        if (selectedRole == "Student") "GP_Type": projectType, "BE": backend,
+        "FE": frontend, "DB": database, "Gender": gender, "Age": age,
+        "City": location,
       };
 
       try {
@@ -160,7 +207,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           print(responseData);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${responseData['message']}')),
-            
           );
         }
       } catch (e) {
@@ -216,7 +262,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: lightColorScheme.primary,
+                          color: primaryColor,
                         ),
                       ),
                       const SizedBox(
@@ -234,7 +280,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Full Name'),
+                          label: const Text(
+                            'Full Name',
+                            style: TextStyle(color: primaryColor),
+                          ),
                           hintText: 'Enter Full Name',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -253,11 +302,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -287,7 +337,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Email'),
+                          label: const Text('Email',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Email',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -306,11 +357,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -338,7 +390,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Username'),
+                          label: const Text('Username',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Username',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -357,11 +410,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -392,7 +446,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Password'),
+                          label: const Text('Password',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Password',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -411,11 +466,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -433,7 +489,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // Role Dropdown
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
-                          label: const Text('Role'),
+                          label: const Text('Role',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Select Role',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -452,11 +509,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
-                              color: lightColorScheme
-                                  .primary, // Focus border color
-                              width: 2.0,
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
                           errorBorder: OutlineInputBorder(
                             borderSide: const BorderSide(
@@ -466,8 +524,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        items: ['Doctor', 'User', 'Student', 'Seller', 'Delivery']
-                            .map((String role) {
+                        items: [
+                          'Doctor',
+                          'User',
+                          'Student',
+                          'Seller',
+                          'Delivery'
+                        ].map((String role) {
                           return DropdownMenuItem<String>(
                             value: role,
                             child: Text(role),
@@ -502,7 +565,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 return null;
                               },
                               decoration: InputDecoration(
-                                label: const Text('Registration Number'),
+                                label: const Text('Registration Number',
+                                    style: TextStyle(color: primaryColor)),
                                 hintText: 'Enter Registration Number',
                                 hintStyle: const TextStyle(
                                   color: Colors.black26,
@@ -550,6 +614,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onPressed: () => pickImage('Doctor'),
                               icon: const Icon(Icons.image),
                               label: const Text('Upload Doctor Degree'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    primaryColor, // Change button color to primaryColor
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 14.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10), // Rounded corners
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 15.0),
                             _doctorImage != null
@@ -572,12 +646,319 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Column(
                           children: [
                             const SizedBox(height: 25.0),
+                            DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                label: const Text('Project Type',
+                                    style: TextStyle(color: primaryColor)),
+                                hintText: 'Select Project Type',
+                                hintStyle: const TextStyle(
+                                  color: Colors.black26,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: primaryColor, // Focus border color
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.red, // Red border for errors
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              items:
+                                  ['Hardware', 'Software'].map((String type) {
+                                return DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Text(type),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  projectType = newValue;
+
+                                  // Clear all fields when project type changes
+                                  ageController.clear();
+                                  cityController.clear();
+                                  backend = null;
+                                  frontend = null;
+                                  database = null;
+                                  gender = null;
+                                  location = null;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a project type';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+// Dynamically display fields based on Project Type
+                            if (projectType == 'Hardware') ...[
+                              // Age
+                              _buildSearchableField(
+                                label: 'Age',
+                                controller: ageController,
+                                suggestions: ages,
+                                onSuggestionSelected: (selectedAge) {
+                                  setState(() {
+                                    age = selectedAge;
+                                    ageController.text = selectedAge;
+                                  });
+                                },
+                              ),
+
+                              const SizedBox(height: 16.0),
+
+                              // City
+                              _buildSearchableField(
+                                label: 'City',
+                                controller: cityController,
+                                suggestions: palestineCities,
+                                onSuggestionSelected: (selectedCity) {
+                                  setState(() {
+                                    location = selectedCity;
+                                    cityController.text = selectedCity;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16.0),
+
+                              // Gender
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  label: const Text('Gender',
+                                      style: TextStyle(color: primaryColor)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                                items: ['Male', 'Female'].map((String gender) {
+                                  return DropdownMenuItem<String>(
+                                    value: gender,
+                                    child: Text(gender),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    gender = value;
+                                  });
+                                },
+                              ),
+                            ],
+
+                            if (projectType == 'Software') ...[
+                              // Backend Framework
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  label: const Text('Backend Framework',
+                                      style: TextStyle(color: primaryColor)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                                items: [
+                                  'Node.js',
+                                  'Laravel',
+                                  'Spring Boot',
+                                  'ASP.NET',
+                                  'Other'
+                                ].map((String backend) {
+                                  return DropdownMenuItem<String>(
+                                    value: backend,
+                                    child: Text(backend),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    backend = value;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16.0),
+
+                              // Frontend Framework
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  label: const Text('Frontend Framework',
+                                      style: TextStyle(color: primaryColor)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                                items: [
+                                  'Flutter',
+                                  'React',
+                                  'Angular',
+                                  'HTML/CSS',
+                                  'Other'
+                                ].map((String frontend) {
+                                  return DropdownMenuItem<String>(
+                                    value: frontend,
+                                    child: Text(frontend),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    frontend = value;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16.0),
+
+                              // Database
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  label: const Text('Preferred Database',
+                                      style: TextStyle(color: primaryColor)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                                items: [
+                                  'MySQL',
+                                  'Oracle',
+                                  'MongoDB',
+                                  'Django',
+                                  'Other'
+                                ].map((String db) {
+                                  return DropdownMenuItem<String>(
+                                    value: db,
+                                    child: Text(db),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    database = value;
+                                  });
+                                },
+                              ),
+                              SizedBox(
+                                height: 16,
+                              ),
+                              _buildSearchableField(
+                                label: 'Age',
+                                controller: ageController,
+                                suggestions: ages,
+                                onSuggestionSelected: (selectedAge) {
+                                  setState(() {
+                                    age = selectedAge;
+                                    ageController.text = selectedAge;
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16.0),
+
+                              // Gender
+                              DropdownButtonFormField<String>(
+                                decoration: InputDecoration(
+                                  label: const Text('Gender',
+                                      style: TextStyle(color: primaryColor)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color:
+                                          primaryColor, // Change border color to primaryColor when focused
+                                      width:
+                                          2.0, // Optional: Make the border a bit thicker for emphasis
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.0),
+                                  ),
+                                ),
+                                items: ['Male', 'Female'].map((String gender) {
+                                  return DropdownMenuItem<String>(
+                                    value: gender,
+                                    child: Text(gender),
+                                  );
+                                }).toList(),
+                                onChanged: (String? value) {
+                                  setState(() {
+                                    gender = value;
+                                  });
+                                },
+                              ),
+                            ],
+                            SizedBox(
+                              height: 16,
+                            ),
                             ElevatedButton.icon(
                               onPressed: () => pickImage('Student'),
                               icon: const Icon(Icons.image),
                               label: const Text('Upload Student Card'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    primaryColor, // Change button color to primaryColor
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 14.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      10), // Rounded corners
+                                ),
+                              ),
                             ),
+
                             const SizedBox(height: 15.0),
+                            // Add a dropdown for Project Type
+
                             _studentImage != null
                                 ? Image.file(
                                     _studentImage!,
@@ -753,30 +1134,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                       // i agree to the processing
                       Row(
-                        children: [
-                          Checkbox(
-                            value: agreePersonalData,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                agreePersonalData = value!;
-                              });
-                            },
-                            activeColor: lightColorScheme.primary,
-                          ),
-                          const Text(
-                            'I agree to the processing of ',
-                            style: TextStyle(
-                              color: Colors.black45,
-                            ),
-                          ),
-                          Text(
-                            'Personal data',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: lightColorScheme.primary,
-                            ),
-                          ),
-                        ],
+                        children: [],
                       ),
                       const SizedBox(
                         height: 25.0,
@@ -786,9 +1144,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed:
-                              createUser, // Call createUser function on sign up
-                          child: const Text('Sign up'),
+                          onPressed: _areAllFieldsFilled()
+                              ? () {
+                                  createUser(); // Proceed with user creation
+                                }
+                              : null, // Disable button if fields are not filled
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                primaryColor), // Force primaryColor
+                            padding: MaterialStateProperty.all(
+                              const EdgeInsets.symmetric(vertical: 16.0),
+                            ),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            elevation: MaterialStateProperty.all(
+                                4), // Optional shadow effect
+                          ),
+                          child: const Text('Sign up',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
                       const SizedBox(
@@ -810,12 +1186,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               vertical: 0,
                               horizontal: 10,
                             ),
-                            child: Text(
-                              'Sign up with',
-                              style: TextStyle(
-                                color: Colors.black45,
-                              ),
-                            ),
                           ),
                           Expanded(
                             child: Divider(
@@ -831,12 +1201,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // sign up social media logo
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Logo(Logos.facebook_f),
-                          Logo(Logos.twitter),
-                          Logo(Logos.google),
-                          Logo(Logos.apple),
-                        ],
                       ),
                       const SizedBox(height: 25.0),
                       // already have an account
@@ -862,7 +1226,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               'Sign in',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                               ),
                             ),
                           ),
@@ -878,5 +1242,81 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildSearchableField({
+    required String label,
+    required TextEditingController controller,
+    required List<String> suggestions,
+    required ValueChanged<String> onSuggestionSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: controller,
+            readOnly: true,
+            decoration: InputDecoration(
+              label: Text(label, style: TextStyle(color: primaryColor)),
+              hintText: 'Enter $label',
+              hintStyle: const TextStyle(color: Colors.black26),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.black12),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Colors.black12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color:
+                      primaryColor, // Change border color to primaryColor when focused
+                  width:
+                      2.0, // Optional: Make the border a bit thicker for emphasis
+                ),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+            onTap: () async {
+              // Trigger the TypeAhead modal when field is tapped
+              final selectedValue = await showModalBottomSheet<String>(
+                context: context,
+                builder: (context) {
+                  return ListView(
+                    children: suggestions.map((suggestion) {
+                      return ListTile(
+                        title: Text(suggestion),
+                        onTap: () {
+                          Navigator.pop(context, suggestion);
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              );
+              if (selectedValue != null) {
+                onSuggestionSelected(selectedValue);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _areAllFieldsFilled() {
+    if (projectType == 'Hardware') {
+      return age != null && gender != null && location != null;
+    } else if (projectType == 'Software') {
+      return backend != null &&
+          frontend != null &&
+          database != null &&
+          age != null &&
+          gender != null;
+    }
+    return false;
   }
 }

@@ -18,7 +18,7 @@ class SellerProfileScreen extends StatefulWidget {
 class _SellerProfileScreenState extends State<SellerProfileScreen> {
   String userName = 'Loading...';
   String email = 'Loading...';
-  String userRole = '';  // Add a field for the user's role
+  String userRole = ''; // Add a field for the user's role
 
   @override
   void initState() {
@@ -29,11 +29,12 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   Future<void> fetchUserData() async {
     // Fetch the base URL from the .env file
     final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-    final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role'); // Use the dynamic base URL
+    final roleUrl =
+        Uri.parse('${baseUrl}/GP/v1/seller/role'); // Use the dynamic base URL
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token'); 
+      final token = prefs.getString('jwt_token');
 
       if (token == null) {
         setState(() {
@@ -55,9 +56,11 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          userName = data['Username'] ?? "No name found"; // Assuming the response contains 'Username'
+          userName = data['Username'] ??
+              "No name found"; // Assuming the response contains 'Username'
           email = data['Email'] ?? "No email found";
-          userRole = data['Role'] ?? "Unknown";  // Assuming the response contains 'Role'
+          userRole = data['Role'] ??
+              "Unknown"; // Assuming the response contains 'Role'
         });
       } else {
         setState(() {
@@ -127,23 +130,50 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
               const SizedBox(height: 10),
               // Menu: Show these options based on the user role
               if (userRole == "Seller") ...[
-                  ProfileMenuWidget(title: "Edit Profile", icon: Icons.edit, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
-                }),
-                ProfileMenuWidget(title: "Components Selled", icon: Icons.wallet, onPress: () {}),
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
+                ProfileMenuWidget(
+                    title: "Components Selled",
+                    icon: Icons.wallet,
+                    onPress: () {}),
               ] else if (userRole == "Student") ...[
                 // Show only Edit Profile for Student or User
-                ProfileMenuWidget(title: "Edit Profile", icon: Icons.edit, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
-                }),
-                ProfileMenuWidget(title: "Add item to sale", icon: Icons.add, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddItemScreen()));
-                }),
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
+                ProfileMenuWidget(
+                    title: "Add item to sale",
+                    icon: Icons.add,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddItemScreen()));
+                    }),
               ] else if (userRole == "User") ...[
                 // Show only Edit Profile for Student or User
-                ProfileMenuWidget(title: "Edit Profile", icon: Icons.edit, onPress: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateProfileScreen()));
-                }),
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
               ],
               ProfileMenuWidget(
                 title: "Logout",
@@ -156,7 +186,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => WelcomeScreen()),
-                    (Route<dynamic> route) => false, 
+                    (Route<dynamic> route) => false,
                   );
                 },
               ),
@@ -168,7 +198,6 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   }
 }
 
-
 class ProfileMenuWidget extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -176,7 +205,8 @@ class ProfileMenuWidget extends StatelessWidget {
   final Color? textColor;
   final bool endIcon;
 
-  const ProfileMenuWidget({super.key, 
+  const ProfileMenuWidget({
+    super.key,
     required this.title,
     required this.icon,
     required this.onPress,

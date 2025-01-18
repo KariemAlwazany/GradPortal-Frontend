@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math'; // For generating random OTPs
 import 'verification_code.dart'; // Import the OTPPage
 import 'signin_screen.dart'; // Import your SignInScreen
@@ -101,14 +102,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             left: 16,
             child: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SignInScreen(),
-                  ),
-                );
-              },
+              onPressed: () => {_logout},
             ),
           ),
           Center(
@@ -142,7 +136,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           'Enter your Email',
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.blueAccent.shade700,
+                            color: primaryColor,
                           ),
                         ),
                         SizedBox(height: 20),
@@ -154,13 +148,22 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           decoration: InputDecoration(
                             prefixIcon: Icon(
                               Icons.email,
-                              color: Colors.blueAccent,
+                              color: primaryColor,
                             ),
                             hintText: 'Email',
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color:
+                                    primaryColor, // Change border color to primaryColor when focused
+                                width:
+                                    2.0, // Optional: Make the border a bit thicker for emphasis
+                              ),
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
                           ),
                         ),
@@ -172,10 +175,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30.0),
                             ),
+
                             padding: EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 15),
                             backgroundColor:
-                                Colors.blueAccent, // Button background color
+                                primaryColor, // Button background color
                             elevation: 5,
                           ),
                           onPressed: () {
@@ -214,4 +218,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ),
     );
   }
+}
+
+Future<void> _logout(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('jwt_token');
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SignInScreen()),
+  );
 }

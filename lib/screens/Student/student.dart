@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project/components/navbar/community_navabar.dart';
 import 'package:flutter_project/screens/Community/main_screen.dart';
 import 'package:flutter_project/screens/Shop/shop_home_page.dart';
+import 'package:flutter_project/screens/Student/calendar.dart';
 import 'package:flutter_project/screens/Student/discussionTable.dart';
 import 'package:flutter_project/screens/Student/files.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_project/screens/Student/navbarPages/profile.dart';
 import 'package:flutter_project/screens/Student/meeting/meeting_options_page.dart'; // New options page import
 import 'package:flutter_project/screens/Student/projectsPage.dart';
 import 'package:flutter_project/screens/Student/messages.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -125,7 +127,33 @@ class HomeContent extends StatelessWidget {
   final Function(BuildContext) selectDateTime;
   final int notificationCount;
 
-  const HomeContent({super.key, required this.selectDateTime, required this.notificationCount});
+  HomeContent({required this.selectDateTime, required this.notificationCount});
+  Future<String> fetchProjectTitle() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        return "Error fetching title";
+      }
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects/student'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['GP_Title'] ?? "No Title Available";
+      } else {
+        return "Error fetching title";
+      }
+    } catch (e) {
+      return "Error fetching title";
+    }
+  }
 
   Future<String> fetchStudentName() async {
     try {
@@ -178,12 +206,37 @@ class HomeContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(height: 12),
-                      Text(
-                        'GradHub',
-                        style: TextStyle(
-                          fontSize: 22,
-                          color: Colors.white,
-                        ),
+                      FutureBuilder<String>(
+                        future: fetchProjectTitle(),
+                        initialData: 'Fetching...',
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text(
+                              'Fetching...',
+                              style: TextStyle(
+                                fontSize: 22,
+                                color: Colors.white,
+                              ),
+                            );
+                          } else if (snapshot.hasError ||
+                              snapshot.data == null) {
+                            return Text(
+                              'Error fetching title',
+                              style: TextStyle(
+                                fontSize: 22,
+                                color: Colors.white,
+                              ),
+                            );
+                          }
+                          return Text(
+                            snapshot.data!,
+                            style: TextStyle(
+                              fontSize: 22,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
                       ),
                       FutureBuilder<String>(
                         future: fetchStudentName(),
@@ -342,13 +395,24 @@ class HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => ShopHomePage()),
+                  MaterialPageRoute(builder: (context) => ShopHomePage()),
                 ),
                 child: _buildCategoryItem(
                   'Store',
                   'Browse resources',
                   Icons.shopping_cart_outlined,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ScrollableCalendarPage()),
+                ),
+                child: _buildCategoryItem(
+                  'Calendar',
+                  'Show your tasks',
+                  Icons.calendar_month_rounded,
                 ),
               ),
               GestureDetector(
@@ -365,8 +429,7 @@ class HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => CommunityNavbar()),
+                  MaterialPageRoute(builder: (context) => CommunityNavbar()),
                 ),
                 child: _buildCategoryItem(
                   'Community',

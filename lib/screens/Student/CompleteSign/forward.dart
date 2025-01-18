@@ -58,10 +58,10 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
-                  initialStep: 0,
+                  initialStep: 2,
                 )),
       );
-    } else if (status == 'waitpartner' || status == 'declinedpartner') {
+    } else if (status == 'projectSelected') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -69,7 +69,7 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
                   initialStep: 1,
                 )),
       );
-    } else if (status == 'declineDoctor' || status == 'approvedpartner') {
+    } else if (status == 'waitpartner' || status == 'declinedpartner') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -77,12 +77,20 @@ class _StatusCheckPageState extends State<StatusCheckPage> {
                   initialStep: 2,
                 )),
       );
-    } else if (status == 'waiting') {
+    } else if (status == 'declineDoctor' || status == 'approvedpartner') {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) => ProjectStepper(
                   initialStep: 3,
+                )),
+      );
+    } else if (status == 'waiting') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProjectStepper(
+                  initialStep: 4,
                 )),
       );
     } else if (status == 'completed' || status == 'waitapprove') {

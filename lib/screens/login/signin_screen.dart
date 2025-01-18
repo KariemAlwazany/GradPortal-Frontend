@@ -20,6 +20,8 @@ import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+const Color primaryColor = Color(0xFF3B4280);
+
 Future<Map<String, dynamic>> login(String email, String password) async {
   // Prepare the login data
   Map<String, dynamic> loginData = {
@@ -103,7 +105,7 @@ Future<void> onUserLogin(String jwtToken) async {
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 6,
             child: Container(
               padding: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0),
               decoration: const BoxDecoration(
@@ -126,7 +128,7 @@ Future<void> onUserLogin(String jwtToken) async {
                         style: TextStyle(
                           fontSize: 30.0,
                           fontWeight: FontWeight.w900,
-                          color: lightColorScheme.primary,
+                          color: primaryColor,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -141,13 +143,23 @@ Future<void> onUserLogin(String jwtToken) async {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Email'),
-                          hintText: 'Enter Email',
-                          hintStyle: const TextStyle(
-                            color: Colors.black26,
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
                           ),
+                          label: const Text('Email',
+                              style: TextStyle(color: primaryColor)),
+                          hintText: 'Enter Email',
+                          hintStyle: const TextStyle(color: primaryColor),
                           border: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.black12),
+                            borderSide: const BorderSide(
+                              color: Colors.black12,
+                            ),
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                           enabledBorder: OutlineInputBorder(
@@ -172,7 +184,17 @@ Future<void> onUserLogin(String jwtToken) async {
                           return null;
                         },
                         decoration: InputDecoration(
-                          label: const Text('Password'),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color:
+                                  primaryColor, // Change border color to primaryColor when focused
+                              width:
+                                  2.0, // Optional: Make the border a bit thicker for emphasis
+                            ),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          label: const Text('Password',
+                              style: TextStyle(color: primaryColor)),
                           hintText: 'Enter Password',
                           hintStyle: const TextStyle(
                             color: Colors.black26,
@@ -202,7 +224,7 @@ Future<void> onUserLogin(String jwtToken) async {
                                     rememberMe = value!;
                                   });
                                 },
-                                activeColor: lightColorScheme.primary,
+                                activeColor: primaryColor,
                               ),
                               const Text(
                                 'Remember me',
@@ -216,7 +238,7 @@ Future<void> onUserLogin(String jwtToken) async {
                             child: Text(
                               'Forget Password?',
                               style: TextStyle(
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -320,7 +342,16 @@ Future<void> onUserLogin(String jwtToken) async {
                               }
                             }
                           },
-                          child: const Text('Login'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                primaryColor, // Set button color to primaryColor
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text('Login',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -338,12 +369,6 @@ Future<void> onUserLogin(String jwtToken) async {
                               vertical: 0,
                               horizontal: 10,
                             ),
-                            child: Text(
-                              'Sign up with',
-                              style: TextStyle(
-                                color: Colors.black45,
-                              ),
-                            ),
                           ),
                           Expanded(
                             child: Divider(
@@ -356,27 +381,6 @@ Future<void> onUserLogin(String jwtToken) async {
                       const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Logo(Logos.facebook_f),
-                          Logo(Logos.twitter),
-                          Logo(Logos.apple),
-                          GestureDetector(
-                            onTap: () async {
-                              bool res = false;
-                              // await _authMethods.signInWithGoogle(context);
-                              if (res) {
-                                // Navigator.pushReplacement(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) =>
-                                //        // HomeScreen(), // Ensure Widget193 is correctly wrapped
-                                //   ),
-                                // );
-                              }
-                            }, // Call sign-in method
-                            child: Logo(Logos.google),
-                          ),
-                        ],
                       ),
                       const SizedBox(height: 18),
                       Row(
@@ -400,7 +404,7 @@ Future<void> onUserLogin(String jwtToken) async {
                             child: Text(
                               'Sign up now',
                               style: TextStyle(
-                                color: lightColorScheme.primary,
+                                color: primaryColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

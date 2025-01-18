@@ -34,8 +34,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
- 
-
   Future<void> _uploadItem() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -92,7 +90,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
         );
         Navigator.pop(context);
       } else {
-        final errorMessage = json.decode(responseBody)['message'] ?? 'Failed to upload item';
+        final errorMessage =
+            json.decode(responseBody)['message'] ?? 'Failed to upload item';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
@@ -163,19 +162,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   decoration: InputDecoration(
                     labelText: 'Type',
                     labelStyle: const TextStyle(color: Color(0xFF3B4280)),
-                    prefixIcon: const Icon(Icons.art_track, color: Color(0xFF3B4280)),
+                    prefixIcon:
+                        const Icon(Icons.art_track, color: Color(0xFF3B4280)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Color(0xFF3B4280)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF3B4280), width: 2.0),
                     ),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'Hardware', child: Text('Hardware')),
-                    DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
+                    DropdownMenuItem(
+                        value: 'Hardware', child: Text('Hardware')),
+                    DropdownMenuItem(
+                        value: '3D Printing', child: Text('3D Printing')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -195,24 +198,30 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   decoration: InputDecoration(
                     labelText: 'Category',
                     labelStyle: const TextStyle(color: Color(0xFF3B4280)),
-                    prefixIcon: const Icon(Icons.category, color: Color(0xFF3B4280)),
+                    prefixIcon:
+                        const Icon(Icons.category, color: Color(0xFF3B4280)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Color(0xFF3B4280)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF3B4280), width: 2.0),
                     ),
                   ),
                   items: const [
                     DropdownMenuItem(value: 'Motors', child: Text('Motors')),
                     DropdownMenuItem(value: 'Drivers', child: Text('Drivers')),
-                    DropdownMenuItem(value: 'Robotics', child: Text('Robotics')),
-                    DropdownMenuItem(value: 'Microcontrollers', child: Text('Microcontrollers')),
+                    DropdownMenuItem(
+                        value: 'Robotics', child: Text('Robotics')),
+                    DropdownMenuItem(
+                        value: 'Microcontrollers',
+                        child: Text('Microcontrollers')),
                     DropdownMenuItem(value: 'Sensors', child: Text('Sensors')),
                     DropdownMenuItem(value: 'Arms', child: Text('Arms')),
-                    DropdownMenuItem(value: '3D Printing', child: Text('3D Printing')),
+                    DropdownMenuItem(
+                        value: '3D Printing', child: Text('3D Printing')),
                     DropdownMenuItem(value: 'Others', child: Text('Others')),
                   ],
                   onChanged: (value) {
@@ -254,7 +263,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   child: ElevatedButton(
                     onPressed: _uploadItem,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
                       backgroundColor: const Color(0xFF3B4280),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -302,7 +312,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+              borderSide:
+                  const BorderSide(color: Color(0xFF3B4280), width: 2.0),
             ),
           ),
           validator: (value) {

@@ -6,6 +6,7 @@ import 'package:flutter_project/screens/Student/CompleteSign/Page2.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page5.dart';
+import 'package:flutter_project/screens/Student/CompleteSign/questions_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +27,7 @@ class ProjectStepper extends StatefulWidget {
 class _ProjectStepperState extends State<ProjectStepper>
     with SingleTickerProviderStateMixin {
   late int _currentStep;
-  final int _totalSteps = 4;
+  final int _totalSteps = 5;
   final ScrollController _scrollController = ScrollController();
   late AnimationController _animationController;
   late Animation<double> _animation;
@@ -133,7 +134,7 @@ class _ProjectStepperState extends State<ProjectStepper>
                 ),
                 if (index < _totalSteps - 1)
                   Container(
-                    width: 76,
+                    width: 42,
                     height: 2,
                     color: isCompleted ? Colors.green : stepInactiveColor,
                   ),
@@ -161,23 +162,29 @@ class _ProjectStepperState extends State<ProjectStepper>
       case 0:
         return ProjectTypePage(onNext: _nextStep, key: ValueKey(step));
       case 1:
-        return SecondPage(
+        return QuestionsPage(
+          projectType: typeGP, // Pass the project type to the QuestionsPage
           onNext: _nextStep,
           onPrevious: _previousStep,
           key: ValueKey(step),
         );
       case 2:
-        return ThirdPage(
+        return SecondPage(
+          onNext: _nextStep,
           onPrevious: _previousStep,
           key: ValueKey(step),
-          onNext: _nextStep,
         );
       case 3:
+        return ThirdPage(
+          onPrevious: _previousStep,
+          onNext: _nextStep,
+          key: ValueKey(step),
+        );
+      case 4:
         return FourthPage(
           onPrevious: _previousStep,
           key: ValueKey(step),
         );
-
       default:
         return ProjectTypePage(onNext: _nextStep, key: ValueKey(step));
     }
@@ -367,8 +374,8 @@ Future<List<String>> fetchStudents() async {
 
 // Function to fetch doctors from the API
 Future<List<String>> fetchDoctors() async {
-  final response =
-      await http.get(Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors'));
+  final response = await http
+      .get(Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/doctors/available'));
 
   if (response.statusCode == 200) {
     List<dynamic> doctors = json.decode(response.body);

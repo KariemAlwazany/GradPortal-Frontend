@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Student/files.dart';
 import 'dart:convert'; // For JSON decoding
 import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
@@ -296,8 +297,8 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
-                          child: CircularProgressIndicator(
-                              color: Theme.of(context).colorScheme.primary));
+                          child:
+                              CircularProgressIndicator(color: primaryColor));
                     } else if (snapshot.hasError) {
                       return Center(
                           child: Text('Error: ${snapshot.error}',
@@ -322,6 +323,7 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => SecondPage(
                                 heroTag: index,
+                                projectId: _filteredProjects[index].gpId,
                               ),
                             ));
                           },
@@ -361,22 +363,20 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                                                 color: const Color(0xFF17203A)),
                                       ),
                                       Text(
-                                        project.description,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: Colors.black54),
-                                      ),
-                                      Text('Year: ${project.year}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
-                                      Text(
                                           'Project Type: ${project.projectType}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium),
+                                      Text(
+                                          'Students:${project.Student1}&${project.Student2}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium),
                                       Text('Supervisor: ${project.supervisor}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium),
+                                      Text('Year: ${project.year}',
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium),
@@ -419,46 +419,174 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
   }
 }
 
-class SecondPage extends StatelessWidget {
+class SecondPage extends StatefulWidget {
   final int heroTag;
+  final int projectId; // Pass the project ID
 
   const SecondPage({
     super.key,
     required this.heroTag,
+    required this.projectId, // Ensure the project ID is passed
   });
+
+  @override
+  _SecondPageState createState() => _SecondPageState();
+}
+
+Future<List<Map<String, dynamic>>> fetchProjectSubmissions(
+    int projectId) async {
+  final token = await getToken();
+  final response = await http.get(
+    Uri.parse('${dotenv.env['API_BASE_URL']}/gp/v1/submit/project/$projectId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body)['data'] as List<dynamic>;
+    return data
+        .where((submission) {
+          final title = submission['Title'] ?? '';
+          return title == 'Abstract Submission' || title == 'Final Submission';
+        })
+        .cast<Map<String, dynamic>>()
+        .toList();
+  } else {
+    print('Failed to fetch project submissions: ${response.statusCode}');
+    return [];
+  }
+}
+
+Future<Map<String, dynamic>?> fetchProjectDetails(int projectId) async {
+  final token = await getToken();
+  final response = await http.get(
+    Uri.parse(
+        '${dotenv.env['API_BASE_URL']}/GP/v1/projects/specific/$projectId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+  } else {
+    print('Failed to fetch project details: ${response.statusCode}');
+    return null;
+  }
+}
+
+class _SecondPageState extends State<SecondPage> {
+  Map<String, dynamic>? projectDetails;
+  List<Map<String, dynamic>> submissions = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    final details = await fetchProjectDetails(widget.projectId);
+    final projectSubmissions = await fetchProjectSubmissions(widget.projectId);
+
+    setState(() {
+      projectDetails = details;
+      submissions = projectSubmissions;
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary, // Blue as the app bar color
-        title: const Text("Project Details"),
+        backgroundColor: primaryColor,
+        title: Text('Project Details', style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Hero(
-                tag: heroTag,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                      'https://example.com/project-image'), // Placeholder image
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Container(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        'Description',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              primaryColor, // Replace with your theme's color
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                if (projectDetails != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      projectDetails?['GP_Description'] ?? 'No Description',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(color: primaryColor),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      "Submissions:",
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                              fontWeight: FontWeight.bold, color: primaryColor),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: submissions.length,
+                      itemBuilder: (context, index) {
+                        final submission = submissions[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              title: Text(submission['Title']),
+                              trailing: submission['FileSubmitted'] != null
+                                  ? IconButton(
+                                      icon: Icon(Icons.download),
+                                      onPressed: () {
+                                        // Add file download logic here
+                                        print(
+                                            'Downloading ${submission['FileSubmitted']}');
+                                      },
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
-          Expanded(
-            child: Text(
-              "Project content goes here",
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.primary), // Blue for text
-            ),
-          )
-        ],
-      ),
     );
   }
 }
@@ -466,30 +594,38 @@ class SecondPage extends StatelessWidget {
 class Project {
   final int gpId; // Ensure this is an integer for GP_ID
   final String title;
-  final String description;
+  final String Student1;
   final String? imageUrl; // Nullable
   final String projectType;
   final int year;
   final String supervisor;
-
-  Project({
-    required this.gpId,
-    required this.title,
-    required this.description,
-    this.imageUrl,
-    required this.projectType,
-    required this.year,
-    required this.supervisor,
-  });
+  final String Student2;
+  Project(
+      {required this.gpId,
+      required this.title,
+      this.imageUrl,
+      required this.projectType,
+      required this.year,
+      required this.supervisor,
+      required this.Student1,
+      required this.Student2});
 
   factory Project.fromJson(Map<String, dynamic> json) {
+    // Parse the year from the createdAt field
+    int year = 0;
+    if (json['createdAt'] != null) {
+      DateTime createdAtDate = DateTime.parse(json['createdAt']);
+      year = createdAtDate.year; // Extract the year
+    }
+
     return Project(
       gpId: json['GP_ID'], // Ensure correct type for gpId (integer)
       title: json['GP_Title'], // Check your API response keys
-      description: json['GP_Description'], // Check your API response keys
+      Student1: json['Student_1'],
+      Student2: json['Student_2'],
       imageUrl: json['imageUrl'], // Nullable field
       projectType: json['GP_Type'] ?? 'Unknown', // Default value if null
-      year: json['year'] ?? 0, // Default to 0 if not provided
+      year: year, // Use extracted year
       supervisor: json['Supervisor_1'] ?? 'Unknown', // Default value if null
     );
   }
