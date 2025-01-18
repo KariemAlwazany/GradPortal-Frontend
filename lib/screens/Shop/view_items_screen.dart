@@ -381,6 +381,8 @@ class CategoryChip extends StatelessWidget {
   }
 }
 
+
+
 class ItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final BuildContext parentContext;
@@ -399,13 +401,10 @@ class ItemCard extends StatelessWidget {
     int quantity = item['Quantity'] ?? 0;
     int itemId = item['Item_ID'] ?? 0;
 
-    print('Item: $item');  // Log the item data
-
     if (itemId == 0) {
       return const SizedBox();
     }
 
-    // Handle Picture field if it's a Base64 string
     Uint8List? pictureBytes;
     if (item['Picture'] != null && item['Picture'] is String) {
       try {
@@ -421,7 +420,6 @@ class ItemCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to the item detail screen
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -467,7 +465,7 @@ class ItemCard extends StatelessWidget {
               ),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit, color: Color(0xFF3B4280)),
@@ -481,6 +479,20 @@ class ItemCard extends StatelessWidget {
                     _showDeleteConfirmationDialog(parentContext, item);
                   },
                 ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'Share to Community') {
+                      _showShareDialog(context);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'Share to Community',
+                      child: Text('Share to Community'),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_vert, color: Color(0xFF3B4280)),
+                ),
               ],
             ),
           ],
@@ -489,6 +501,48 @@ class ItemCard extends StatelessWidget {
     );
   }
 
+
+  void _showShareDialog(BuildContext context) {
+    TextEditingController postController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Share to Community'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: postController,
+                maxLines: 3,
+                decoration: const InputDecoration(hintText: 'Write your post here...'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                String postContent = postController.text;
+                if (postContent.isNotEmpty) {
+                  shareToCommunity(item, postContent);
+                  print('Post content: $postContent');
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Share'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showEditDialog(BuildContext context, Map<String, dynamic> item) {
     String itemName = item['item_name'] ?? '';
@@ -708,5 +762,56 @@ Future<void> _deleteItem(Map<String, dynamic> itemId) async {
     print("Error deleting item: $e");
   }
 }
+
+
+Future<void> shareToCommunity(Map<String, dynamic> item, String userInputText) async {
+  try {
+    // Retrieve the token from SharedPreferences
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('JWT token not found');
+    }
+
+    // Prepare post content
+    String itemName = item['item_name'] ?? 'No name';
+    String description = item['Description'] ?? 'No description';
+    String price = item['Price'] != null ? "${item['Price']} NIS" : 'No price';
+    Uint8List? image = item['Picture'] != null ? base64Decode(item['Picture']) : null;
+
+    String content = '''
+      Item Name: $itemName
+      Description: $description
+      Price: $price
+
+      User's Thoughts: $userInputText
+    ''';
+
+    // Create a multipart request
+    var request = http.MultipartRequest('POST',
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/community/shareItem')
+ )
+      ..fields['content'] = content
+      ..headers['Authorization'] = 'Bearer $token';
+
+    if (image != null) {
+      request.files.add(http.MultipartFile.fromBytes('image', image, filename: 'item_image.jpg'));
+    }
+
+    // Send the request
+    var response = await request.send();
+
+    if (response.statusCode == 201) {
+      print('Post created successfully');
+    } else {
+      print('Failed to create post: ${response.statusCode}');
+    }
+  } catch (error) {
+    print('Error sharing to community: $error');
+  }
+}
+
+
 }
 

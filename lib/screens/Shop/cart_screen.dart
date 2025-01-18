@@ -92,7 +92,7 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       body: ListView(
         children: [
-          CartAppBar(),
+          CartAppBar(onCartUpdated: () { fetchCartItems(); },),
           Container(
             padding: EdgeInsets.only(top: 15),
             decoration: BoxDecoration(
@@ -116,7 +116,7 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: cartItems.length,
                     itemBuilder: (context, index) {
                       final cartItem = cartItems[index];
-                      return CartItemTile(cartItem: cartItem);
+                      return CartItemTile(cartItem: cartItem, onItemRemoved: () { fetchCartItems(); },);
                     },
                   ),
                 Container(
@@ -137,19 +137,62 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
+
 class CartItemTile extends StatelessWidget {
   final Map<String, dynamic> cartItem;
+  final VoidCallback onItemRemoved; // Callback to notify after item is removed
 
-  const CartItemTile({Key? key, required this.cartItem}) : super(key: key);
+  const CartItemTile({
+    Key? key,
+    required this.cartItem, required this.onItemRemoved,
+  }) : super(key: key);
+
+  Future<bool> removeFromCart(int itemId) async {
+    try {
+      // Get the JWT token from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        print('Error: No JWT token found');
+        return false;
+      }
+
+      // Define the API URL
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+      // Make the DELETE request
+      final response = await http.delete(
+        Uri.parse('$baseUrl/GP/v1/shop/cart/deleteFromCart'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // Pass the JWT token in the headers
+        },
+        body: jsonEncode({
+          'item_id': itemId, // Pass the item_id to be removed
+        }),
+      );
+
+      // Check the response status
+      if (response.statusCode == 200) {
+        print('Item removed successfully: ${response.body}');
+        return true;
+      } else {
+        print('Failed to remove item: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error removing item from cart: $e');
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final itemId = cartItem['Item_ID'];
     final itemName = cartItem['item_name'] ?? 'No name';
     final itemPrice = cartItem['price'] ?? '0';
-
-    // Access quantity from CartItems
     final itemQuantity = cartItem['CartItems']?['quantity'] ?? 1;
-
     final itemDescription = cartItem['description'] ?? 'No description';
 
     // Decode Picture field (if available)
@@ -201,7 +244,7 @@ class CartItemTile extends StatelessWidget {
                     style: TextStyle(fontSize: 14, color: Colors.white),
                   ),
                   Text(
-                    "Quantity: $itemQuantity", // Ensure quantity is displayed
+                    "Quantity: $itemQuantity",
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   Text(
@@ -210,6 +253,23 @@ class CartItemTile extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            // Remove Icon
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () async {
+                final success = await removeFromCart(itemId); // Call the async function
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$itemName removed from cart!')),
+                  );
+                    onItemRemoved(); // Call the callback after successful removal
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to remove $itemName from cart.')),
+                  );
+                }
+              },
             ),
           ],
         ),

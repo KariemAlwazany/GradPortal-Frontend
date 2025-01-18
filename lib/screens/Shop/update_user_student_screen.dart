@@ -42,7 +42,7 @@ class _UpdateUserSellerProfileScreenState
 
   Future<void> fetchUserData() async {
     final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-    final roleUrl = Uri.parse('${baseUrl}/GP/v1/seller/role');
+    final roleUrl = Uri.parse('$baseUrl/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();

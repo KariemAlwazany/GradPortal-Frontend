@@ -23,11 +23,40 @@ class _ChatScreenState extends State<ChatScreen> {
   final _firestore = FirebaseFirestore.instance;
   final _scrollController = ScrollController();
   String? _message;
+  String loggedInUsername = ""; 
   final String baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+Future<void> _fetchLoggedInUsername() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/GP/v1/seller/role'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        loggedInUsername = data['Username'];
+        print(loggedInUsername);
+      });
+    } else {
+      throw Exception('Failed to fetch id');
+    }
+  } catch (error) {
+    print('Error fetching id: $error');
+  }
+}
 
 Future<void> _sendNotification(String receiverId, String message) async {
   print('Invoking _sendNotification with receiverId: $receiverId and message: $message');
-
+  _fetchLoggedInUsername();
   try {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -60,8 +89,8 @@ Future<void> _sendNotification(String receiverId, String message) async {
       },
       body: jsonEncode({
         "userId": parsedReceiverId,
-        "title": "New Message",
-        "body": message,
+        "title": "Gradhub",
+        "body": "$loggedInUsername: $message",
         "additionalData": {"chat": "true"}
       }),
     );
@@ -80,7 +109,7 @@ Future<void> _sendNotification(String receiverId, String message) async {
 
 void _sendMessage() async {
   if (_message != null && _message!.trim().isNotEmpty) {
-    final messageToSend = _message; // Save the message before clearing it
+    final messageToSend = _message; 
 
     print('Sending message: $messageToSend');
     await _firestore.collection('messages').add({

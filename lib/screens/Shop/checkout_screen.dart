@@ -21,6 +21,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   LatLng? userLocation;
   LatLng? selectedLocation;
   String selectedCity = "No city selected";
+  int? userId;
   late GoogleMapController mapController;
 
   final TextEditingController cardNumberController = TextEditingController();
@@ -32,6 +33,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     _getUserLocation();
+    _fetchLoggedInUsername();
   }
 
   Future<void> _getUserLocation() async {
@@ -70,6 +72,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       selectedLocation = userLocation;
     });
   }
+
+Future<void> _fetchLoggedInUsername() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/GP/v1/seller/role'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data);
+      setState(() {
+        userId = data['id'];
+      });
+      print(userId);
+    } else {
+      throw Exception('Failed to fetch id');
+    }
+  } catch (error) {
+    print('Error fetching id: $error');
+  }
+}
+
+Future<void> _sendNotification(int receiverId,) async {
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    // Send the notification
+    final response = await http.post(
+      Uri.parse('$baseUrl/GP/v1/notification/notifyUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "userId": receiverId,
+        "title": "Gradhub",
+        "body": "Thank you, Your order has been placed, wait for shop confirmation",
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Notification sent successfully');
+    } else {
+      print('Failed to send notification: ${response.body}');
+    }
+  } catch (e) {
+    print('Error sending notification: $e');
+  }
+}
+
 
   Future<void> _updateUserLocationWithAPI(LatLng coordinates) async {
     final prefs = await SharedPreferences.getInstance();
@@ -143,6 +205,7 @@ Future<void> _orderConfirm() async {
   final emailApiUrl = Uri.parse('$baseUrl/GP/v1/orders/checkoutOrder');
 
   final orderData = {
+    'deliveryMethod': selectedDeliveryMethod,
     'totalPrice': widget.totalPrice,
     'paymentMethod': selectedPaymentMethod,
     'deliveryLocation': selectedDeliveryMethod == 'Delivery' && selectedLocation != null
@@ -182,6 +245,7 @@ Future<void> _orderConfirm() async {
       );
 
       if (emailResponse.statusCode == 200) {
+        _sendNotification(userId!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email sent successfully!')),
         );
