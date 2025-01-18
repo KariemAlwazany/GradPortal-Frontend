@@ -139,7 +139,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       );
       return;
     }
-
     Map<String, dynamic> updates = {};
     if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
     if (phoneNumberController.text.isNotEmpty) updates['phone_number'] = phoneNumberController.text;
@@ -366,18 +365,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Stack(
-              children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(height: 10),
             Text(
               'Role: $role',
@@ -433,6 +420,24 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                     icon: LineAwesomeIcons.map_pin,
                     isEnabled: true,
                   ),
+                  // Password field
+                  _buildTextField(
+                    controller: passwordController,
+                    label: "Password",
+                    hint: "Enter your password",
+                    icon: LineAwesomeIcons.lock,
+                    isPassword: true,
+                    isEnabled: true,
+                  ),
+                  // Rewrite Password field
+                  _buildTextField(
+                    controller: confirmPasswordController,
+                    label: "Rewrite Password",
+                    hint: "Rewrite your password",
+                    icon: LineAwesomeIcons.lock,
+                    isPassword: true,
+                    isEnabled: true,
+                  ),
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
                     onPressed: _showMapDialog,
@@ -470,6 +475,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                 ],
               ),
             ),
+
           ],
         ),
       ),
