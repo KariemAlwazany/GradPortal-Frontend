@@ -12,12 +12,40 @@ class OrdersRequestScreen extends StatefulWidget {
 class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
   List<dynamic> orders = [];
   bool isLoading = true;
-
+  int ?userId;
   @override
   void initState() {
     super.initState();
-    fetchOrders(); // Fetch orders when the screen loads
+    fetchOrders();
+    _fetchLoggedInUsername();
   }
+
+Future<void> _fetchLoggedInUsername() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/GP/v1/seller/role'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        userId = data['id'];
+      });
+    } else {
+      throw Exception('Failed to fetch id');
+    }
+  } catch (error) {
+    print('Error fetching id: $error');
+  }
+}
 
   Future<void> fetchOrders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,7 +111,6 @@ Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
   final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/updateOrderStatus');
 
-  // Map 'accepted' to 'completed' for valid status values in the database
   final validStatus = status == 'accepted' ? 'completed' : status;
 
   print('Sending request to $apiUrl with order_id: $orderId and status: $validStatus');
@@ -109,10 +136,9 @@ Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false
         SnackBar(content: Text('Order $status successfully updated.')),
       );
       if (refresh) {
-        fetchOrders(); // Refresh orders if specified
+        fetchOrders();
       }
 
-      // Call the second API after the first API call succeeds
       await sendOrderResponse(orderId, validStatus, refresh: refresh);
     } else {
       final errorData = json.decode(response.body);
@@ -142,7 +168,7 @@ Future<void> sendOrderResponse(int orderId, String orderResponse, {bool refresh 
   }
 
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/respondToOrder'); // New API for responding to order
+  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/respondToOrder');
 
   try {
     final response = await http.post(
@@ -158,6 +184,7 @@ Future<void> sendOrderResponse(int orderId, String orderResponse, {bool refresh 
     );
 
     if (response.statusCode == 200) {
+      _sendNotification(userId!, orderResponse);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Order $orderResponse successfully responded.')),
       );
@@ -175,6 +202,37 @@ Future<void> sendOrderResponse(int orderId, String orderResponse, {bool refresh 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Failed to respond to order.')),
     );
+  }
+}
+
+Future<void> _sendNotification(int receiverId, String status) async {
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/GP/v1/notification/notifyUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "userId": receiverId,
+        "title": "Gradhub",
+        "body": "Order Status: Your order has $status",
+        "additionalData": {"chat": "true"}
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Notification sent successfully');
+    } else {
+      print('Failed to send notification: ${response.body}');
+    }
+  } catch (e) {
+    print('Error sending notification: $e');
   }
 }
 

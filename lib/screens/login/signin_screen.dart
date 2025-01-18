@@ -1,6 +1,9 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
+import 'package:flutter_project/screens/Shop/Delivery/delivery_screen.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
@@ -84,6 +87,9 @@ Future<void> onUserLogin(String jwtToken) async {
     print('No FCM token found to send to the server.');
   }
 }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +292,17 @@ Future<void> onUserLogin(String jwtToken) async {
                                           StatusCheckPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
-                                } else if (userRole == 'Head') {
+                                }
+                                else if (userRole == 'Delivery') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DeliveryScreen(), // Ensure Widget193 is correctly wrapped
+                                    ),
+                                  );
+                                }
+                                 else if (userRole == 'Head') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(

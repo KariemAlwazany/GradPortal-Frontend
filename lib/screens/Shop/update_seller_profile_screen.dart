@@ -99,7 +99,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       if (profileResponse.statusCode == 200) {
         final profileData = json.decode(profileResponse.body);
         setState(() {
-          phoneNumber = profileData['Phone_number'] ?? "No phone number found";
+          phoneNumber = profileData['phone_number'] ?? "No phone number found";
           shopName = profileData['Shop_name'] ?? "No shop name found";
           location = "${profileData['city']} ${profileData['longitude']} ${profileData['latitude']}" ?? "Location not found";
         });
@@ -142,7 +142,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
     Map<String, dynamic> updates = {};
     if (usernameController.text.isNotEmpty) updates['Username'] = usernameController.text;
-    if (phoneNumberController.text.isNotEmpty) updates['Phone_number'] = phoneNumberController.text;
+    if (phoneNumberController.text.isNotEmpty) updates['phone_number'] = phoneNumberController.text;
     if (fullNameController.text.isNotEmpty) updates['FullName'] = fullNameController.text;
     if (emailController.text.isNotEmpty) updates['Email'] = emailController.text;
     if (passwordController.text.isNotEmpty) updates['Password'] = passwordController.text;

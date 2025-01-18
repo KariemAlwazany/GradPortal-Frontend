@@ -34,40 +34,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  Future<String?> _fetchShopName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return null;
-    }
-
-    try {
-      final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
-      final response = await http.get(
-        Uri.parse('${baseUrl}/GP/v1/seller/profile'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final shopData = json.decode(response.body);
-        return shopData['Shop_name'];
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch shop details')),
-        );
-        return null;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching shop details')),
-      );
-      return null;
-    }
-  }
+ 
 
   Future<void> _uploadItem() async {
     if (!_formKey.currentState!.validate()) {
@@ -84,7 +51,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       return;
     }
 
-    final shopName = await _fetchShopName();
+    const shopName = "Students Shop";
     if (shopName == null) return;
 
     try {

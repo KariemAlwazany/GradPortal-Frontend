@@ -229,6 +229,13 @@ class _SideMenuState extends State<SideMenu> {
           RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
         ];
       }
+      else if (userRole == "Delivery") {
+        return [
+          RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
+          RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
+        ];
+      }
     } else {
       return [
         RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),

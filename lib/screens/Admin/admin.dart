@@ -5,6 +5,7 @@ import 'package:flutter_project/screens/Admin/sellerrequests.dart';
 import 'package:flutter_project/screens/Admin/statistics.dart';
 import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/Admin/transfer.dart';
+import 'package:flutter_project/screens/Admin/students_shop.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -24,6 +25,7 @@ class _AdminPageState extends State<AdminPage> {
     AdminManageTab(),
     SchedulePage(),
     AdminProfilePage(),
+    StudentsShop(),
   ];
 
   void _onItemTapped(int index) {
@@ -60,6 +62,7 @@ class _AdminPageState extends State<AdminPage> {
             icon: Icon(Icons.account_circle),
             label: 'Profile',
           ),
+
         ],
       ),
     );
@@ -253,6 +256,18 @@ class AdminHomeTab extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => ManageDoctorsTransferPage()),
+                    );
+                  },
+                ),
+                  _buildOptionCard(
+                  context,
+                  icon: Icons.shop,
+                  title: 'Manage Students Shop',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => StudentsShop()),
                     );
                   },
                 ),
