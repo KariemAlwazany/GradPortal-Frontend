@@ -671,7 +671,7 @@ Future fetchCartItemCount() async {
     checkPhoneNumber(); // Check if user has phone number
     _fetchLoggedInUsername();
     fetchCartItemCount();
-    fetchNotifications(userId);
+    fetchAndShowNotifications(userId);
   }
 
 
@@ -1182,5 +1182,3 @@ class _ItemCardState extends State<ItemCard> {
   }
 }
 }
-
-
