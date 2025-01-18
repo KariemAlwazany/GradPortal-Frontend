@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AddItemScreen extends StatefulWidget {
-  const AddItemScreen({Key? key}) : super(key: key);
+  const AddItemScreen({super.key});
 
   @override
-  State<AddItemScreen> createState() => _AddItemScreenState();
+  _AddItemScreenState createState() => _AddItemScreenState();
 }
 
 class _AddItemScreenState extends State<AddItemScreen> {
@@ -23,60 +23,17 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   File? _selectedImage;
   String selectedType = 'Hardware'; // Default dropdown value
+  String selectedCategory = 'Motors'; // Default category value
 
-  // Method to select an image
   Future<void> _selectImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
-      print("Selected Image Path: ${_selectedImage!.path}");
-    } else {
-      print("No image selected.");
     }
   }
 
-  // Fetch shop name using an API call
-  Future<String?> _fetchShopName() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not logged in')),
-      );
-      return null;
-    }
-
-    try {
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/profile'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        final shopData = json.decode(response.body);
-        print("Fetched Shop Name: ${shopData['Shop_name']}");
-        return shopData['Shop_name'];
-      } else {
-        print(
-            "Failed to fetch shop details. Status Code: ${response.statusCode}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch shop details')),
-        );
-        return null;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error fetching shop details')),
-      );
-      print(e);
-      return null;
-    }
-  }
-
-  // Upload item to the API
   Future<void> _uploadItem() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -92,13 +49,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
       return;
     }
 
-    final shopName = await _fetchShopName();
+    const shopName = "Students Shop";
     if (shopName == null) return;
 
     try {
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? ''; // Fetch from .env
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/additem'),
+        Uri.parse('${baseUrl}/GP/v1/seller/items/additem'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -108,11 +66,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
       request.fields['Price'] = priceController.text.trim();
       request.fields['Description'] = descriptionController.text.trim();
       request.fields['Type'] = selectedType;
+      request.fields['Category'] = selectedCategory; // Added category field
       request.fields['Available'] = 'true';
 
       if (_selectedImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
-          'Picture', // This must match the backend field name
+          'Picture',
           _selectedImage!.path,
         ));
       } else {
@@ -121,9 +80,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
         );
         return;
       }
-
-      print("Request Fields: ${request.fields}");
-      print("Selected Image: ${_selectedImage!.path}");
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
@@ -136,13 +92,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
       } else {
         final errorMessage =
             json.decode(responseBody)['message'] ?? 'Failed to upload item';
-        print("Error Response: $responseBody");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
-      print("Exception occurred: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred. Please try again.')),
       );
@@ -176,14 +130,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 _buildTextField(
                   controller: itemNameController,
                   label: 'Item Name',
                   hint: 'Enter item name',
                   icon: Icons.label,
                 ),
-
                 _buildTextField(
                   controller: quantityController,
                   label: 'Quantity',
@@ -191,7 +143,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   icon: Icons.confirmation_number,
                   keyboardType: TextInputType.number,
                 ),
-
                 _buildTextField(
                   controller: priceController,
                   label: 'Price (NIS)',
@@ -199,25 +150,28 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   icon: Icons.attach_money,
                   keyboardType: TextInputType.number,
                 ),
-
                 _buildTextField(
                   controller: descriptionController,
                   label: 'Description',
                   hint: 'Enter item description',
                   icon: Icons.description,
                 ),
-
                 const SizedBox(height: 16),
-
-                // Type Field as Dropdown
                 DropdownButtonFormField<String>(
                   value: selectedType,
                   decoration: InputDecoration(
                     labelText: 'Type',
-                    hintText: 'Select item type',
-                    prefixIcon: const Icon(Icons.category),
-                    border: OutlineInputBorder(
+                    labelStyle: const TextStyle(color: Color(0xFF3B4280)),
+                    prefixIcon:
+                        const Icon(Icons.art_track, color: Color(0xFF3B4280)),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF3B4280)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF3B4280), width: 2.0),
                     ),
                   ),
                   items: const [
@@ -238,9 +192,51 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 16),
-
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    labelStyle: const TextStyle(color: Color(0xFF3B4280)),
+                    prefixIcon:
+                        const Icon(Icons.category, color: Color(0xFF3B4280)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF3B4280)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF3B4280), width: 2.0),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Motors', child: Text('Motors')),
+                    DropdownMenuItem(value: 'Drivers', child: Text('Drivers')),
+                    DropdownMenuItem(
+                        value: 'Robotics', child: Text('Robotics')),
+                    DropdownMenuItem(
+                        value: 'Microcontrollers',
+                        child: Text('Microcontrollers')),
+                    DropdownMenuItem(value: 'Sensors', child: Text('Sensors')),
+                    DropdownMenuItem(value: 'Arms', child: Text('Arms')),
+                    DropdownMenuItem(
+                        value: '3D Printing', child: Text('3D Printing')),
+                    DropdownMenuItem(value: 'Others', child: Text('Others')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCategory = value ?? 'Motors';
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a category';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
                 GestureDetector(
                   onTap: _selectImage,
                   child: Container(
@@ -262,9 +258,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 Center(
                   child: ElevatedButton(
                     onPressed: _uploadItem,
@@ -309,10 +303,17 @@ class _AddItemScreenState extends State<AddItemScreen> {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             labelText: label,
+            labelStyle: const TextStyle(color: Color(0xFF3B4280)),
             hintText: hint,
-            prefixIcon: Icon(icon),
-            border: OutlineInputBorder(
+            prefixIcon: Icon(icon, color: const Color(0xFF3B4280)),
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF3B4280)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: Color(0xFF3B4280), width: 2.0),
             ),
           ),
           validator: (value) {

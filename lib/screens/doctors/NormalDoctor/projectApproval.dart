@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class ProjectApprovalPage extends StatefulWidget {
+  const ProjectApprovalPage({super.key});
+
   @override
   _ProjectApprovalPageState createState() => _ProjectApprovalPageState();
 }

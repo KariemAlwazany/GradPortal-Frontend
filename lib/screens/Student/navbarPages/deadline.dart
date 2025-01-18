@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class DeadlinePage extends StatelessWidget {
+  const DeadlinePage({super.key});
+
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');

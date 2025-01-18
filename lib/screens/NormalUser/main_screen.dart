@@ -5,7 +5,7 @@ import 'package:flutter_project/screens/NormalUser/project_screen.dart';
 import 'profile_screen.dart'; // Import your UpdateProfileScreen here
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
+  const MainPage({super.key});
 
   @override
   MainPageState createState() => MainPageState();
@@ -85,7 +85,7 @@ class MainPageState extends State<MainPage> {
           });
         },
         type: BottomNavigationBarType.fixed, // Ensures all icons are shown
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Projects',

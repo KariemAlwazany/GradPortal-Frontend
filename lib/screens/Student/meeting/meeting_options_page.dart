@@ -6,7 +6,7 @@ import 'package:flutter_project/screens/Student/meeting/meeting.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class MeetingsOptionsPage extends StatelessWidget {
-  const MeetingsOptionsPage({Key? key}) : super(key: key);
+  const MeetingsOptionsPage({super.key});
 
   void _showJoinMeetingDialog(BuildContext context) {
     final TextEditingController conferenceIdController =

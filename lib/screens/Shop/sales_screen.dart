@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-class EditItemScreen extends StatelessWidget{
+
+class SalesScreen extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Item'),
+        title: Text('Sales Screen'),
       ),
       body: Center(
-        child: Text('This is the Edit Item Screen'),
+        child: Text('Welcome to Sales Screen'),
       ),
     );
   }

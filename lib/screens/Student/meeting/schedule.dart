@@ -8,6 +8,8 @@ import 'package:zego_uikit_prebuilt_video_conference/zego_uikit_prebuilt_video_c
 const Color primaryColor = Color(0xFF3B4280);
 
 class ScheduledMeetingsPage extends StatefulWidget {
+  const ScheduledMeetingsPage({super.key});
+
   @override
   _ScheduledMeetingsPageState createState() => _ScheduledMeetingsPageState();
 }
@@ -353,9 +355,8 @@ class VideoConferencePage extends StatelessWidget {
   final String conferenceID;
   final String userId;
 
-  VideoConferencePage(
-      {Key? key, required this.conferenceID, required this.userId})
-      : super(key: key);
+  const VideoConferencePage(
+      {super.key, required this.conferenceID, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +369,7 @@ class VideoConferencePage extends StatelessWidget {
         appSign: appSign,
         conferenceID: conferenceID,
         userID: userId,
-        userName: '$userId',
+        userName: userId,
         config: ZegoUIKitPrebuiltVideoConferenceConfig(),
       ),
     );

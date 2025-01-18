@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
-  const UpdateProfileScreen({Key? key}) : super(key: key);
+  const UpdateProfileScreen({super.key});
 
   @override
   _UpdateProfileScreenState createState() => _UpdateProfileScreenState();
@@ -62,7 +62,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   void _saveProfile() async {
     final String? token = await getToken();
     final response;
-    if (!_oldPasswordController.text.isEmpty) {
+    if (_oldPasswordController.text.isNotEmpty) {
       response = await http.patch(
           Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updatePassword'),
           headers: {
@@ -84,7 +84,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         );
         throw Exception('Failed to update password');
       }
-      if (!_fullNameController.text.isEmpty && _emailController.text.isEmpty) {
+      if (_fullNameController.text.isNotEmpty && _emailController.text.isEmpty) {
         final response2 = await http.patch(
             Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updateMe'),
             headers: {
@@ -106,7 +106,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           throw Exception('Failed to update password');
         }
       }
-    } else if (!_fullNameController.text.isEmpty) {
+    } else if (_fullNameController.text.isNotEmpty) {
       response = await http.patch(
           Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/updateMe'),
           headers: {
@@ -464,7 +464,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text(
-                          "Joined at " + _joinedDate,
+                          "Joined at $_joinedDate",
                           style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],

@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class AdminProfilePage extends StatelessWidget {
+  const AdminProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

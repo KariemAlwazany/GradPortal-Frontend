@@ -5,23 +5,27 @@ import 'package:flutter_project/screens/Admin/sellerrequests.dart';
 import 'package:flutter_project/screens/Admin/statistics.dart';
 import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/Admin/transfer.dart';
+import 'package:flutter_project/screens/Admin/students_shop.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
 class AdminPage extends StatefulWidget {
+  const AdminPage({super.key});
+
   @override
   _AdminPageState createState() => _AdminPageState();
 }
 
 class _AdminPageState extends State<AdminPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 7; // Example notification count
+  final int _notificationCount = 7; // Example notification count
 
   final List<Widget> _pages = [
     AdminHomeTab(notificationCount: 7),
     AdminManageTab(),
     SchedulePage(),
     AdminProfilePage(),
+    StudentsShop(),
   ];
 
   void _onItemTapped(int index) {
@@ -41,7 +45,7 @@ class _AdminPageState extends State<AdminPage> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -58,6 +62,7 @@ class _AdminPageState extends State<AdminPage> {
             icon: Icon(Icons.account_circle),
             label: 'Profile',
           ),
+
         ],
       ),
     );
@@ -67,7 +72,7 @@ class _AdminPageState extends State<AdminPage> {
 class AdminHomeTab extends StatelessWidget {
   final int notificationCount;
 
-  AdminHomeTab({required this.notificationCount});
+  const AdminHomeTab({super.key, required this.notificationCount});
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +93,7 @@ class AdminHomeTab extends StatelessWidget {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: const [
                   SizedBox(height: 12),
                   Text(
                     'Welcome,',
@@ -254,6 +259,18 @@ class AdminHomeTab extends StatelessWidget {
                     );
                   },
                 ),
+                  _buildOptionCard(
+                  context,
+                  icon: Icons.shop,
+                  title: 'Manage Students Shop',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => StudentsShop()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -305,6 +322,8 @@ class AdminHomeTab extends StatelessWidget {
 }
 
 class AdminManageTab extends StatelessWidget {
+  const AdminManageTab({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -321,7 +340,7 @@ class AdminManageTab extends StatelessWidget {
           padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
-            children: [
+            children: const [
               Text(
                 'Manage',
                 style: TextStyle(
@@ -402,6 +421,8 @@ class AdminManageTab extends StatelessWidget {
 }
 
 class SchedulePage extends StatelessWidget {
+  const SchedulePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

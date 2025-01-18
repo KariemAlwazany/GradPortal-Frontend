@@ -10,7 +10,7 @@ const Color primaryColor = Color(0xFF3B4280);
 class MeetingRequestPage extends StatefulWidget {
   final DateTime initialDateTime;
 
-  MeetingRequestPage({required this.initialDateTime});
+  const MeetingRequestPage({super.key, required this.initialDateTime});
 
   @override
   _MeetingRequestPageState createState() => _MeetingRequestPageState();

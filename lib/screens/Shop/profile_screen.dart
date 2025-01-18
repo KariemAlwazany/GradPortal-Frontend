@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_project/screens/shop_management_screen.dart';
-import 'package:flutter_project/screens/update_profile_screen.dart';
-import 'package:flutter_project/screens/view_items_screen.dart';
+import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
+import 'package:flutter_project/screens/Shop/update_seller_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/view_items_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
-import 'package:flutter_project/screens/add_item_screen.dart';
+import 'package:flutter_project/screens/Shop/add_item_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +18,7 @@ class SellerProfileScreen extends StatefulWidget {
 class _SellerProfileScreenState extends State<SellerProfileScreen> {
   String userName = 'Loading...';
   String email = 'Loading...';
+  String userRole = ''; // Add a field for the user's role
 
   @override
   void initState() {
@@ -26,8 +27,10 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   }
 
   Future<void> fetchUserData() async {
+    // Fetch the base URL from the .env file
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
     final roleUrl =
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
+        Uri.parse('${baseUrl}/GP/v1/seller/role'); // Use the dynamic base URL
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -37,6 +40,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         setState(() {
           userName = "Not logged in";
           email = "Not logged in";
+          userRole = "Unknown"; // Set default to "Unknown"
         });
         return;
       }
@@ -54,18 +58,22 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         setState(() {
           userName = data['Username'] ??
               "No name found"; // Assuming the response contains 'Username'
-          email = data['Email'] ?? "No role found";
+          email = data['Email'] ?? "No email found";
+          userRole = data['Role'] ??
+              "Unknown"; // Assuming the response contains 'Role'
         });
       } else {
         setState(() {
           userName = "Error loading user";
           email = "Error loading role";
+          userRole = "Unknown";
         });
       }
     } catch (e) {
       setState(() {
         userName = "Error loading user";
         email = "Error loading role";
+        userRole = "Unknown";
       });
     }
   }
@@ -118,68 +126,55 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: 200,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => UpdateProfileScreen()));
-                  },
-                  // ignore: sort_child_properties_last
-                  child: const Text(
-                    "Edit Profile",
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3B4280),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4C53A5),
-                    side: BorderSide.none,
-                    shape: const StadiumBorder(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
               const Divider(),
               const SizedBox(height: 10),
-              // Menu
-              ProfileMenuWidget(
-                  title: "Settings", icon: Icons.settings, onPress: () {}),
-              ProfileMenuWidget(
-                  title: "Components Selled",
-                  icon: Icons.wallet,
-                  onPress: () {}),
-              ProfileMenuWidget(
-                  title: "Add Items",
-                  icon: Icons.add,
-                  onPress: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AddItemScreen()));
-                  }),
-              ProfileMenuWidget(
-                  title: "My Shop",
-                  icon: Icons.store,
-                  onPress: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ShopManagementScreen()));
-                  }),
-              ProfileMenuWidget(
-                  title: "My Items",
-                  icon: Icons.account_tree_outlined,
-                  onPress: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ViewItemsScreen()));
-                  }),
+              // Menu: Show these options based on the user role
+              if (userRole == "Seller") ...[
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
+                ProfileMenuWidget(
+                    title: "Components Selled",
+                    icon: Icons.wallet,
+                    onPress: () {}),
+              ] else if (userRole == "Student") ...[
+                // Show only Edit Profile for Student or User
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
+                ProfileMenuWidget(
+                    title: "Add item to sale",
+                    icon: Icons.add,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddItemScreen()));
+                    }),
+              ] else if (userRole == "User") ...[
+                // Show only Edit Profile for Student or User
+                ProfileMenuWidget(
+                    title: "Edit Profile",
+                    icon: Icons.edit,
+                    onPress: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfileScreen()));
+                    }),
+              ],
               ProfileMenuWidget(
                 title: "Logout",
                 icon: Icons.logout,
@@ -211,6 +206,7 @@ class ProfileMenuWidget extends StatelessWidget {
   final bool endIcon;
 
   const ProfileMenuWidget({
+    super.key,
     required this.title,
     required this.icon,
     required this.onPress,

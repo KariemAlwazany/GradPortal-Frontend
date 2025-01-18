@@ -1,12 +1,19 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/components/MenuSideBar/info_card.dart';
 import 'package:flutter_project/components/MenuSideBar/side_menu_tile.dart';
-
+import 'package:flutter_project/components/navbar/community_navabar.dart';
 import 'package:flutter_project/models/rive_asset.dart';
+import 'package:flutter_project/screens/Community/chat_screen.dart';
+import 'package:flutter_project/screens/Community/main_screen.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
-import 'package:flutter_project/screens/main_screen.dart'; // Ensure this points to your actual main screen
-import 'package:flutter_project/screens/seller_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/favorite_items_screen.dart';
+import 'package:flutter_project/screens/Shop/profile_screen.dart';
+import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
+import 'package:flutter_project/screens/Shop/store_shops_screen.dart';
+import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/utils/rive_utils.dart';
 import 'package:rive/rive.dart';
@@ -15,22 +22,19 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SideMenu extends StatefulWidget {
-  const SideMenu(
-      {super.key,
-      void Function(int index, String newTitle)? onMenuItemClicked});
+  const SideMenu({super.key, void Function(int index, String newTitle)? onMenuItemClicked});
 
   @override
   State<SideMenu> createState() => _SideMenuState();
 }
-
 class _SideMenuState extends State<SideMenu> {
   RiveAsset selectedMenu = sideMenus.first;
   Color activeTileColor = const Color(0xFF4C53A5);
 
   String userName = "Loading...";
   String userRole = "Loading...";
-  bool showProjectsButton =
-      false; // Control visibility of "Return to Projects" button
+  bool showProjectsButton = false;
+  bool isLoggedIn = false;
 
   @override
   void initState() {
@@ -39,8 +43,7 @@ class _SideMenuState extends State<SideMenu> {
   }
 
   Future<void> fetchUserData() async {
-    final roleUrl =
-        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
+    final roleUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/role');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -50,11 +53,13 @@ class _SideMenuState extends State<SideMenu> {
         setState(() {
           userName = "Not logged in";
           userRole = "Not logged in";
+          isLoggedIn = false;
         });
         return;
       }
-
-      // Fetch Role Data
+      setState(() {
+        isLoggedIn = true;
+      });
       final response = await http.get(
         roleUrl,
         headers: {
@@ -65,23 +70,25 @@ class _SideMenuState extends State<SideMenu> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          userName = data['Username'] ??
-              "No name found"; // Assuming the response contains 'Username'
-          userRole = data['Role'] ??
-              "No role found"; // Assuming the response contains 'RoleName'
+          userName = data['Username'] ?? "No name found";
+          userRole = data['Role'] ?? "No role found";
         });
+
+        if (userRole == "Seller") {
+          showProjectsButton = false;
+        } else if (userRole == "Student" || userRole == "User") {
+          showProjectsButton = true;
+        }
       } else {
         setState(() {
           userName = "Error loading user";
-          userRole =
-              "Error loeading Role"; // Assuming the response contains 'RoleName'
+          userRole = "Error loading Role";
         });
       }
     } catch (e) {
       setState(() {
         userName = "Error loading user";
-        userRole =
-            "Error loeading Role"; // Assuming the response contains 'RoleName'
+        userRole = "Error loading Role";
       });
     }
   }
@@ -99,7 +106,6 @@ class _SideMenuState extends State<SideMenu> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info Card displaying dynamic user data
                 InfoCard(
                   name: userName,
                   role: userRole,
@@ -114,35 +120,21 @@ class _SideMenuState extends State<SideMenu> {
                         .copyWith(color: Colors.white70),
                   ),
                 ),
-                // Menu Items
-                ...sideMenus.map((menu) => SideMenuTile(
+                ..._getSideMenuItems().map((menu) => SideMenuTile(
                       menu: menu,
                       riveonInit: (artboard) {
                         final controller = RiveUtils.getRiveController(
                           artboard,
                           stateMachineName: menu.stateMachineName,
                         );
-                        if (controller != null) {
-                          menu.input = controller.findSMI("active") as SMIBool?;
-                        }
+                        menu.input = controller.findSMI("active") as SMIBool?;
                       },
                       press: () {
                         setState(() {
                           selectedMenu = menu;
                           activeTileColor = const Color(0xFF4CAF50);
                         });
-
-                        // Navigate to ProfileScreen if the "Profile" item is clicked
-                        if (menu.title == "Profile") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SellerProfileScreen(),
-                            ),
-                          );
-                        }
-
-                        // Reset active tile color after delay
+                        _navigateToScreen(menu.title);
                         Future.delayed(const Duration(seconds: 1), () {
                           setState(() {
                             activeTileColor = const Color(0xFF4C53A5);
@@ -153,7 +145,6 @@ class _SideMenuState extends State<SideMenu> {
                     )),
                 const Spacer(),
 
-                // Conditionally show the "Return to Projects" button and divider
                 Visibility(
                   visible: showProjectsButton,
                   child: Column(
@@ -161,21 +152,22 @@ class _SideMenuState extends State<SideMenu> {
                       const Divider(color: Colors.white24, height: 1),
                       SideMenuTile(
                         menu: RiveAsset(
-                          'assets/RiveAssets/projects_icon.riv', // Replace with your projects icon asset
+                          'assets/RiveAssets/projects_icon.riv',
                           artboard: "PROJECTS",
                           stateMachineName: "PROJECTS_interactivity",
                           title: "Return to Projects",
                         ),
                         riveonInit: (artboard) {
-                          // Initialize Rive animations or state machine if required
+                          final controller = RiveUtils.getRiveController(
+                            artboard,
+                            stateMachineName: "PROJECTS_interactivity",
+                          );
                         },
                         press: () {
-                          // Navigate to the ProjectScreen
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  MainPage(), // Your project screen
+                              builder: (context) => const StudentPage(),
                             ),
                           );
                         },
@@ -184,7 +176,6 @@ class _SideMenuState extends State<SideMenu> {
                     ],
                   ),
                 ),
-
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: SideMenuTile(
@@ -201,14 +192,12 @@ class _SideMenuState extends State<SideMenu> {
                       );
                     },
                     press: () async {
-                      // Clear token and navigate to WelcomeScreen
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.remove('jwt_token');
-                      Navigator.pushReplacement(
+                      Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => const WelcomeScreen(),
-                        ),
+                        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+                        (Route<dynamic> route) => false, 
                       );
                     },
                     isActive: false,
@@ -220,5 +209,76 @@ class _SideMenuState extends State<SideMenu> {
         ),
       ),
     );
+  }
+
+  List<RiveAsset> _getSideMenuItems() {
+    if (isLoggedIn) {
+      if (userRole == "Seller") {
+        return [
+          RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
+          RiveAsset('assets/RiveAssets/shop_icon.riv', artboard: "SHOP", stateMachineName: "SHOP_interactivity", title: "Shop Management"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
+          RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
+        ];
+      } else if (userRole == "Student" || userRole == "User") {
+        return [
+          RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
+          RiveAsset('assets/RiveAssets/store_shops_icon.riv', artboard: "STORE_SHOPS", stateMachineName: "STORE_SHOPS_interactivity", title: "Store Shops"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "FAVORITES", stateMachineName: "FAVORITES_interactivity", title: "Favorites"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
+          RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
+        ];
+      }
+      else if (userRole == "Delivery") {
+        return [
+          RiveAsset('assets/RiveAssets/profile_icon.riv', artboard: "PROFILE", stateMachineName: "PROFILE_interactivity", title: "Profile"),
+          RiveAsset('assets/RiveAssets/favorites_icon.riv', artboard: "COMMUNITY", stateMachineName: "COMMUNITY_interactivity", title: "Community"),
+          RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
+        ];
+      }
+    } else {
+      return [
+        RiveAsset('assets/RiveAssets/help_icon.riv', artboard: "HELP", stateMachineName: "HELP_interactivity", title: "Help"),
+      ];
+    }
+    return [];
+  }
+
+  void _navigateToScreen(String title) {
+    switch (title) {
+      case "Profile":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SellerProfileScreen()),
+        );
+        break;
+      case "Shop Management":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ShopManagementScreen()),
+        );        
+        break;
+      case "Store Shops":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => StoreShopsScreen()),
+        );              
+        break;
+      case "Favorites":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FavoriteItemsScreen()),
+        );                
+        break;
+      case "Community":
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CommunityNavbar()),
+        );                
+        break;
+      case "Help":
+        // Navigate to Help screen
+        break;
+    }
   }
 }

@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
-import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 

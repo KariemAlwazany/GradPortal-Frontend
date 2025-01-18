@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentApprovalPage extends StatefulWidget {
+  const StudentApprovalPage({super.key});
+
   @override
   _StudentApprovalPageState createState() => _StudentApprovalPageState();
 }

@@ -6,6 +6,8 @@ import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeti
 const Color primaryColor = Color(0xFF3B4280);
 
 class MeetingsPage extends StatelessWidget {
+  const MeetingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

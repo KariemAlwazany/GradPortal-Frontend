@@ -24,6 +24,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -37,13 +39,15 @@ class MyApp extends StatelessWidget {
 }
 
 class DoctorPage extends StatefulWidget {
+  const DoctorPage({super.key});
+
   @override
   _DoctorPageState createState() => _DoctorPageState();
 }
 
 class _DoctorPageState extends State<DoctorPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 3; // Example notification count
+  final int _notificationCount = 3; // Example notification count
 
   final List<Widget> _pages = [
     DoctorHomePage(),
@@ -69,7 +73,7 @@ class _DoctorPageState extends State<DoctorPage> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -93,6 +97,8 @@ class _DoctorPageState extends State<DoctorPage> {
 }
 
 class DoctorHomePage extends StatelessWidget {
+  const DoctorHomePage({super.key});
+
   Future<String> fetchDoctorName() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:shared_preferences/shared_preferences.dart'; // For storing/retrieving JWT token
 
 class ProjectsListViewPage extends StatefulWidget {
+  const ProjectsListViewPage({super.key});
+
   @override
   _ProjectsListViewPageState createState() => _ProjectsListViewPageState();
 }
@@ -422,10 +424,10 @@ class SecondPage extends StatefulWidget {
   final int projectId; // Pass the project ID
 
   const SecondPage({
-    Key? key,
+    super.key,
     required this.heroTag,
     required this.projectId, // Ensure the project ID is passed
-  }) : super(key: key);
+  });
 
   @override
   _SecondPageState createState() => _SecondPageState();

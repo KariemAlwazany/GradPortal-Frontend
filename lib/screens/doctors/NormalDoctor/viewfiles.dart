@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class ViewFilesPage extends StatefulWidget {
+  const ViewFilesPage({super.key});
+
   @override
   _ViewFilesPageState createState() => _ViewFilesPageState();
 }

@@ -167,6 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         "Username": username,
         "Password": password,
         "Role": selectedRole,
+        if (selectedRole == "Delivery") "phoneNumber": phoneNumber,
         if (selectedRole == "Student" || selectedRole == "Doctor")
           "registrationNumber": registrationNumber,
         // Add the image to the userData if an image was selected and encoded
@@ -523,8 +524,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        items: ['Doctor', 'User', 'Student', 'Seller']
-                            .map((String role) {
+                        items: [
+                          'Doctor',
+                          'User',
+                          'Student',
+                          'Seller',
+                          'Delivery'
+                        ].map((String role) {
                           return DropdownMenuItem<String>(
                             value: role,
                             child: Text(role),
@@ -1071,6 +1077,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
 
+                      if (selectedRole == 'Delivery')
+                        Column(
+                          children: [
+                            const SizedBox(height: 25.0),
+                            TextFormField(
+                              onSaved: (value) {
+                                phoneNumber = value;
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter Phone Number';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                label: const Text('Phone Number'),
+                                hintText: 'Enter Phone Number',
+                                hintStyle: const TextStyle(
+                                  color: Colors.black26,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color:
+                                        Colors.black12, // Default border color
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: lightColorScheme
+                                        .primary, // Focus border color
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: const BorderSide(
+                                    color: Colors.red, // Red border for errors
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 25.0),
 
                       // i agree to the processing

@@ -18,8 +18,7 @@ class ProjectStepper extends StatefulWidget {
   final int initialStep;
 
   const ProjectStepper(
-      {Key? key, this.initialStep = 0, String? partnerUsername})
-      : super(key: key);
+      {super.key, this.initialStep = 0, String? partnerUsername});
 
   @override
   _ProjectStepperState createState() => _ProjectStepperState();

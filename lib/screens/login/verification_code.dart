@@ -7,8 +7,8 @@ class OTPPage extends StatelessWidget {
   final String email; // Accept email as a parameter
   final String generatedOTP; // Accept generatedOTP as a parameter
 
-  OTPPage(
-      {required this.email,
+  const OTPPage(
+      {super.key, required this.email,
       required this.generatedOTP}); // Add generatedOTP to constructor
 
   @override
@@ -55,7 +55,7 @@ class OTPPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white, // Make text visible on the background
-                    shadows: [
+                    shadows: const [
                       Shadow(
                         blurRadius: 10.0,
                         color: Colors.black,

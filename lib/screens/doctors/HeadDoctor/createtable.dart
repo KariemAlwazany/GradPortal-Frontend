@@ -12,6 +12,8 @@ import 'package:pdf/widgets.dart' as pw;
 const Color primaryColor = Color(0xFF3B4280);
 
 class CreateDiscussionTablePage extends StatefulWidget {
+  const CreateDiscussionTablePage({super.key});
+
   @override
   _CreateDiscussionTablePageState createState() =>
       _CreateDiscussionTablePageState();

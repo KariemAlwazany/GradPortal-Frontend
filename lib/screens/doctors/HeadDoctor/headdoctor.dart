@@ -21,13 +21,15 @@ import 'package:flutter_project/screens/doctors/NormalDoctor/viewfiles.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class HeadDoctorPage extends StatefulWidget {
+  const HeadDoctorPage({super.key});
+
   @override
   _HeadDoctorPageState createState() => _HeadDoctorPageState();
 }
 
 class _HeadDoctorPageState extends State<HeadDoctorPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 5;
+  final int _notificationCount = 5;
 
   final List<Widget> _pages = [
     HeadDoctorHomeTab(notificationCount: 5), // Home tab with common fields
@@ -53,7 +55,7 @@ class _HeadDoctorPageState extends State<HeadDoctorPage> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -79,7 +81,7 @@ class _HeadDoctorPageState extends State<HeadDoctorPage> {
 class HeadDoctorHomeTab extends StatelessWidget {
   final int notificationCount;
 
-  HeadDoctorHomeTab({required this.notificationCount});
+  const HeadDoctorHomeTab({super.key, required this.notificationCount});
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +102,7 @@ class HeadDoctorHomeTab extends StatelessWidget {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: const [
                   SizedBox(height: 12),
                   Text(
                     'Welcome,',
@@ -331,6 +333,8 @@ class HeadDoctorHomeTab extends StatelessWidget {
 }
 
 class HeadDoctorManageTab extends StatelessWidget {
+  const HeadDoctorManageTab({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -347,7 +351,7 @@ class HeadDoctorManageTab extends StatelessWidget {
           padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
-            children: [
+            children: const [
               Text(
                 'Manage',
                 style: TextStyle(
@@ -505,6 +509,8 @@ class HeadDoctorManageTab extends StatelessWidget {
 }
 
 class SchedulePage extends StatelessWidget {
+  const SchedulePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -9,6 +9,8 @@ import 'package:zego_uikit_prebuilt_video_conference/zego_uikit_prebuilt_video_c
 const Color primaryColor = Color(0xFF3B4280);
 
 class ViewMeetingsPage extends StatefulWidget {
+  const ViewMeetingsPage({super.key});
+
   @override
   _ViewMeetingsPageState createState() => _ViewMeetingsPageState();
 }
@@ -429,7 +431,7 @@ class _ViewMeetingsPageState extends State<ViewMeetingsPage> {
                                                           Colors.red,
                                                     ),
                                                   );
-                                                  return null; // Disable button
+                                                  return; // Disable button
                                                 }
 
                                                 // Proceed with meeting creation logic if the time is valid
@@ -539,12 +541,11 @@ class VideoConferencePage extends StatelessWidget {
   final String userId;
   final int meetingId;
 
-  VideoConferencePage(
-      {Key? key,
+  const VideoConferencePage(
+      {super.key,
       required this.conferenceID,
       required this.userId,
-      required this.meetingId})
-      : super(key: key);
+      required this.meetingId});
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -590,12 +591,13 @@ class VideoConferencePage extends StatelessWidget {
         appSign: appSign,
         conferenceID: conferenceID,
         userID: userId,
-        userName: '$userId',
+        userName: userId,
         config: ZegoUIKitPrebuiltVideoConferenceConfig()
           ..onLeaveConfirmation = (context) async {
             // Call endMeeting before leaving
             await endMeeting();
-            Navigator.of(context).pop(); // Leave the meeting screen
+            Navigator.of(context).pop();
+            return null; // Leave the meeting screen
           },
       ),
     );

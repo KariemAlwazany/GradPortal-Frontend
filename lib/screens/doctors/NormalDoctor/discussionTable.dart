@@ -15,6 +15,8 @@ const Color primaryColor = Color(0xFF3B4280);
 const Color backgroundColor = Colors.white;
 
 class DiscussionTablePage extends StatefulWidget {
+  const DiscussionTablePage({super.key});
+
   @override
   _DiscussionTablePageState createState() => _DiscussionTablePageState();
 }

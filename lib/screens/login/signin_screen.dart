@@ -1,22 +1,20 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_project/resources/auth_method.dart';
-import 'package:flutter_project/resources/home_screen.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
+import 'package:flutter_project/screens/Shop/Delivery/delivery_screen.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
 
-import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
-import 'package:flutter_project/screens/seller_profile_screen.dart';
-import 'package:flutter_project/screens/shop_home_page.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
+import 'package:flutter_project/utils/notification_service.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
 import 'package:flutter_project/screens/login/signup.dart';
 import 'package:flutter_project/theme/theme.dart';
 import 'package:flutter_project/widgets/custom_scaffold.dart';
-import 'package:flutter_project/screens/user_page.dart';
-import 'package:flutter_project/screens/Student/student.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
 import 'package:flutter_project/screens/login/forget_password_screen.dart';
 import 'package:http/http.dart' as http;
@@ -74,6 +72,26 @@ class SignInScreenState extends State<SignInScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token); // Store JWT token
   }
+
+Future<void> onUserLogin(String jwtToken) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Save the JWT token
+  await prefs.setString('jwt_token', jwtToken);
+
+  // Retrieve the stored FCM token
+  final fcmToken = prefs.getString('fcm_token');
+  if (fcmToken != null) {
+    // Send the token to the server
+    NotificationService notificationService = NotificationService();
+    await notificationService.updateTokenToServer(fcmToken);
+  } else {
+    print('No FCM token found to send to the server.');
+  }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +274,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     content: Text('Login successful!'),
                                   ),
                                 );
-
+                                onUserLogin(result['token']);
                                 String userRole =
                                     result['data']['user']['Role'];
 
@@ -264,7 +282,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MainPage(),
+                                      builder: (context) => ShopHomePage(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {
@@ -296,7 +314,17 @@ class SignInScreenState extends State<SignInScreen> {
                                           StatusCheckPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
-                                } else if (userRole == 'Head') {
+                                }
+                                else if (userRole == 'Delivery') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DeliveryScreen(), // Ensure Widget193 is correctly wrapped
+                                    ),
+                                  );
+                                }
+                                 else if (userRole == 'Head') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(

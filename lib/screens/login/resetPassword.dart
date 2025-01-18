@@ -7,7 +7,7 @@ import 'dart:convert';
 class ResetPasswordPage extends StatefulWidget {
   final String email; // Accept email as a parameter
 
-  ResetPasswordPage({required this.email}); // Add email to constructor
+  const ResetPasswordPage({super.key, required this.email}); // Add email to constructor
 
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
@@ -116,7 +116,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      shadows: [
+                      shadows: const [
                         Shadow(
                           blurRadius: 15.0,
                           color: Colors.black,
@@ -135,7 +135,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(15.0),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black26,
                             blurRadius: 10,

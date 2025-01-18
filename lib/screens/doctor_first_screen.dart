@@ -74,7 +74,7 @@ class  _DoctorFirstScreenState extends State<DoctorFirstScreen> {
 class NextPage extends StatelessWidget {
   final String shopName;
 
-  const NextPage({Key? key, required this.shopName}) : super(key: key);
+  const NextPage({super.key, required this.shopName});
 
   @override
   Widget build(BuildContext context) {

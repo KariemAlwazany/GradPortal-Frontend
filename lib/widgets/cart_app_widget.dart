@@ -9,7 +9,7 @@ class CartAppWidget extends StatelessWidget{
     return Scaffold(
       body : ListView(
         children: [
-          CartAppBar(),
+          CartAppBar(onCartUpdated: () {  },),
         ],
       )
     );

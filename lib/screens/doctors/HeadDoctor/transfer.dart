@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color primaryColor = Color(0xFF3B4280);
 
 class TransferStudentPage extends StatefulWidget {
+  const TransferStudentPage({super.key});
+
   @override
   _TransferStudentPageState createState() => _TransferStudentPageState();
 }

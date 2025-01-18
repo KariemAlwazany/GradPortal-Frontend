@@ -19,6 +19,8 @@ Future<String?> getToken() async {
 }
 
 class StatusCheckPage extends StatefulWidget {
+  const StatusCheckPage({super.key});
+
   @override
   _StatusCheckPageState createState() => _StatusCheckPageState();
 }

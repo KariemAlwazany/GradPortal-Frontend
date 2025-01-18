@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentsProjectsPage extends StatefulWidget {
+  const StudentsProjectsPage({super.key});
+
   @override
   _StudentsProjectsPageState createState() => _StudentsProjectsPageState();
 }
@@ -214,7 +216,7 @@ class _StudentsProjectsPageState extends State<StudentsProjectsPage> {
 class ProjectDetailsPage extends StatelessWidget {
   final Map<String, dynamic> project;
 
-  ProjectDetailsPage({required this.project});
+  const ProjectDetailsPage({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {

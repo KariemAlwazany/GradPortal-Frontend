@@ -1,4 +1,9 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
+import 'package:flutter_project/components/navbar/community_navabar.dart';
+import 'package:flutter_project/screens/Community/main_screen.dart';
+import 'package:flutter_project/screens/Shop/shop_home_page.dart';
 import 'package:flutter_project/screens/Student/calendar.dart';
 import 'package:flutter_project/screens/Student/discussionTable.dart';
 import 'package:flutter_project/screens/Student/files.dart';
@@ -17,13 +22,15 @@ import 'dart:convert';
 const Color primaryColor = Color(0xFF3B4280);
 
 class StudentPage extends StatefulWidget {
+  const StudentPage({super.key});
+
   @override
   _StudentPageState createState() => _StudentPageState();
 }
 
 class _StudentPageState extends State<StudentPage> {
   int _selectedIndex = 0;
-  int _notificationCount = 3;
+  final int _notificationCount = 3;
 
   final List<Widget> _pages = [];
 
@@ -37,6 +44,7 @@ class _StudentPageState extends State<StudentPage> {
       DeadlinePage(),
       MessagesPage(),
       ProfilePage(),
+      CommunityScreen(),
     ]);
   }
 
@@ -387,8 +395,7 @@ class HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => MeetingsOptionsPage()),
+                  MaterialPageRoute(builder: (context) => ShopHomePage()),
                 ),
                 child: _buildCategoryItem(
                   'Store',
@@ -422,8 +429,7 @@ class HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => MeetingsOptionsPage()),
+                  MaterialPageRoute(builder: (context) => CommunityNavbar()),
                 ),
                 child: _buildCategoryItem(
                   'Community',

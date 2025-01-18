@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 const Color primaryColor = Color(0xFF3B4280);
 
 class StatisticsPage extends StatefulWidget {
+  const StatisticsPage({super.key});
+
   @override
   _StatisticsPageState createState() => _StatisticsPageState();
 }
@@ -186,7 +188,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                 indicatorColor: Colors.black,
                 labelColor: primaryColor,
                 unselectedLabelColor: Colors.grey,
-                tabs: [
+                tabs: const [
                   Tab(icon: Icon(Icons.people), text: "Users"),
                   Tab(icon: Icon(Icons.work), text: "Projects"),
                   Tab(icon: Icon(Icons.store), text: "Store"),
