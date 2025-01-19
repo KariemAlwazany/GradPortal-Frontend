@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/components/navbar/community_navabar.dart';
 import 'package:flutter_project/screens/Admin/doctorrequests.dart';
 import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
@@ -270,6 +271,18 @@ class HeadDoctorHomeTab extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => SendMessagePage()),
+                    );
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.people,
+                  title: 'Community',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => CommunityNavbar()),
                     );
                   },
                 ),

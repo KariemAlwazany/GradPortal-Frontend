@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Community/main_screen.dart';
+import 'package:flutter_project/screens/Community/show_users_for_chat.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -116,6 +118,35 @@ class _PartnerRequestsPageState extends State<PartnerRequestsPage> {
       }
     } catch (e) {
       print('Error responding to partner request: $e');
+    }
+  }
+
+  Future<int?> _fetchCurrentUserId() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data != null &&
+            data['data'] != null &&
+            data['data']['data'] != null &&
+            data['data']['data']['id'] != null) {
+          return data['data']['data']['id']; // Extract the user ID
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching current user ID: $e');
+      return null;
     }
   }
 
@@ -341,6 +372,29 @@ class _PartnerRequestsPageState extends State<PartnerRequestsPage> {
         ),
         backgroundColor: primaryColor,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.white),
+            onPressed: () async {
+              final currentUserId = await _fetchCurrentUserId();
+              if (currentUserId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        UserListScreen(currentUserId: currentUserId),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to fetch current user ID.'),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

@@ -331,24 +331,31 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                             padding: const EdgeInsets.all(8.0),
                             child: Row(
                               children: [
-                                Hero(
-                                  tag: index,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      project.imageUrl ??
-                                          'https://via.placeholder.com/200',
-                                      width: 200,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Image.network(
+                                // Image with fixed width
+                                SizedBox(
+                                  width: 150, // Adjust the width as needed
+                                  child: Hero(
+                                    tag: index,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        project.imageUrl ??
                                             'https://via.placeholder.com/200',
-                                            width: 200);
-                                      },
+                                        fit: BoxFit
+                                            .cover, // Ensure the image fits within the container
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Image.network(
+                                            'https://via.placeholder.com/200',
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
+                                // Use Expanded to allow the text content to take up remaining space
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -361,36 +368,47 @@ class _ProjectsListViewPageState extends State<ProjectsListViewPage> {
                                             .headlineMedium
                                             ?.copyWith(
                                                 color: const Color(0xFF17203A)),
+                                        overflow: TextOverflow
+                                            .ellipsis, // Prevent text overflow
                                       ),
                                       Text(
-                                          'Project Type: ${project.projectType}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
+                                        'Project Type: ${project.projectType}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                       Text(
-                                          'Students:${project.Student1}&${project.Student2}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
-                                      Text('Supervisor: ${project.supervisor}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
-                                      Text('Year: ${project.year}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
+                                        'Students: ${project.Student1} & ${project.Student2}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        'Supervisor: ${project.supervisor}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        'Year: ${project.year}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ],
                                   ),
                                 ),
-                                // Display the heart icon here, red if favorite, otherwise outlined
+                                // Favorite icon
                                 IconButton(
                                   icon: Icon(isFavorite
                                       ? Icons.favorite
                                       : Icons.favorite_border),
                                   color: isFavorite ? Colors.red : null,
-                                  onPressed: () => _toggleFavorite(
-                                      project), // Toggle favorite status
+                                  onPressed: () => _toggleFavorite(project),
                                 ),
                               ],
                             ),

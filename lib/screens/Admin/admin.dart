@@ -6,6 +6,7 @@ import 'package:flutter_project/screens/Admin/statistics.dart';
 import 'package:flutter_project/screens/Admin/studentrequests.dart';
 import 'package:flutter_project/screens/Admin/transfer.dart';
 import 'package:flutter_project/screens/Admin/students_shop.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -24,7 +25,7 @@ class _AdminPageState extends State<AdminPage> {
     AdminHomeTab(notificationCount: 7),
     AdminManageTab(),
     SchedulePage(),
-    AdminProfilePage(),
+    HeadDoctorProfilePage(),
     StudentsShop(),
   ];
 
@@ -62,7 +63,6 @@ class _AdminPageState extends State<AdminPage> {
             icon: Icon(Icons.account_circle),
             label: 'Profile',
           ),
-
         ],
       ),
     );
@@ -259,15 +259,14 @@ class AdminHomeTab extends StatelessWidget {
                     );
                   },
                 ),
-                  _buildOptionCard(
+                _buildOptionCard(
                   context,
                   icon: Icons.shop,
                   title: 'Manage Students Shop',
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => StudentsShop()),
+                      MaterialPageRoute(builder: (context) => StudentsShop()),
                     );
                   },
                 ),

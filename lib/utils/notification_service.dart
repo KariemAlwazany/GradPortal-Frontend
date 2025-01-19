@@ -18,7 +18,8 @@ class NotificationService {
     const DarwinInitializationSettings iosInitializationSettings =
         DarwinInitializationSettings();
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: androidInitializationSettings,
       iOS: iosInitializationSettings,
     );

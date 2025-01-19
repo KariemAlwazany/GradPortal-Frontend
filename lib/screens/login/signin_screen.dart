@@ -5,10 +5,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_project/screens/Admin/admin.dart';
 import 'package:flutter_project/screens/Shop/Delivery/delivery_screen.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/forward.dart';
+import 'package:flutter_project/screens/Student/projectsPage.dart';
 
 import 'package:flutter_project/screens/doctors/HeadDoctor/headdoctor.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/doctor.dart';
 import 'package:flutter_project/screens/Shop/shop_home_page.dart';
+import 'package:flutter_project/screens/user_page.dart';
 import 'package:flutter_project/utils/notification_service.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // For storing JWT token
@@ -73,25 +75,22 @@ class SignInScreenState extends State<SignInScreen> {
     await prefs.setString('jwt_token', token); // Store JWT token
   }
 
-Future<void> onUserLogin(String jwtToken) async {
-  final prefs = await SharedPreferences.getInstance();
+  Future<void> onUserLogin(String jwtToken) async {
+    final prefs = await SharedPreferences.getInstance();
 
-  // Save the JWT token
-  await prefs.setString('jwt_token', jwtToken);
+    // Save the JWT token
+    await prefs.setString('jwt_token', jwtToken);
 
-  // Retrieve the stored FCM token
-  final fcmToken = prefs.getString('fcm_token');
-  if (fcmToken != null) {
-    // Send the token to the server
-    NotificationService notificationService = NotificationService();
-    await notificationService.updateTokenToServer(fcmToken);
-  } else {
-    print('No FCM token found to send to the server.');
+    // Retrieve the stored FCM token
+    final fcmToken = prefs.getString('fcm_token');
+    if (fcmToken != null) {
+      // Send the token to the server
+      NotificationService notificationService = NotificationService();
+      await notificationService.updateTokenToServer(fcmToken);
+    } else {
+      print('No FCM token found to send to the server.');
+    }
   }
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +281,7 @@ Future<void> onUserLogin(String jwtToken) async {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ShopHomePage(),
+                                      builder: (context) => ProjectsPage(),
                                     ),
                                   );
                                 } else if (userRole == 'Doctor') {
@@ -314,8 +313,7 @@ Future<void> onUserLogin(String jwtToken) async {
                                           StatusCheckPage(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
-                                }
-                                else if (userRole == 'Delivery') {
+                                } else if (userRole == 'Delivery') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
@@ -323,8 +321,7 @@ Future<void> onUserLogin(String jwtToken) async {
                                           DeliveryScreen(), // Ensure Widget193 is correctly wrapped
                                     ),
                                   );
-                                }
-                                 else if (userRole == 'Head') {
+                                } else if (userRole == 'Head') {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
@@ -402,7 +399,7 @@ Future<void> onUserLogin(String jwtToken) async {
                               );
                             },
                             child: Text(
-                              'Sign up now',
+                              'Signup now',
                               style: TextStyle(
                                 color: primaryColor,
                                 fontWeight: FontWeight.bold,
