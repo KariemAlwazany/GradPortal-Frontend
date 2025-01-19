@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Shop/add_item_screen_student.dart';
 import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
 import 'package:flutter_project/screens/Shop/update_seller_profile_screen.dart';
+import 'package:flutter_project/screens/Shop/update_user_student_screen.dart';
 import 'package:flutter_project/screens/Shop/view_items_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/screens/Shop/add_item_screen.dart';
@@ -102,14 +104,6 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              SizedBox(
-                width: 120,
-                height: 120,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: Image.asset("assets/images/logo.png"),
-                ),
-              ),
               const SizedBox(height: 10),
               Text(
                 userName,
@@ -137,12 +131,9 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => UpdateProfileScreen()));
+                              builder: (context) => UpdateProfileScreen())
+                              );
                     }),
-                ProfileMenuWidget(
-                    title: "Components Selled",
-                    icon: Icons.wallet,
-                    onPress: () {}),
               ] else if (userRole == "Student") ...[
                 // Show only Edit Profile for Student or User
                 ProfileMenuWidget(
@@ -152,7 +143,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => UpdateProfileScreen()));
+                              builder: (context) => UpdateUserSellerProfileScreen()));
                     }),
                 ProfileMenuWidget(
                     title: "Add item to sale",
@@ -161,7 +152,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => AddItemScreen()));
+                              builder: (context) => AddItemScreenStudents()));
                     }),
               ] else if (userRole == "User") ...[
                 // Show only Edit Profile for Student or User
@@ -172,9 +163,9 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => UpdateProfileScreen()));
+                              builder: (context) => UpdateUserSellerProfileScreen()));
                     }),
-              ],
+              ], 
               ProfileMenuWidget(
                 title: "Logout",
                 icon: Icons.logout,

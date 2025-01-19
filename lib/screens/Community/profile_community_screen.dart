@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Shop/profile_screen.dart';
 import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:flutter_project/widgets/comments_section.dart';
 import 'package:flutter_project/widgets/post.dart';
@@ -50,7 +51,6 @@ Future<void> _fetchLoggedInUsername() async {
       final data = json.decode(response.body);
       setState(() {
         loggedInUsername = data['Username'];
-        phoneNumber = data['phone_number'];
         email = data['Email'];
       });
 
@@ -273,25 +273,31 @@ Widget build(BuildContext context) {
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isPhoneVisible ? phoneNumber : "Hidden",
-                style: const TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-              IconButton(
-                icon: Icon(
-                  isPhoneVisible ? Icons.visibility_off : Icons.visibility,
-                  color: Color(0xFF3B4280),
+          // Edit Profile Button
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SellerProfileScreen(), // Replace with your edit profile screen
                 ),
-                onPressed: () {
-                  setState(() {
-                    isPhoneVisible = !isPhoneVisible;
-                  });
-                },
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3B4280),
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
+            ),
+            child: const Text(
+              'Edit Profile',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           Container(

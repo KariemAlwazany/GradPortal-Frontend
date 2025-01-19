@@ -15,9 +15,11 @@ class UserListScreen extends StatefulWidget {
 }
 
 class _UserListScreenState extends State<UserListScreen> {
-  List<dynamic> _users = [];
   bool _isLoading = true;
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  List<dynamic> _users = [];
+  String _searchQuery = '';
+  String _selectedRole = 'All';
 
   @override
   void initState() {
@@ -58,41 +60,126 @@ class _UserListScreenState extends State<UserListScreen> {
     }
   }
 
+
+  Future<void> _searchUsers(String query) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        print('Error: No JWT token found');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final String apiUrl =
+          '${dotenv.env['API_BASE_URL']}/api/v1/users/search?query=$query';
+
+      final response = await http.get(
+        Uri.parse(apiUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _users = List<Map<String, dynamic>>.from(data['users']);
+          _isLoading = false;
+        });
+      } else {
+        print('Failed to fetch users: ${response.body}');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error searching users: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Users'),
+        backgroundColor: Color(0xFF3B4280),
+        title: Text('Users',
+        style: TextStyle(color: Colors.white)),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _users.length,
-              itemBuilder: (context, index) {
-                final user = _users[index];
-                final String userName = user['Username'];
-                final int userId = user['id'];
-
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(userName[0].toUpperCase()),
-                  ),
-                  title: Text(userName),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          senderId: widget.currentUserId,
-                          receiverId: userId,
-                          username: userName,
-                        ),
-                      ),
-                    );
-                  },
-                );
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase(); // Update the search query
+                });
               },
+              decoration: InputDecoration(
+                hintText: 'Search users...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide(color: Theme.of(context).primaryColor),
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _users.length,
+                    itemBuilder: (context, index) {
+                      final user = _users[index];
+                      final String userName = user['Username'];
+                      final int userId = user['id'];
+
+                      // Filter users based on the search query
+                      if (_searchQuery.isNotEmpty &&
+                          !userName.toLowerCase().contains(_searchQuery)) {
+                        return SizedBox.shrink(); // Skip users that don't match
+                      }
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          child: Text(userName[0].toUpperCase()),
+                        ),
+                        title: Text(userName),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                senderId: widget.currentUserId,
+                                receiverId: userId,
+                                username: userName,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,9 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/welcome_screen.dart';
 import 'package:line_awesome_flutter/line_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +25,9 @@ class _UpdateUserSellerProfileScreenState
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController rewritePasswordController = TextEditingController();
+
 
   String location = 'Loading...';
   String username = 'Loading...';
@@ -76,6 +82,8 @@ class _UpdateUserSellerProfileScreenState
           fullName = data['FullName'] ?? "No name found";
           phoneNumber = data['phone_number'] ?? "No phone number found";
           location = "${data['city']} ${data['longitude']} ${data['latitude']}" ?? "Location not found";
+          print(location);
+          print(phoneNumber);
         });
       } else {
         setState(() {
@@ -188,6 +196,73 @@ class _UpdateUserSellerProfileScreenState
   }
 }
 
+Future<void> updateUser() async {
+  final String apiUrl = '${dotenv.env['API_BASE_URL']}/GP/v1/users/updateUsers';
+
+  try {
+    if (passwordController.text != rewritePasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No JWT token found")),
+      );
+      return;
+    }
+
+    final response = await http.patch(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        "Username": usernameController.text.trim(),
+        "FullName": fullNameController.text.trim(),
+        "Email": emailController.text.trim(),
+        "Password": passwordController.text.trim(),
+        "phone_number": phoneNumberController.text.trim(),
+        "city": locationController.text.trim(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User updated successfully")),
+      );
+
+      if (passwordController.text.isNotEmpty) {
+        await prefs.remove('jwt_token');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        );            
+        return;
+      }
+
+      print('User updated successfully: $data');
+    } else {
+      // Show failure snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to update user: ${response.body}")),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error updating user: $e")),
+    );
+  }
+}
+
 
   void _showMapDialog() async {
     await _getUserLocation(); // Ensure location is fetched before showing the map
@@ -259,165 +334,166 @@ class _UpdateUserSellerProfileScreenState
 
 
 
-  @override
-  Widget build(BuildContext context) {
-    bool isEditable = role != "Student" && role != "User";
+@override
+Widget build(BuildContext context) {
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(LineAwesomeIcons.angle_left),
-        ),
-        title: const Text(
-          "Edit Profile",
-          style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF3B4280),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF3B4280)),
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        onPressed: () {
+          Navigator.pop(context);
+        },
+        icon: const Icon(LineAwesomeIcons.angle_left),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
+      title: const Text(
+        "Edit Profile",
+        style: TextStyle(
+          fontSize: 20.0,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF3B4280),
+        ),
+      ),
+      backgroundColor: Colors.white,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Color(0xFF3B4280)),
+    ),
+    body: SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Text(
+            'Role: $role',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3B4280),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Form(
+            child: Column(
               children: [
-                SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Role: $role',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3B4280),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Form(
-              child: Column(
-                children: [
                   _buildTextField(
                     controller: fullNameController,
                     label: fullName,
                     hint: fullName,
                     icon: LineAwesomeIcons.user,
-                    isEnabled: isEditable,
                   ),
                   _buildTextField(
                     controller: usernameController,
                     label: username,
                     hint: username,
                     icon: LineAwesomeIcons.user,
-                    isEnabled: isEditable,
                   ),
                   _buildTextField(
                     controller: emailController,
                     label: email,
                     hint: email,
                     icon: LineAwesomeIcons.mail_bulk,
-                    isEnabled: isEditable,
                   ),
-                  _buildTextField(
-                    controller: phoneNumberController,
-                    label: phoneNumber,
-                    hint: phoneNumber,
-                    icon: LineAwesomeIcons.phone,
-                    isEnabled: true,
+                _buildTextField(
+                  controller: phoneNumberController,
+                  label: phoneNumber,
+                  hint: phoneNumber,
+                  icon: LineAwesomeIcons.phone,
+                  isEnabled: true,
+                ),
+                _buildTextField(
+                  controller: locationController,
+                  label: location,
+                  hint: location,
+                  icon: LineAwesomeIcons.map_pin,
+                  isEnabled: true,
+                ),
+                _buildTextField(
+                  controller: passwordController,
+                  label: "Password",
+                  hint: "Enter your password",
+                  icon: LineAwesomeIcons.lock,
+                  isPassword: true,
+                  isEnabled: true,
+                ),
+                _buildTextField(
+                  controller: rewritePasswordController,
+                  label: "Rewrite Password",
+                  hint: "Rewrite your password",
+                  icon: LineAwesomeIcons.lock,
+                  isPassword: true,
+                  isEnabled: true,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _showMapDialog,
+                  icon: const Icon(Icons.map, color: Colors.white),
+                  label: const Text(
+                    "Open Map",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                    _buildTextField(
-                    controller: locationController,
-                    label: location,
-                    hint: location,
-                    icon: LineAwesomeIcons.map_pin,
-                    isEnabled: true,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3B4280),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: _showMapDialog,
-                    icon: const Icon(Icons.map, color: Colors.white),
-                    label: const Text(
-                      "Open Map",
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: updateUser,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B4280),
+                    ),
+                    child: const Text(
+                      "Confirm Changes",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B4280),
-                    ),
                   ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: fetchUserData,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B4280),
-                      ),
-                      child: const Text(
-                        "Confirm Changes",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-    bool isEnabled = true,
-  }) {
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          enabled: isEnabled,
-          decoration: InputDecoration(
-            labelText: label,
-            hintText: hint,
-            prefixIcon: Icon(icon),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(100),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(100),
-              borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+                ),
+              ],
             ),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      ),
+    ),
+  );
 }
+
+// Update the `_buildTextField` to handle the new password fields
+Widget _buildTextField({
+  required TextEditingController controller,
+  required String label,
+  required String hint,
+  required IconData icon,
+  bool isPassword = false,
+  bool isEnabled = true,
+}) {
+  return Column(
+    children: [
+      const SizedBox(height: 20),
+      TextFormField(
+        controller: controller,
+        obscureText: isPassword,
+        enabled: isEnabled,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: const BorderSide(color: Color(0xFF3B4280), width: 2.0),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+    }

@@ -21,29 +21,29 @@ class ShopHomePage extends StatefulWidget {
 }
 
 class _ShopHomePageState extends State<ShopHomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // GlobalKey for Scaffold
-  File? _image; // To store the image file
-  int _cartItemCount = 0; // Track cart item count
-  List<dynamic> items = []; // Store fetched items
-  bool isLoading = false; // Loading state for items
-  String selectedCategory = ''; // Store selected category
-  bool hasPhoneNumber = false; // Track whether user has phone number or not
-  TextEditingController _searchController = TextEditingController(); // Search controller
-  int userId = 0; // User
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  File? _image;
+  int _cartItemCount = 0;
+  List<dynamic> items = [];
+  bool isLoading = false;
+  String selectedCategory = '';
+  bool hasPhoneNumber = false; 
+  TextEditingController _searchController = TextEditingController(); 
+  int userId = 0;
   int notificationCount = 0;
-  int totalItemCount = 0; // Default to 0 if the field is not present
+  int totalItemCount = 0;
   List<Map<String, dynamic>> notifications = [];
 
 Future<void> searchItems(String query, {String? filter}) async {
   if (query.isEmpty && (filter == null || filter == "No Filter")) {
-    fetchItems(); // Fetch all items if search query and filter are empty
+    fetchItems();
     return;
   }
 
   final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/searchItems')
       .replace(queryParameters: {
     'item_name': query,
-    if (filter != null && filter != "No Filter") 'category': filter, // Add filter if present
+    if (filter != null && filter != "No Filter") 'category': filter,
   });
 
   final prefs = await SharedPreferences.getInstance();
@@ -58,7 +58,7 @@ Future<void> searchItems(String query, {String? filter}) async {
 
   try {
     setState(() {
-      isLoading = true; // Start loading
+      isLoading = true;
     });
 
     final response = await http.get(
@@ -68,11 +68,11 @@ Future<void> searchItems(String query, {String? filter}) async {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print(data); // Print raw response to check structure
+      print(data);
       if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
         setState(() {
-          items = List.from(data['items'] ?? []); // Update items list
-          isLoading = false; // Stop loading when data is received
+          items = List.from(data['items'] ?? []);
+          isLoading = false;
         });
       } else {
         setState(() {
@@ -116,7 +116,7 @@ Future<void> fetchItems() async {
 
   try {
     setState(() {
-      isLoading = true; // Start loading
+      isLoading = true;
     });
 
     final response = await http.get(
@@ -126,11 +126,11 @@ Future<void> fetchItems() async {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print(data); // Add this line to print the raw response to check its structure
+      print(data);
       if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
         setState(() {
-          items = List.from(data['items'] ?? []); // Update items list
-          isLoading = false; // Stop loading when data is received
+          items = List.from(data['items'] ?? []);
+          isLoading = false;
         });
         
       } else {
@@ -161,15 +161,14 @@ Future<void> fetchItems() async {
   }
 }
 
-  // Function to fetch items by category
   Future<void> fetchItemsByCategory(String category) async {
     if (category == "All") {
-      fetchItems(); // Call fetchItems to get all items
+      fetchItems();
       return;
     }
 
     final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getItemsByCategory')
-        .replace(queryParameters: {'Category': category});  // Send category as a query parameter
+        .replace(queryParameters: {'Category': category});
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -183,8 +182,8 @@ Future<void> fetchItems() async {
 
     try {
       setState(() {
-        isLoading = true; // Start loading
-        selectedCategory = category; // Set selected category
+        isLoading = true;
+        selectedCategory = category;
       });
 
       final response = await http.get(
@@ -197,16 +196,16 @@ Future<void> fetchItems() async {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print("API Response (Category): $data");  // Log the API response
+        print("API Response (Category): $data");
 
         if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
           setState(() {
-            items = List.from(data['items'] ?? []); // Update items state with fetched data
-            isLoading = false; // Stop loading when data is received
+            items = List.from(data['items'] ?? []);
+            isLoading = false;
           });
         } else {
           setState(() {
-            items = []; // No items found for the selected category
+            items = [];
             isLoading = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -232,23 +231,21 @@ Future<void> fetchItems() async {
     }
   }
 
-  // Function to check if the user has a phone number
   Future<void> checkPhoneNumber() async {
     final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString('phone_number'); // Retrieve phone number from SharedPreferences
+    final phoneNumber = prefs.getString('phone_number'); 
 
     if (phoneNumber == null || phoneNumber.isEmpty) {
-      // If the phone number is missing, show the dialog
       _showPhoneNumberDialog();
     } else {
       setState(() {
-        hasPhoneNumber = true; // User already has a phone number
+        hasPhoneNumber = true;
       });
     }
   }
 
 Future<void> _showPhoneNumberDialog() async {
-  final TextEditingController phoneNumberController = TextEditingController(); // Create the controller here
+  final TextEditingController phoneNumberController = TextEditingController();
 
   showDialog(
     context: context,
@@ -256,14 +253,14 @@ Future<void> _showPhoneNumberDialog() async {
       return AlertDialog(
         title: Text('Please enter your phone number'),
         content: TextField(
-          controller: phoneNumberController, // Assign the controller to the TextField
+          controller: phoneNumberController,
           decoration: InputDecoration(hintText: 'Enter phone number'),
           keyboardType: TextInputType.phone,
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close the dialog
+              Navigator.pop(context);
             },
             child: Text('Not now'),
           ),
@@ -271,14 +268,12 @@ Future<void> _showPhoneNumberDialog() async {
             onPressed: () async {
               String phoneNumber = phoneNumberController.text.trim();
               if (phoneNumber.isNotEmpty) {
-                // Update the phone number in SharedPreferences
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString('phone_number', phoneNumber);
 
-                // Call the API to update the phone number
                 await updateProfile(phoneNumber);
 
-                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Phone number cannot be empty')),
@@ -313,7 +308,7 @@ Future<void> updateProfile(String newPhoneNumber) async {
     return;
   }
 
-  print('Sending Phone Number: $newPhoneNumber'); // Debugging: print the phone number
+  print('Sending Phone Number: $newPhoneNumber');
 
   Map<String, dynamic> updates = {'phone_number': newPhoneNumber};
 
@@ -327,8 +322,8 @@ Future<void> updateProfile(String newPhoneNumber) async {
       body: json.encode(updates),
     );
 
-    print('Response Status: ${response.statusCode}'); // Debugging: log status code
-    print('Response Body: ${response.body}'); // Debugging: print response body
+    print('Response Status: ${response.statusCode}');
+    print('Response Body: ${response.body}');
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -336,7 +331,7 @@ Future<void> updateProfile(String newPhoneNumber) async {
       );
     } else {
       final errorData = json.decode(response.body);
-      print('Error: ${errorData['message']}'); // Debugging: print the error message
+      print('Error: ${errorData['message']}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${errorData['message']}')),
       );
@@ -345,7 +340,7 @@ Future<void> updateProfile(String newPhoneNumber) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Network error')),
     );
-    print('Error: $e'); // Log the error
+    print('Error: $e');
   }
 }
 
@@ -472,17 +467,17 @@ void showNotificationsDialog() {
   showDialog(
     context: context,
     builder: (context) {
-      return StatefulBuilder( // Use StatefulBuilder to allow updates within the dialog
+      return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
             title: Text(
               'Notifications',
-              style: TextStyle(color: Color(0xFF3B4280)), // Title color
+              style: TextStyle(color: Color(0xFF3B4280)),
             ),
             content: notifications.isEmpty
                 ? Text(
                     'No notifications found.',
-                    style: TextStyle(color: Color(0xFF3B4280)), // Text color for no notifications
+                    style: TextStyle(color: Color(0xFF3B4280)),
                   )
                 : SizedBox(
                     width: double.maxFinite,
@@ -490,7 +485,7 @@ void showNotificationsDialog() {
                       shrinkWrap: true,
                       itemCount: notifications.length,
                       separatorBuilder: (context, index) =>
-                          SizedBox(height: 10), // Add space between notifications
+                          SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final notification = notifications[index];
                         final createdAt = notification['createdAt'];
@@ -500,7 +495,7 @@ void showNotificationsDialog() {
                         );
 
                         return Card(
-                          color: Color(0xFF3B4280), // Card background color
+                          color: Color(0xFF3B4280),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Row(
@@ -513,24 +508,24 @@ void showNotificationsDialog() {
                                       Text(
                                         notification['title'] ?? 'No title',
                                         style: TextStyle(
-                                          color: Colors.white, // Title text color
+                                          color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),
                                       ),
-                                      SizedBox(height: 8), // Space between title and message
+                                      SizedBox(height: 8),
                                       Text(
                                         notification['message'] ?? 'No message',
                                         style: TextStyle(
-                                          color: Colors.white, // Message text color
+                                          color: Colors.white,
                                           fontSize: 14,
                                         ),
                                       ),
-                                      SizedBox(height: 8), // Space between message and date
+                                      SizedBox(height: 8),
                                       Text(
                                         'Date: ${dateTime.toLocal()}',
                                         style: TextStyle(
-                                          color: Colors.white70, // Date text color
+                                          color: Colors.white70,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -539,17 +534,15 @@ void showNotificationsDialog() {
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    // Mark as read and remove from list
                                     setState(() {
                                       notifications.removeAt(index);
                                     });
 
-                                    // Optionally call an API to mark the notification as read
                                     markNotificationAsRead(notification['id']);
                                   },
                                   icon: Icon(
                                     Icons.check_circle,
-                                    color: Colors.white, // Icon color
+                                    color: Colors.white,
                                   ),
                                   tooltip: 'Mark as Read',
                                 ),
@@ -565,7 +558,7 @@ void showNotificationsDialog() {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   'Close',
-                  style: TextStyle(color: Color(0xFF3B4280)), // Button text color
+                  style: TextStyle(color: Color(0xFF3B4280)),
                 ),
               ),
             ],
@@ -660,6 +653,64 @@ Future fetchCartItemCount() async {
 
 
 
+Future<void> fetchStudentItems() async {
+  final itemsUrl = Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/seller/items/getItemsForStudent');
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return;
+  }
+
+  try {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+
+    final response = await http.get(
+      itemsUrl,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data); // Add this line to print the raw response to check its structure
+      if (data != null && data is Map<String, dynamic> && data.containsKey('items')) {
+        setState(() {
+          items = List.from(data['items'] ?? []); // Update items list
+          isLoading = false; // Stop loading when data is received
+        });
+        
+      } else {
+        setState(() {
+          items = [];
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found')),
+        );
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load items')),
+      );
+    }
+  } catch (e) {
+    print("Error fetching items: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error fetching items')),
+    );
+  }
+}
 
 
 
@@ -671,7 +722,7 @@ Future fetchCartItemCount() async {
     checkPhoneNumber(); // Check if user has phone number
     _fetchLoggedInUsername();
     fetchCartItemCount();
-    fetchNotifications(userId);
+    fetchNotificationCount(userId);
   }
 
 
@@ -726,7 +777,7 @@ Widget build(BuildContext context) {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                    fetchAndShowNotifications(userId);
+                      showNotificationsDialog();
                     },
                     child: Icon(
                       Icons.notifications_none_outlined,
@@ -837,7 +888,7 @@ Widget build(BuildContext context) {
                 children: [
                   TextButton(
                     onPressed: () {
-                      print("Students button pressed");
+                      fetchStudentItems();
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.white,
@@ -845,17 +896,16 @@ Widget build(BuildContext context) {
                     ),
                     child: Text("Students"),
                   ),
-                  const SizedBox(width: 8), // Space between buttons
+                  const SizedBox(width: 8),
                   TextButton(
                     onPressed: () {
-                      // Handle Shops button action
-                      print("Shops button pressed");
+                      fetchItems();
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Color(0xFF3B4280),
                     ),
-                    child: Text("Shops"),
+                    child: Text("All"),
                   ),
                 ],
               ),
@@ -1182,5 +1232,3 @@ class _ItemCardState extends State<ItemCard> {
   }
 }
 }
-
-

@@ -85,6 +85,7 @@ Widget build(BuildContext context) {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             widget.username,
             style: const TextStyle(
@@ -93,10 +94,6 @@ Widget build(BuildContext context) {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            email ?? 'Loading email...',
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
           const SizedBox(height: 16),
           const SizedBox(height: 20),
           const Divider(),

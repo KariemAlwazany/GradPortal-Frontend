@@ -211,178 +211,184 @@ class _CommunityScreenState extends State<CommunityScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF3B4280),
-        centerTitle: true,
-        title: const Text(
-          'Community',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      elevation: 0,
+      backgroundColor: const Color(0xFF3B4280),
+      centerTitle: true,
+      title: const Text(
+        'Community',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
-      body: Column(
-        children: [
-          // Post Input Section
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _postController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: 'What’s on your mind?',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF3B4280)),
+    ),
+    body: Column(
+      children: [
+        // Post Input Section
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _postController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'What’s on your mind?',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF3B4280)),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                ),
+              ),
+              if (_selectedImage != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Center(
+                    child: Image.file(
+                      _selectedImage!,
+                      height: 150,
+                      fit: BoxFit.cover,
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
                   ),
                 ),
-                if (_selectedImage != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Center(
-                      child: Image.file(
-                        _selectedImage!,
-                        height: 150,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.photo, color: Color(0xFF3B4280)),
+                    onPressed: _pickImage,
                   ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.photo, color: Color(0xFF3B4280)),
-                      onPressed: () {
-                        // Replace with your image picker logic
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.send, color: Color(0xFF3B4280)),
-                      onPressed: () {
-                        if (_postController.text.isNotEmpty) {
-                          // Replace with your post creation logic
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: Colors.grey),
-          // Posts Feed
-          Expanded(
-            child: _posts.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No posts yet. Share something!',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _posts.length,
-                    itemBuilder: (context, index) {
-                      final post = _posts[index];
-                      return Card(
-                        margin:
-                            const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Post Header
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProfileScreenClicked(
-                                            username: post.username,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      post.username,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    post.timestamp != null
-                                        ? post.timestamp.toString()
-                                        : 'Unknown time',
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey),
-                                  ),
-                                  if (post.username == loggedInUsername)
-                                    PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          // Replace with your edit post logic
-                                        } else if (value == 'delete') {
-                                          // Replace with your delete post logic
-                                        }
-                                      },
-                                      itemBuilder: (BuildContext context) => [
-                                        const PopupMenuItem(
-                                          value: 'edit',
-                                          child: Text('Edit'),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'delete',
-                                          child: Text('Delete'),
-                                        ),
-                                      ],
-                                      icon: const Icon(Icons.more_vert),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              // Post Content
-                              Text(post.content, style: const TextStyle(fontSize: 16)),
-                              if (post.image != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Image.memory(
-                                    base64Decode(post.image!),
-                                    height: 200,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              const SizedBox(height: 10),
-                              // Comments Section
-                              CommentsSection(
-                                postId: post.id,
-                                apiBaseUrl: 'your_api_base_url', // Replace with your base URL
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Color(0xFF3B4280)),
+                    onPressed: () {
+                      if (_postController.text.isNotEmpty) {
+                        _createPost(_postController.text);
+                      }
                     },
                   ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const Divider(height: 1, color: Colors.grey),
+        // Posts Feed
+        Expanded(
+          child: _posts.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No posts yet. Share something!',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _posts.length,
+                  itemBuilder: (context, index) {
+                    final post = _posts[index];
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 4.0,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Post Header
+                            Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProfileScreenClicked(
+                                          username: post.username,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    post.username,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  post.timestamp != null
+                                      ? post.timestamp.toString()
+                                      : 'Unknown time',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                if (post.username == loggedInUsername)
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _editPost(post);
+                                      } else if (value == 'delete') {
+                                        _deletePost(post.id);
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Text('Edit'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
+                                    icon: const Icon(Icons.more_vert),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Post Content
+                            Text(
+                              post.content,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            if (post.image != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Image.memory(
+                                  base64Decode(post.image!),
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            const SizedBox(height: 10),
+                            // Comments Section
+                            CommentsSection(
+                              postId: post.id,
+                              apiBaseUrl: baseUrl,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    ),
+  );
+}
 }
