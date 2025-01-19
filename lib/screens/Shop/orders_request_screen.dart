@@ -13,6 +13,7 @@ class _OrdersRequestScreenState extends State<OrdersRequestScreen> {
   List<dynamic> orders = [];
   bool isLoading = true;
   int ?userId;
+  int ?buyer_id;
   @override
   void initState() {
     super.initState();
@@ -97,7 +98,7 @@ Future<void> _fetchLoggedInUsername() async {
       });
     }
   }
-Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false}) async {
+  Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false}) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('jwt_token');
 
@@ -111,6 +112,7 @@ Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false
   final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
   final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/updateOrderStatus');
 
+  // Adjust status to fit your backend logic
   final validStatus = status == 'accepted' ? 'completed' : status;
 
   print('Sending request to $apiUrl with order_id: $orderId and status: $validStatus');
@@ -135,11 +137,18 @@ Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Order $status successfully updated.')),
       );
+
       if (refresh) {
         fetchOrders();
       }
 
+      // Call profit calculation API if the status is 'accepted'
+      if (status == 'accepted') {
+        await calculateProfit(orderId);
+      }
+      await getBuyerId(orderId);
       await sendOrderResponse(orderId, validStatus, refresh: refresh);
+      await _sendNotification(buyer_id!, status);
     } else {
       final errorData = json.decode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -233,6 +242,77 @@ Future<void> _sendNotification(int receiverId, String status) async {
     }
   } catch (e) {
     print('Error sending notification: $e');
+  }
+}
+
+
+  Future<void> calculateProfit(int orderId) async {
+    try {
+      // Retrieve JWT token from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final String? jwtToken = prefs.getString('jwt_token');
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
+      if (jwtToken == null) {
+        throw Exception('JWT token not found.');
+      }
+
+      // Call the calculateProfit API
+      final response = await http.get(
+        Uri.parse('$baseUrl/GP/v1/orders/calculateProfit'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Profit Calculation: $data');
+        // You can display this data on the UI or store it as needed
+      } else {
+        print('Failed to calculate profit: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error calling calculateProfit: $e');
+    }
+  }
+
+Future getBuyerId(int orderId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('User not logged in')),
+    );
+    return null;
+  }
+
+  final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+  final apiUrl = Uri.parse('$baseUrl/GP/v1/orders/getBuyerId?orderId=$orderId');
+
+  try {
+    final response = await http.get(
+      apiUrl,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        buyer_id = data['buyer_id'] ;
+      });
+    } else {
+      print('Failed to fetch buyer ID: ${response.statusCode}');
+      return null;
+    }
+  } catch (e) {
+    print('Error fetching buyer ID: $e');
+    return null;
   }
 }
 
