@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Community/show_users_for_chat.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_project/screens/Student/student.dart';
@@ -315,6 +316,28 @@ class _FifthPageState extends State<FifthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: primaryColor,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final currentUserId = await _fetchCurrentUserId();
+          if (currentUserId != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    UserListScreen(currentUserId: currentUserId),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to fetch current user ID.'),
+              ),
+            );
+          }
+        },
+        backgroundColor: primaryColor,
+        child: const Icon(Icons.message, color: Colors.white),
+      ),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -457,6 +480,43 @@ class _FifthPageState extends State<FifthPage> {
         ),
       ),
     );
+  }
+
+  Future<int?> _fetchCurrentUserId() async {
+    try {
+      final token = await getToken(); // Retrieve the JWT token
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('API Response for Current User ID: $data'); // Log the response
+
+        // Check if the nested structure exists
+        if (data != null &&
+            data['data'] != null &&
+            data['data']['data'] != null &&
+            data['data']['data']['id'] != null) {
+          return data['data']['data']['id']; // Extract the user ID
+        } else {
+          print('Invalid API response structure for /users/me');
+          return null;
+        }
+      } else {
+        print('Failed to fetch current user ID: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching current user ID: $e');
+      return null;
+    }
   }
 
   Future<void> _undoRequest() async {

@@ -162,8 +162,9 @@ class AdminProfilePage extends StatelessWidget {
 Future<void> _logout(BuildContext context) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.remove('jwt_token');
-  Navigator.pushReplacement(
+  Navigator.pushAndRemoveUntil(
     context,
-    MaterialPageRoute(builder: (context) => SignInScreen()),
+    MaterialPageRoute(builder: (context) => const SignInScreen()),
+    (Route<dynamic> route) => false,
   );
 }

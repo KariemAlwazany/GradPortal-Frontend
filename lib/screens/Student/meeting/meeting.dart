@@ -29,11 +29,40 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
 
   // Placeholder function to simulate fetching the doctor's name from the backend
   Future<void> _fetchDoctorName() async {
-    await Future.delayed(Duration(seconds: 2)); // Simulate a network delay
-    setState(() {
-      doctorName =
-          "Dr. John Doe"; // Replace with the fetched name from the backend
-    });
+    try {
+      final token = await getToken(); // Retrieve the JWT token
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
+      // Make a GET request to fetch the doctor's name
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students/getDoctor'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response JSON
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final String doctorNameFromApi =
+            data['Doctor']; // Extract the doctor's name
+
+        // Update the state with the fetched doctor's name
+        setState(() {
+          doctorName = doctorNameFromApi;
+        });
+      } else {
+        throw Exception('Failed to fetch doctor name: ${response.statusCode}');
+      }
+    } catch (error) {
+      // Handle errors (e.g., network issues, invalid token, etc.)
+      print('Error fetching doctor name: $error');
+      setState(() {
+        doctorName = 'Error loading doctor name';
+      });
+    }
   }
 
   Future<String?> getToken() async {
@@ -84,7 +113,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        doctorName, // Display the doctor's name here
+                        'Dr.' + doctorName, // Display the doctor's name here
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -219,27 +248,100 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
     final formattedDate =
         DateFormat('yyyy-MM-dd HH:mm').format(selectedDateTime);
 
-    final response = await http.post(
-      Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({'Date': formattedDate}),
-    );
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Meeting request submitted! Await doctor's response."),
-          backgroundColor: primaryColor,
-        ),
+    try {
+      // Step 1: Fetch project details
+      final projectResponse = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/projects/student'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
       );
-      Navigator.pop(context);
-    } else {
+
+      if (projectResponse.statusCode == 200) {
+        final Map<String, dynamic> projectData =
+            jsonDecode(projectResponse.body);
+        final String projectTitle = projectData['GP_Title'];
+        final String student1 = projectData['Student_1'];
+        final String student2 = projectData['Student_2'];
+        final String studentNames =
+            student2 != null ? '$student1 and $student2' : student1;
+
+        // Step 2: Submit the meeting request
+        final meetingResponse = await http.post(
+          Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/meetings'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({'Date': formattedDate}),
+        );
+
+        if (meetingResponse.statusCode == 200) {
+          // Step 3: Fetch the doctor's ID (assuming you have it or can fetch it)
+          final doctorResponse = await http.get(
+            Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/students/getDoctor'),
+            headers: {
+              'Authorization': 'Bearer $token',
+            },
+          );
+
+          if (doctorResponse.statusCode == 200) {
+            final Map<String, dynamic> doctorData =
+                jsonDecode(doctorResponse.body);
+            final int doctorId =
+                doctorData['id']; // Assuming the doctor's ID is in the response
+
+            // Step 4: Send a notification to the doctor
+            final notificationResponse = await http.post(
+              Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/notifyUser'),
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode({
+                'userId': doctorId, // Doctor's user ID
+                'title': 'New Meeting Request',
+                'body':
+                    'You have a new meeting request from $studentNames for the project "$projectTitle".',
+                'additionalData': {
+                  'meetingDate': formattedDate,
+                  'studentNames': studentNames,
+                  'projectTitle': projectTitle,
+                },
+              }),
+            );
+
+            if (notificationResponse.statusCode == 200) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      "Meeting request submitted! Await doctor's response."),
+                  backgroundColor: primaryColor,
+                ),
+              );
+              Navigator.pop(context);
+            } else {
+              throw Exception(
+                  'Failed to send notification: ${notificationResponse.statusCode}');
+            }
+          } else {
+            throw Exception(
+                'Failed to fetch doctor details: ${doctorResponse.statusCode}');
+          }
+        } else {
+          throw Exception(
+              'Failed to submit meeting request: ${meetingResponse.statusCode}');
+        }
+      } else {
+        throw Exception(
+            'Failed to fetch project details: ${projectResponse.statusCode}');
+      }
+    } catch (error) {
+      print('Error submitting meeting request: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Failed to submit meeting request."),
+          content:
+              Text("Failed to submit meeting request: ${error.toString()}"),
           backgroundColor: Colors.red,
         ),
       );

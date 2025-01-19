@@ -14,8 +14,15 @@ class NotificationService {
     // Initialize local notifications
     const AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const DarwinInitializationSettings iosInitializationSettings =
+        DarwinInitializationSettings();
+
     const InitializationSettings initializationSettings =
-        InitializationSettings(android: androidInitializationSettings);
+        InitializationSettings(
+      android: androidInitializationSettings,
+      iOS: iosInitializationSettings,
+    );
 
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,

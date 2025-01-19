@@ -1,6 +1,10 @@
 // package:flutter_project/screens/Student/CompleteSign/Page3.dart
 // package:flutter_project/screens/Student/CompleteSign/Page3.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_project/screens/Community/show_users_for_chat.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page4.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/send_message.dart';
 import 'package:flutter_project/screens/login/signin_screen.dart';
@@ -92,6 +96,43 @@ class _ThirdPageState extends State<ThirdPage> {
       print('Successfully added to the waiting list.');
     } catch (error) {
       print('Error adding to the waiting list: $error');
+    }
+  }
+
+  Future<int?> _fetchCurrentUserId() async {
+    try {
+      final token = await getToken(); // Retrieve the JWT token
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('API Response for Current User ID: $data'); // Log the response
+
+        // Check if the nested structure exists
+        if (data != null &&
+            data['data'] != null &&
+            data['data']['data'] != null &&
+            data['data']['data']['id'] != null) {
+          return data['data']['data']['id']; // Extract the user ID
+        } else {
+          print('Invalid API response structure for /users/me');
+          return null;
+        }
+      } else {
+        print('Failed to fetch current user ID: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching current user ID: $e');
+      return null;
     }
   }
 

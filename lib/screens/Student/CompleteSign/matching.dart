@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter_project/screens/Community/chat_screen.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/Page3.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/partner_request.dart';
 import 'package:flutter_project/screens/Student/CompleteSign/type.dart';
@@ -422,45 +423,144 @@ class _MatchingPageState extends State<MatchingPage> {
     }
   }
 
+  Future<int?> _fetchUserId() async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/users/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('API Response for User ID: $data'); // Log the response
+
+        // Check if the nested structure exists
+        if (data != null &&
+            data['data'] != null &&
+            data['data']['data'] != null &&
+            data['data']['data']['id'] != null) {
+          return data['data']['data']['id']; // Extract the user ID
+        } else {
+          print('Invalid API response structure for /users/me');
+          return null;
+        }
+      } else {
+        print('Failed to fetch user ID: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching user ID: $e');
+      return null;
+    }
+  }
+
+  Future<int?> _fetchReceiverId(String username) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/users/username/$username'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('API Response for Receiver ID: $data'); // Log the response
+
+        // Check if the nested structure exists
+        if (data != null &&
+            data['data'] != null &&
+            data['data']['user'] != null &&
+            data['data']['user']['id'] != null) {
+          return data['data']['user']['id']; // Extract the receiver ID
+        } else {
+          print('Invalid API response structure for /users/username/:Username');
+          return null;
+        }
+      } else {
+        print('Failed to fetch receiver ID: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching receiver ID: $e');
+      return null;
+    }
+  }
+
   void _showStudentInfoPopup(
-      BuildContext context, Map<String, dynamic> studentInfo) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Student Information'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Username: ${studentInfo['Username'] ?? 'N/A'}'),
-              Text(
-                  'Registration Number: ${studentInfo['Registration_number'] ?? 'N/A'}'),
-              Text('Status: ${studentInfo['Status'] ?? 'N/A'}'),
-              Text('GP Type: ${studentInfo['GP_Type'] ?? 'N/A'}'),
-              Text('Age: ${studentInfo['Age'] ?? 'N/A'}'),
-              Text('Gender: ${studentInfo['Gender'] ?? 'N/A'}'),
-              if (studentInfo['GP_Type'] == 'Software') ...[
-                Text('Backend: ${studentInfo['BE'] ?? 'N/A'}'),
-                Text('Frontend: ${studentInfo['FE'] ?? 'N/A'}'),
-                Text('Database: ${studentInfo['DB'] ?? 'N/A'}'),
+      BuildContext context, Map<String, dynamic> studentInfo) async {
+    final username = studentInfo['Username'];
+    final userid = await _fetchUserId();
+    final receiverId = await _fetchReceiverId(username);
+
+    if (userid != null && receiverId != null) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Student Information'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Username: ${studentInfo['Username'] ?? 'N/A'}'),
+                Text(
+                    'Registration Number: ${studentInfo['Registration_number'] ?? 'N/A'}'),
+                Text('Status: ${studentInfo['Status'] ?? 'N/A'}'),
+                Text('GP Type: ${studentInfo['GP_Type'] ?? 'N/A'}'),
+                Text('Age: ${studentInfo['Age'] ?? 'N/A'}'),
+                Text('Gender: ${studentInfo['Gender'] ?? 'N/A'}'),
+                if (studentInfo['GP_Type'] == 'Software') ...[
+                  Text('Backend: ${studentInfo['BE'] ?? 'N/A'}'),
+                  Text('Frontend: ${studentInfo['FE'] ?? 'N/A'}'),
+                  Text('Database: ${studentInfo['DB'] ?? 'N/A'}'),
+                ],
+                if (studentInfo['GP_Type'] == 'Hardware') ...[
+                  Text('City: ${studentInfo['City'] ?? 'N/A'}'),
+                ],
               ],
-              if (studentInfo['GP_Type'] == 'Hardware') ...[
-                Text('City: ${studentInfo['City'] ?? 'N/A'}'),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
             ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Close'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        senderId: userid,
+                        receiverId: receiverId,
+                        username: username,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Send Message'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to fetch user or receiver ID.')),
+      );
+    }
   }
 
   void _sendPartnerRequest(String username) async {

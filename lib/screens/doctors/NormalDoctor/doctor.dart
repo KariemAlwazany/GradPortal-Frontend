@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project/components/navbar/community_navabar.dart';
 import 'package:flutter_project/resources/home_screen.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/postdeadlines.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/Requests.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/meeting/createMeeting.dart';
 import 'package:flutter_project/screens/doctors/NormalDoctor/discussionTable.dart';
@@ -53,7 +55,7 @@ class _DoctorPageState extends State<DoctorPage> {
     DoctorHomePage(),
     ScrollableCalendarPage(),
     ReceivedMessagesPage(),
-    DoctorProfilePage(),
+    HeadDoctorProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -347,6 +349,18 @@ class DoctorHomePage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                           builder: (context) => SendMessagePage()),
+                    );
+                  },
+                ),
+                _buildOptionCard(
+                  context,
+                  icon: Icons.people,
+                  title: 'Community',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => CommunityNavbar()),
                     );
                   },
                 ),
