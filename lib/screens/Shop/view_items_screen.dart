@@ -621,18 +621,6 @@ class ItemCard extends StatelessWidget {
                     quantity = int.tryParse(value) ?? 0;
                   },
                 ),
-                // Dropdown for Availability in the Dialog
-                DropdownButtonFormField<String>(
-                  value: available ? 'true' : 'false',
-                  decoration: const InputDecoration(labelText: 'Available'),
-                  items: const [
-                    DropdownMenuItem(value: 'true', child: Text('Yes')),
-                    DropdownMenuItem(value: 'false', child: Text('No')),
-                  ],
-                  onChanged: (value) {
-                    available = value == 'true';
-                  },
-                ),
                 // You can add more fields for picture upload if necessary
               ],
             ),

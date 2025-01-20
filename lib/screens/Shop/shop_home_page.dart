@@ -762,7 +762,7 @@ Widget build(BuildContext context) {
               ),
               Spacer(),
                 badges.Badge(
-                showBadge: notificationCount > 0,
+                showBadge: notificationCount > 1000,
                 badgeStyle: badges.BadgeStyle(
                   badgeColor: Colors.red,
                   padding: EdgeInsets.all(7),
@@ -789,7 +789,7 @@ Widget build(BuildContext context) {
               ),
               Spacer(),
               badges.Badge(
-                showBadge: totalItemCount>0,
+                showBadge: totalItemCount>1000,
                 badgeStyle: badges.BadgeStyle(
                   badgeColor: Colors.red,
                   padding: EdgeInsets.all(7),

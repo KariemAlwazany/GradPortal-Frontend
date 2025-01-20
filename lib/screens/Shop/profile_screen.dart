@@ -154,7 +154,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                           MaterialPageRoute(
                               builder: (context) => AddItemScreenStudents()));
                     }),
-              ] else if (userRole == "User") ...[
+              ] else if (userRole == "User" || userRole == "Delivery") ...[
                 // Show only Edit Profile for Student or User
                 ProfileMenuWidget(
                     title: "Edit Profile",

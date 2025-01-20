@@ -74,8 +74,6 @@ dependencies:
   collection: ^1.17.0
   dio: ^5.0.0
   csv: ^5.0.0
- 
-
 
 
   app_settings: ^5.1.1

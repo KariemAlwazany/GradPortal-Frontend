@@ -4,6 +4,7 @@ import 'package:flutter_project/screens/Admin/profile.dart';
 import 'package:flutter_project/screens/Admin/sellerrequests.dart';
 import 'package:flutter_project/screens/Admin/statistics.dart';
 import 'package:flutter_project/screens/Admin/studentrequests.dart';
+import 'package:flutter_project/screens/Admin/students_shop_items.dart';
 import 'package:flutter_project/screens/Admin/transfer.dart';
 import 'package:flutter_project/screens/Admin/students_shop.dart';
 import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
@@ -26,7 +27,7 @@ class _AdminPageState extends State<AdminPage> {
     AdminManageTab(),
     SchedulePage(),
     HeadDoctorProfilePage(),
-    StudentsShop(),
+    StoreStudentItemsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -266,7 +267,7 @@ class AdminHomeTab extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => StudentsShop()),
+                      MaterialPageRoute(builder: (context) => StoreStudentItemsScreen()),
                     );
                   },
                 ),
