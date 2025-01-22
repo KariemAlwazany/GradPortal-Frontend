@@ -661,7 +661,7 @@ class _MatchingPageState extends State<MatchingPage> {
             onPressed: _declineRequest, // Call the _declineRequest function
             icon: const Icon(Icons.cancel, color: Colors.white),
             label: const Text(
-              'Cancle Request',
+              'Cancel Request',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

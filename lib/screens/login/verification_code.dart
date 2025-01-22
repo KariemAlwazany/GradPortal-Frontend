@@ -8,7 +8,8 @@ class OTPPage extends StatelessWidget {
   final String generatedOTP; // Accept generatedOTP as a parameter
 
   const OTPPage(
-      {super.key, required this.email,
+      {super.key,
+      required this.email,
       required this.generatedOTP}); // Add generatedOTP to constructor
 
   @override
@@ -20,7 +21,7 @@ class OTPPage extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/bg.png'),
+                image: AssetImage('assets/images/result.png'),
                 fit: BoxFit.cover, // Ensures the image covers the whole screen
               ),
             ),
@@ -66,6 +67,7 @@ class OTPPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20),
                 OtpTextField(
+                  textStyle: TextStyle(color: Colors.white),
                   numberOfFields:
                       6, // Set it to 6 fields if your OTP length is 6
                   borderColor: primaryColor, //

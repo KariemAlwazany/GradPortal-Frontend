@@ -7,7 +7,8 @@ import 'dart:convert';
 class ResetPasswordPage extends StatefulWidget {
   final String email; // Accept email as a parameter
 
-  const ResetPasswordPage({super.key, required this.email}); // Add email to constructor
+  const ResetPasswordPage(
+      {super.key, required this.email}); // Add email to constructor
 
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();
@@ -86,7 +87,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/bg.png'),
+                image: AssetImage('assets/images/result.png'),
                 fit: BoxFit.cover,
               ),
             ),

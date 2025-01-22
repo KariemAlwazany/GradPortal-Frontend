@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_project/components/MenuSideBar/side_bar_menu.dart';
 import 'package:flutter_project/screens/NormalUser/project_screen.dart';
+import 'package:flutter_project/screens/doctors/HeadDoctor/profile.dart';
 // Import your extracted projects_screen.dart here
 import 'profile_screen.dart'; // Import your UpdateProfileScreen here
 
@@ -20,7 +21,7 @@ class MainPageState extends State<MainPage> {
     Center(
         child: Text(
             'Store Page')), // Placeholder for Store page // Placeholder for another page
-    Center(child: UpdateProfileScreen()), // Navigate to UpdateProfileScreen
+    Center(child: HeadDoctorProfilePage()), // Navigate to UpdateProfileScreen
   ];
 
   void _updateTitle(String newTitle) {

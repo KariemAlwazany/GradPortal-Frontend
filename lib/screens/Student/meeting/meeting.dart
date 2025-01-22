@@ -261,6 +261,8 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
         final Map<String, dynamic> projectData =
             jsonDecode(projectResponse.body);
         final String projectTitle = projectData['GP_Title'];
+        final String projectType = projectData['GP_Type'];
+
         final String student1 = projectData['Student_1'];
         final String student2 = projectData['Student_2'];
         final String studentNames =
@@ -288,18 +290,19 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
           if (doctorResponse.statusCode == 200) {
             final Map<String, dynamic> doctorData =
                 jsonDecode(doctorResponse.body);
-            final int doctorId =
-                doctorData['id']; // Assuming the doctor's ID is in the response
+            final String doctorUsername = doctorData[
+                'Doctor']; // Assuming the doctor's ID is in the response
 
             // Step 4: Send a notification to the doctor
             final notificationResponse = await http.post(
-              Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/notifyUser'),
+              Uri.parse(
+                  '${dotenv.env['API_BASE_URL']}/GP/v1/notification/notifyUserByUsername'),
               headers: {
                 'Authorization': 'Bearer $token',
                 'Content-Type': 'application/json',
               },
               body: jsonEncode({
-                'userId': doctorId, // Doctor's user ID
+                'username': doctorUsername, // Doctor's username
                 'title': 'New Meeting Request',
                 'body':
                     'You have a new meeting request from $studentNames for the project "$projectTitle".',
@@ -307,6 +310,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
                   'meetingDate': formattedDate,
                   'studentNames': studentNames,
                   'projectTitle': projectTitle,
+                  'projectType': projectType,
                 },
               }),
             );

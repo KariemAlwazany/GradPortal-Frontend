@@ -72,6 +72,7 @@ class _CreateMeetingForGroupPageState extends State<CreateMeetingForGroupPage> {
         '${dotenv.env['API_BASE_URL']}/GP/v1/meetings/createMeetingForGroup';
 
     try {
+      // Format the meeting date and time
       final meetingDateTime = DateTime(
         date.year,
         date.month,
@@ -80,6 +81,7 @@ class _CreateMeetingForGroupPageState extends State<CreateMeetingForGroupPage> {
         time.minute,
       ).toIso8601String();
 
+      // Create the meeting
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -95,20 +97,48 @@ class _CreateMeetingForGroupPageState extends State<CreateMeetingForGroupPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("Meeting created successfully: ${data['data']['meeting']}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Meeting created successfully!')),
-        );
+
+        // Notify the group about the new meeting
+        await notifyGroup(id, meetingDateTime);
+
+        // Show success message (if context is available)
       } else {
         print("Failed to create meeting: ${response.statusCode}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create meeting.')),
-        );
       }
     } catch (e) {
       print("Error creating meeting: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating meeting.')),
+    }
+  }
+
+  Future<void> notifyGroup(int groupId, String meetingDateTime) async {
+    final token = await getToken();
+    final notifyUrl =
+        '${dotenv.env['API_BASE_URL']}/GP/v1/notification/doctor/notifyGroup/$groupId';
+
+    try {
+      final response = await http.post(
+        Uri.parse(notifyUrl),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "title": "New Scheduled Meeting",
+          "body": "A new meeting has been scheduled on $meetingDateTime.",
+          "additionalData": {
+            "meetingDateTime": meetingDateTime,
+            "groupId": groupId,
+          },
+        }),
       );
+
+      if (response.statusCode == 200) {
+        print("Group notified successfully: ${response.body}");
+      } else {
+        print("Failed to notify group: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error notifying group: $e");
     }
   }
 

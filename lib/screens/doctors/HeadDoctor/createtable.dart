@@ -337,24 +337,87 @@ class _CreateDiscussionTablePageState extends State<CreateDiscussionTablePage> {
     final token = await getToken();
     final url = '${dotenv.env['API_BASE_URL']}$endpoint';
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Successfully posted to $endpoint')),
+    try {
+      // Step 1: Post to the specified endpoint
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
-    } else {
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Successfully posted to $endpoint')),
+        );
+
+        // Step 2: Notify the doctor if the endpoint is /GP/v1/table/doctors
+        if (endpoint == '/GP/v1/table/doctors') {
+          final notificationResponse = await http.post(
+            Uri.parse(
+                '${dotenv.env['API_BASE_URL']}/GP/v1/notification/notifyDoctors'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'title': 'Discussion Table Posted',
+              'body':
+                  'Discussion table posted for doctors. If there\'s any issue, call the head doctor.',
+              'additionalData': {
+                'endpoint': endpoint,
+              },
+            }),
+          );
+
+          if (notificationResponse.statusCode == 200) {
+            print('Notification sent successfully to the doctor.');
+          } else {
+            throw Exception(
+                'Failed to send notification: ${notificationResponse.statusCode}');
+          }
+        }
+        if (endpoint == '/GP/v1/table/students') {
+          final notificationResponse = await http.post(
+            Uri.parse(
+                '${dotenv.env['API_BASE_URL']}/GP/v1/notification/doctor/notifyStudents'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'title': 'Discussion Table Posted',
+              'body':
+                  'Discussion table posted for students. If there\'s any issue, call the head doctor.',
+              'additionalData': {
+                'endpoint': endpoint,
+              },
+            }),
+          );
+
+          if (notificationResponse.statusCode == 200) {
+            print('Notification sent successfully to the doctor.');
+          } else {
+            throw Exception(
+                'Failed to send notification: ${notificationResponse.statusCode}');
+          }
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to post to $endpoint: ${response.body}'),
+          ),
+        );
+        print('Error response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error posting to $endpoint: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Failed to post to $endpoint: ${response.body}')),
+          content: Text('Error: Could not connect to the server.'),
+        ),
       );
-      print('Error response: ${response.body}');
     }
   }
 

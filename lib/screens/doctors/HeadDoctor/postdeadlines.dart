@@ -237,25 +237,73 @@ class _PostDeadlinesPageState extends State<PostDeadlinesPage> {
 
     final url = Uri.parse(
         '${dotenv.env['API_BASE_URL']}/GP/v1/deadlines/doctor/deadlines');
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'Title': deadline['title'],
-        'Description': deadline['description'],
-        'Date': deadline['date']?.toIso8601String(),
-        'File': deadline['file'], // Highlighted to store file as URL here
-      }),
-    );
+    try {
+      // Post the deadline
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'Title': deadline['title'],
+          'Description': deadline['description'],
+          'Date': deadline['date']?.toIso8601String(),
+          'File': deadline['file'], // Store file as URL
+        }),
+      );
 
-    if (response.statusCode == 201) {
-      print('Deadline posted successfully');
-      fetchDeadlines(); // Refresh deadlines after posting
-    } else {
-      print('Failed to post deadline: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print('Deadline posted successfully');
+
+        // Notify students about the new deadline
+        await notifyMyStudentsAboutDeadline(
+          deadline['title'],
+          deadline['description'],
+          deadline['date'],
+        );
+
+        fetchDeadlines(); // Refresh deadlines after posting
+      } else {
+        print('Failed to post deadline: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error posting deadline: $e');
+    }
+  }
+
+  Future<void> notifyMyStudentsAboutDeadline(
+      String title, String description, DateTime date) async {
+    final token = await getToken();
+    if (token == null) return;
+
+    final notifyUrl = Uri.parse(
+        '${dotenv.env['API_BASE_URL']}/GP/v1/notification/doctor/notifyMyStudents');
+
+    try {
+      final response = await http.post(
+        notifyUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'title': 'New Deadline Posted',
+          'body': 'A new deadline has been posted: $title',
+          'additionalData': {
+            'description': description,
+            'date': date.toIso8601String(),
+          },
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification sent to students successfully');
+      } else {
+        print('Failed to notify students: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error notifying students: $e');
     }
   }
 
