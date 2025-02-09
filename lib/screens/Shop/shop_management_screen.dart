@@ -557,17 +557,6 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
                         );
                       },
                     );
-                  case 5:
-                    return _buildCategoryContainer(
-                      title: 'Statistics', 
-                      icon: Icons.stacked_line_chart,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => StatisticsScreen()),
-                        );
-                      },
-                    );
                   default:
                     return Container();
                 }
@@ -577,46 +566,6 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
             const SizedBox(height: 20),
             _buildStatisticsSection(totalProducts, completedOrdersCount, pendingOrdersCount),
             const SizedBox(height: 20),
-
-            // Create Sale Button
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SalesScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF3B4280),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 22),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.attach_money,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      "Create a Sale",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white, 
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
 
             // Add Item Button
             Container(
@@ -656,42 +605,7 @@ class _ShopManagementScreenState extends State<ShopManagementScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 40),
-
-            // Close Shop Button
-            Container(
-              width: double.infinity, 
-              child: ElevatedButton(
-                onPressed: _showCloseShopDialog, // Show the close dialog
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 22),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.close,
-                      color: Colors.white,  
-                      size: 24,  
-                    ),
-                    const SizedBox(width: 10), 
-                    Text(
-                      "Close Shop Temporary",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 80),
 
             // Delete Shop Button
             Container(

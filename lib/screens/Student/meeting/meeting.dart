@@ -293,7 +293,7 @@ class _MeetingRequestPageState extends State<MeetingRequestPage> {
 
             // Step 4: Send a notification to the doctor
             final notificationResponse = await http.post(
-              Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/notifyUser'),
+              Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/notification/notifyUser'),
               headers: {
                 'Authorization': 'Bearer $token',
                 'Content-Type': 'application/json',

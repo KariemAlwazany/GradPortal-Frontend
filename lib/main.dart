@@ -12,8 +12,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await dotenv.load(fileName: ".env");
-  // NotificationService notificationService = NotificationService();
-  // await notificationService.init();
+   NotificationService notificationService = NotificationService();
+   await notificationService.init();
   runApp(const MyApp());
 }
 

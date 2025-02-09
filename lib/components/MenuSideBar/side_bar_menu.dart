@@ -10,6 +10,7 @@ import 'package:flutter_project/screens/Community/chat_screen.dart';
 import 'package:flutter_project/screens/Community/main_screen.dart';
 import 'package:flutter_project/screens/NormalUser/main_screen.dart';
 import 'package:flutter_project/screens/Shop/favorite_items_screen.dart';
+import 'package:flutter_project/screens/Shop/help_screen.dart';
 import 'package:flutter_project/screens/Shop/profile_screen.dart';
 import 'package:flutter_project/screens/Shop/shop_management_screen.dart';
 import 'package:flutter_project/screens/Shop/store_shops_screen.dart';
@@ -277,7 +278,10 @@ class _SideMenuState extends State<SideMenu> {
         );                
         break;
       case "Help":
-        // Navigate to Help screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HelpScreen()),
+        );     
         break;
     }
   }
