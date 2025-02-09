@@ -83,6 +83,7 @@ class _ThirdPageState extends State<ThirdPage> {
     String partnerStatus = 'waiting'; // Set partner status based on partner2
 
     try {
+      // Step 1: Add the project to the waiting list
       await addToWaitingList(
         partner1: partner1,
         partner2: partner2, // This will be null if no partner was selected
@@ -94,8 +95,41 @@ class _ThirdPageState extends State<ThirdPage> {
         doctor3: hasDoctor ? null : selectedDoctors[2],
       );
       print('Successfully added to the waiting list.');
+
+      // Step 2: Send a notification to the doctor
+      final token = await getToken(); // Retrieve the JWT token
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
+      // Fetch the student's name (replace with actual logic to get the student's name)
+      final studentName = 'Student Name'; // Replace with actual student name
+
+      // Prepare the notification payload
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/notification/student/request/notifyDoctor'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'title': 'Student Request',
+          'body': '$studentName wants you as a supervisor.',
+          'additionalData': {
+            'studentName': studentName,
+            'projectType': typeGP,
+          },
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification sent successfully to the doctor.');
+      } else {
+        throw Exception('Failed to send notification: ${response.statusCode}');
+      }
     } catch (error) {
-      print('Error adding to the waiting list: $error');
+      print('Error adding to the waiting list or sending notification: $error');
     }
   }
 

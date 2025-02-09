@@ -377,7 +377,7 @@ class _SecondPageState extends State<SecondPage> {
                           },
                           icon: const Icon(Icons.cancel, color: Colors.white),
                           label: const Text(
-                            'Cancle Request',
+                            'Cancel Request',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,

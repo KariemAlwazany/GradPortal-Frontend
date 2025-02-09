@@ -32,19 +32,27 @@ class _ViewCurrentProjectsPageState extends State<ViewCurrentProjectsPage> {
 
     if (response.statusCode == 200) {
       final List projects = json.decode(response.body);
+      final Map<String, List<Map<String, dynamic>>> groupedProjects = {};
+
+      for (var project in projects) {
+        final doctorName = project['Supervisor_1'] ?? 'Unknown';
+        if (!groupedProjects.containsKey(doctorName)) {
+          groupedProjects[doctorName] = [];
+        }
+        groupedProjects[doctorName]!.add({
+          'title': project['GP_Title'],
+          'type': project['GP_Type'],
+          'description': project['GP_Description'],
+          'Student_1': project['Student_1'],
+          'Student_2': project['Student_2'],
+        });
+      }
+
       setState(() {
-        doctorsWithProjects = projects.map((project) {
+        doctorsWithProjects = groupedProjects.entries.map((entry) {
           return {
-            'doctorName': project['Supervisor_1'] ?? 'Unknown',
-            'projects': [
-              {
-                'title': project['GP_Title'],
-                'type': project['GP_Type'],
-                'description': project['GP_Description'],
-                'Student_1': project['Student_1'],
-                'Student_2': project['Student_2'],
-              }
-            ],
+            'doctorName': entry.key,
+            'projects': entry.value,
           };
         }).toList();
       });

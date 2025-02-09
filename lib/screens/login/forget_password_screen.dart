@@ -90,7 +90,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/bg.png'),
+                image: AssetImage('assets/images/result.png'),
                 fit: BoxFit
                     .cover, // Adjusts the image to cover the entire background
               ),

@@ -61,7 +61,13 @@ class _SendMessagePageState extends State<SendMessagePage> {
 
   Future<void> sendMessage() async {
     final token = await getToken();
-    if (token != null) {
+    if (token == null) {
+      print('Token is null');
+      return;
+    }
+
+    try {
+      // Send the message
       final response = await http.post(
         Uri.parse('${dotenv.env['API_BASE_URL']}/GP/v1/messages'),
         headers: {
@@ -77,9 +83,55 @@ class _SendMessagePageState extends State<SendMessagePage> {
       if (response.statusCode == 200) {
         print('Message sent to $selectedRecipient');
         messageController.clear();
+
+        // If the recipient is 'All', notify all students
+        if (selectedRecipient == 'All Students') {
+          await notifyAllStudents();
+        }
       } else {
-        print('Failed to send message');
+        print('Failed to send message: ${response.statusCode}');
       }
+    } catch (e) {
+      print('Error sending message: $e');
+    }
+  }
+
+  Future<void> notifyAllStudents() async {
+    final token = await getToken();
+    if (token == null) {
+      print('Token is null');
+      return;
+    }
+
+    try {
+      // Prepare additionalData with date and other details
+      final additionalData = {
+        'date': DateTime.now().toIso8601String(), // Add current date
+        'message': 'New message from doctor for all students',
+        // Add other fields as needed
+      };
+
+      final response = await http.post(
+        Uri.parse(
+            '${dotenv.env['API_BASE_URL']}/GP/v1/notification/doctor/notifyMyStudents'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'title': 'New Message',
+          'body': 'New message from doctor for all students',
+          'additionalData': additionalData, // Include additionalData
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Notification sent to all students');
+      } else {
+        print('Failed to notify students: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error notifying students: $e');
     }
   }
 

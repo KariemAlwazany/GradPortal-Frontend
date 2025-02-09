@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Color primaryColor = Color(0xFF3B4280);
 
@@ -26,10 +27,24 @@ class _ManageStudentRequestsPageState extends State<ManageStudentRequestsPage> {
 
   Future<void> fetchDoctorAndStudentData() async {
     try {
+      // Retrieve the JWT token from SharedPreferences
+      final token = await getToken();
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
       // Fetch doctor and student name data
       final url =
           '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/doctors';
-      final response = await http.get(Uri.parse(url));
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization':
+              'Bearer $token', // Add the Bearer token to the headers
+          'Content-Type': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -46,8 +61,15 @@ class _ManageStudentRequestsPageState extends State<ManageStudentRequestsPage> {
         final studentName = doctorData['Partner_1'];
 
         // Fetch student registration number using studentName
-        final studentResponse = await http.get(Uri.parse(
-            '${dotenv.env['API_BASE_URL']}/GP/v1/students/specific/$studentName'));
+        final studentResponse = await http.get(
+          Uri.parse(
+              '${dotenv.env['API_BASE_URL']}/GP/v1/students/specific/$studentName'),
+          headers: {
+            'Authorization':
+                'Bearer $token', // Add the Bearer token to the headers
+            'Content-Type': 'application/json',
+          },
+        );
 
         if (studentResponse.statusCode == 200) {
           final studentData = json.decode(studentResponse.body);
@@ -81,10 +103,16 @@ class _ManageStudentRequestsPageState extends State<ManageStudentRequestsPage> {
     }
   }
 
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs
+        .getString('jwt_token'); // Retrieve JWT token from SharedPreferences
+  }
+
   Future<void> saveRequest(int index) async {
     final student = studentRequests[index]['name'];
     final doctor = studentRequests[index]['selectedDoctor'];
-
+    final token = await getToken();
     if (doctor != null) {
       try {
         // Send POST request
@@ -92,7 +120,11 @@ class _ManageStudentRequestsPageState extends State<ManageStudentRequestsPage> {
             '${dotenv.env['API_BASE_URL']}/GP/v1/projects/WaitingList/doctors';
         final response = await http.post(
           Uri.parse(url),
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Authorization':
+                'Bearer $token', // Add the Bearer token to the headers
+            'Content-Type': 'application/json',
+          },
           body: json.encode({
             'student': student,
             'Doctor': doctor,

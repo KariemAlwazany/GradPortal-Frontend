@@ -260,17 +260,6 @@ class AdminHomeTab extends StatelessWidget {
                     );
                   },
                 ),
-                _buildOptionCard(
-                  context,
-                  icon: Icons.shop,
-                  title: 'Manage Students Shop',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => StoreStudentItemsScreen()),
-                    );
-                  },
-                ),
               ],
             ),
           ),
