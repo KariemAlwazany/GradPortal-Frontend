@@ -98,6 +98,7 @@ Future<void> _fetchLoggedInUsername() async {
       });
     }
   }
+
   Future<void> updateOrderStatus(int orderId, String status, {bool refresh = false}) async {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('jwt_token');
@@ -143,12 +144,9 @@ Future<void> _fetchLoggedInUsername() async {
       }
 
       // Call profit calculation API if the status is 'accepted'
-      if (status == 'accepted') {
-        await calculateProfit(orderId);
-      }
-      await getBuyerId(orderId);
+      await calculateProfit(orderId);
+      await getBuyerId(orderId); // Ensure buyer_id is set correctly
       await sendOrderResponse(orderId, validStatus, refresh: refresh);
-      await _sendNotification(buyer_id!, status);
     } else {
       final errorData = json.decode(response.body);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -231,7 +229,6 @@ Future<void> _sendNotification(int receiverId, String status) async {
         "userId": receiverId,
         "title": "Gradhub",
         "body": "Order Status: Your order has $status",
-        "additionalData": {"chat": "true"}
       }),
     );
 
@@ -306,6 +303,8 @@ Future getBuyerId(int orderId) async {
       setState(() {
         buyer_id = data['buyer_id'] ;
       });
+              print(buyer_id);
+
     } else {
       print('Failed to fetch buyer ID: ${response.statusCode}');
       return null;
@@ -387,17 +386,18 @@ Future getBuyerId(int orderId) async {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () => updateOrderStatus(orderId, 'accepted', refresh: true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                  child: const Text('Approve'),
-                                ),
-                                const SizedBox(width: 10),
-                                ElevatedButton(
-                                  onPressed: () => updateOrderStatus(orderId, 'declined', refresh: true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                  child: const Text('Decline'),
-                                ),
+                              ElevatedButton(
+                                onPressed: () => updateOrderStatus(orderId, 'approved', refresh: true), // Sends 'accepted'
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                child: const Text('Approve'),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () => updateOrderStatus(orderId, 'declined', refresh: true), // Sends 'declined'
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                child: const Text('Decline'),
+                              ),
+
                               ],
                             ),
                           ],

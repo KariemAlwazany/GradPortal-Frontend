@@ -96,7 +96,8 @@ class _StoreStudentItemsScreenState extends State<StoreStudentItemsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.shopName ?? 'Items'),
+        title: Text(widget.shopName ?? 'Items',
+        style: TextStyle(color: Colors.white),),
         backgroundColor: Color(0xFF3B4280),
       ),
       body: isLoading

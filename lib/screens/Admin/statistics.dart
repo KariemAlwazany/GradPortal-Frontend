@@ -30,6 +30,7 @@ class _StatisticsPageState extends State<StatisticsPage>
   int completedMeetings = 0;
   int storeItemsCount = 0;
   int transactionsCount = 0;
+  int profit = 0;
   List<int> monthlyCounts = List.generate(12, (_) => 0);
 
   @override
@@ -51,7 +52,15 @@ class _StatisticsPageState extends State<StatisticsPage>
 
       final baseUrl = dotenv.env['API_BASE_URL'];
 
-      // Fetch users count by role
+      final protfitResponse = await http.get(
+        Uri.parse('$baseUrl/GP/v1/orders/getProfitData'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      final storeResponse = await http.get(
+        Uri.parse('$baseUrl/GP/v1/seller/items/countAllItems'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
       final studentsResponse = await http.get(
         Uri.parse('$baseUrl/GP/v1/users/students/count'),
         headers: {'Authorization': 'Bearer $token'},
@@ -156,7 +165,14 @@ class _StatisticsPageState extends State<StatisticsPage>
         final upcomingData = json.decode(upcomingMeetingsResponse.body);
         upcomingMeetings = upcomingData['data']['upcomming'];
       }
-
+      if (storeResponse.statusCode == 200) {
+        final storeResponsedata = json.decode(storeResponse.body);
+        storeItemsCount = storeResponsedata['totalItems'];
+      }
+      if (protfitResponse.statusCode == 200) {
+        final protfitResponsedata = json.decode(protfitResponse.body);
+        profit = protfitResponsedata['data']['1'];
+      }
       setState(() {});
     } catch (error) {
       print('Error fetching statistics: $error');
@@ -332,8 +348,8 @@ class _StatisticsPageState extends State<StatisticsPage>
               Flexible(
                 child: _buildOptionCard(
                   icon: Icons.monetization_on,
-                  title: 'Transactions',
-                  count: '$transactionsCount',
+                  title: 'Profit',
+                  count: '$profit',
                 ),
               ),
             ],
@@ -341,7 +357,7 @@ class _StatisticsPageState extends State<StatisticsPage>
           SizedBox(height: 24),
           _buildBarChart(
             title: 'Store Overview',
-            data: [storeItemsCount, transactionsCount],
+            data: [storeItemsCount, profit],
           ),
         ],
       ),
@@ -537,7 +553,7 @@ class _StatisticsPageState extends State<StatisticsPage>
                     showTitles: true,
                     getTitles: (value) {
                       if (title == 'Store Overview') {
-                        return ['Items', 'Transactions'][value.toInt()];
+                        return ['Items', 'Profit'][value.toInt()];
                       } else if (title == 'Meetings Overview') {
                         return ['Upcoming', 'Completed'][value.toInt()];
                       } else if (title == 'Projects Overview') {
